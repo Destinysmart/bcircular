@@ -1,20 +1,36 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Bitcoin, Store, Users, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import StatCard from '@/components/StatCard';
+import { fetchAllCommunitiesWithStats } from '@/lib/api';
 import { mockCommunities, getFlagEmoji, getScoreColor } from '@/lib/mock-data';
 
 const Homepage = () => {
-  const topCommunities = [...mockCommunities].sort((a, b) => b.score - a.score).slice(0, 5);
-  const totalMerchants = mockCommunities.reduce((s, c) => s + c.merchants, 0);
-  const totalSats = mockCommunities.reduce((s, c) => s + c.satsCircular, 0);
+  const { data: dbCommunities } = useQuery({
+    queryKey: ['communities-stats'],
+    queryFn: fetchAllCommunitiesWithStats,
+  });
+
+  // Use DB data if available, otherwise mock
+  const communities = (dbCommunities && dbCommunities.length > 0)
+    ? dbCommunities.map(c => ({
+        ...c,
+        slug: c.slug,
+        countryCode: c.country_code,
+        weeklyChange: c.weeklyChange ?? 0,
+      }))
+    : mockCommunities;
+
+  const topCommunities = [...communities].sort((a, b) => (b.score ?? 0) - (a.score ?? 0)).slice(0, 5);
+  const totalMerchants = communities.reduce((s, c) => s + (c.merchants ?? 0), 0);
+  const totalSats = communities.reduce((s, c) => s + (c.satsCircular ?? 0), 0);
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      {/* Hero */}
       <section className="relative overflow-hidden border-b border-border">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent" />
         <div className="container relative py-20 md:py-32">
@@ -28,39 +44,29 @@ const Homepage = () => {
               <span className="text-primary">circular economy.</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-xl mb-8">
-              Communities submit merchants, earners, and transactions. Validators verify. 
+              Communities submit merchants, earners, and transactions. Validators verify.
               Data powers a credibility score. No funds held. Ever.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Link to="/register">
-                <Button size="lg" className="gap-2">
-                  Register your community <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link to="/leaderboard">
-                <Button variant="outline" size="lg">Explore communities</Button>
-              </Link>
+              <Link to="/register"><Button size="lg" className="gap-2">Register your community <ArrowRight className="h-4 w-4" /></Button></Link>
+              <Link to="/leaderboard"><Button variant="outline" size="lg">Explore communities</Button></Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Global stats */}
       <section className="container py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <StatCard label="Communities tracked" value={mockCommunities.length} icon={<Users className="h-3.5 w-3.5" />} />
+          <StatCard label="Communities tracked" value={communities.length} icon={<Users className="h-3.5 w-3.5" />} />
           <StatCard label="Merchants accepting BTC" value={totalMerchants} icon={<Store className="h-3.5 w-3.5" />} />
           <StatCard label="Sats in circular flow" value={`${(totalSats / 1_000_000).toFixed(0)}M`} icon={<Zap className="h-3.5 w-3.5" />} />
         </div>
       </section>
 
-      {/* Leaderboard preview */}
       <section className="container pb-16">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold">Top Communities</h2>
-          <Link to="/leaderboard" className="text-sm text-primary hover:underline flex items-center gap-1">
-            View all <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
+          <Link to="/leaderboard" className="text-sm text-primary hover:underline flex items-center gap-1">View all <ArrowRight className="h-3.5 w-3.5" /></Link>
         </div>
         <div className="rounded-lg border border-border overflow-hidden">
           <table className="w-full">
@@ -75,20 +81,20 @@ const Homepage = () => {
             </thead>
             <tbody>
               {topCommunities.map((c, i) => (
-                <tr key={c.id} className="border-b border-border last:border-0 hover:bg-card/50 transition-colors">
+                <tr key={c.id || i} className="border-b border-border last:border-0 hover:bg-card/50 transition-colors">
                   <td className="p-3 font-mono text-muted-foreground">{i + 1}</td>
                   <td className="p-3">
                     <Link to={`/c/${c.slug}`} className="hover:text-primary transition-colors">
-                      <span className="mr-2">{getFlagEmoji(c.countryCode)}</span>
+                      <span className="mr-2">{getFlagEmoji(c.countryCode || c.country_code || '')}</span>
                       <span className="font-medium">{c.name}</span>
                       <span className="text-muted-foreground text-sm ml-2 hidden sm:inline">{c.city}, {c.country}</span>
                     </Link>
                   </td>
                   <td className="p-3 text-right font-mono hidden md:table-cell">{c.merchants}</td>
-                  <td className={`p-3 text-right font-mono font-medium ${getScoreColor(c.score)}`}>{c.score}</td>
+                  <td className={`p-3 text-right font-mono font-medium ${getScoreColor(c.score ?? 0)}`}>{c.score ?? 0}</td>
                   <td className="p-3 text-right font-mono hidden sm:table-cell">
-                    <span className={c.weeklyChange >= 0 ? 'text-emerald-400' : 'text-red-400'}>
-                      {c.weeklyChange >= 0 ? '↑' : '↓'}{Math.abs(c.weeklyChange)}
+                    <span className={(c.weeklyChange ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                      {(c.weeklyChange ?? 0) >= 0 ? '↑' : '↓'}{Math.abs(c.weeklyChange ?? 0)}
                     </span>
                   </td>
                 </tr>
@@ -98,7 +104,6 @@ const Homepage = () => {
         </div>
       </section>
 
-      {/* How it works */}
       <section className="border-t border-border bg-card/30">
         <div className="container py-16">
           <h2 className="text-xl font-semibold mb-8 text-center">How It Works</h2>
@@ -118,13 +123,9 @@ const Homepage = () => {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="border-t border-border py-8">
         <div className="container flex items-center justify-between text-xs text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <Bitcoin className="h-4 w-4 text-primary" />
-            <span>Circular — Bitcoin Circular Economy Tracker</span>
-          </div>
+          <div className="flex items-center gap-2"><Bitcoin className="h-4 w-4 text-primary" /><span>Circular — Bitcoin Circular Economy Tracker</span></div>
           <span>No funds held. Ever.</span>
         </div>
       </footer>
