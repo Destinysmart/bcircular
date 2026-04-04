@@ -4,19 +4,79 @@ import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
-import { mockCommunities, getFlagEmoji } from '@/lib/mock-data';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { submitMerchant, submitEarner, submitTransaction, fetchCommunityBySlug } from '@/lib/api';
+import { useQuery } from '@tanstack/react-query';
 
 type Tab = 'merchant' | 'earner' | 'transaction';
 
 const SubmitPage = () => {
   const { slug } = useParams();
-  const community = mockCommunities.find(c => c.slug === slug) || mockCommunities[0];
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [tab, setTab] = useState<Tab>('merchant');
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Merchant form state
+  const [mName, setMName] = useState('');
+  const [mCategory, setMCategory] = useState('');
+  const [mAddress, setMAddress] = useState('');
+  const [mPayments, setMPayments] = useState<string[]>([]);
+  const [mWebsite, setMWebsite] = useState('');
+
+  // Earner form state
+  const [eDesc, setEDesc] = useState('');
+  const [eMethod, setEMethod] = useState('');
+  const [ePayment, setEPayment] = useState('');
+
+  // Transaction form state
+  const [tAmount, setTAmount] = useState('');
+  const [tCategory, setTCategory] = useState('');
+  const [tCircular, setTCircular] = useState(false);
+  const [tDate, setTDate] = useState(new Date().toISOString().split('T')[0]);
+
+  const { data: community } = useQuery({
+    queryKey: ['community', slug],
+    queryFn: () => fetchCommunityBySlug(slug!),
+    enabled: !!slug,
+  });
+
+  const togglePayment = (method: string) => {
+    setMPayments(prev => prev.includes(method) ? prev.filter(m => m !== method) : [...prev, method]);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!community) return;
+    setLoading(true);
+    try {
+      if (tab === 'merchant') {
+        await submitMerchant(community.id, {
+          name: mName, category: mCategory, address: mAddress,
+          payment_methods: mPayments, website: mWebsite || undefined,
+        }, user?.id);
+      } else if (tab === 'earner') {
+        await submitEarner(community.id, {
+          description: eDesc, earning_method: eMethod, payment_method: ePayment,
+        }, user?.id);
+      } else {
+        await submitTransaction(community.id, {
+          amount_sats: parseInt(tAmount), category: tCategory,
+          is_circular: tCircular, transaction_date: tDate,
+        }, user?.id);
+      }
+      setSubmitted(true);
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (submitted) {
     return (
@@ -38,74 +98,46 @@ const SubmitPage = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="container py-8 max-w-lg">
-        <div className="text-sm text-muted-foreground mb-1">
-          {getFlagEmoji(community.countryCode)} {community.name}
-        </div>
+        <div className="text-sm text-muted-foreground mb-1">{community?.name || slug}</div>
         <h1 className="text-2xl font-bold mb-6">Submit Data</h1>
 
-        {/* Tabs */}
         <div className="flex border-b border-border mb-6">
           {(['merchant', 'earner', 'transaction'] as Tab[]).map(t => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`px-4 py-2 text-sm capitalize border-b-2 transition-colors ${
-                tab === t ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {t}
-            </button>
+            <button key={t} onClick={() => setTab(t)}
+              className={`px-4 py-2 text-sm capitalize border-b-2 transition-colors ${tab === t ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+            >{t}</button>
           ))}
         </div>
 
         {tab === 'merchant' && (
-          <form onSubmit={e => { e.preventDefault(); setSubmitted(true); }} className="space-y-4">
-            <div>
-              <Label>Business name</Label>
-              <Input placeholder="e.g. Mama Rosa's Kitchen" required />
-            </div>
-            <div>
-              <Label>Category</Label>
-              <Select>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div><Label>Business name</Label><Input placeholder="e.g. Mama Rosa's Kitchen" value={mName} onChange={e => setMName(e.target.value)} required /></div>
+            <div><Label>Category</Label>
+              <Select value={mCategory} onValueChange={setMCategory}>
                 <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
-                <SelectContent>
-                  {['Food', 'Retail', 'Services', 'Education', 'Transport', 'Other'].map(c => (
-                    <SelectItem key={c} value={c.toLowerCase()}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
+                <SelectContent>{['food', 'retail', 'services', 'education', 'transport', 'other'].map(c => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <div>
-              <Label>Address</Label>
-              <Input placeholder="Street address or landmark" />
-            </div>
-            <div>
-              <Label className="mb-2 block">Payment methods accepted</Label>
+            <div><Label>Address</Label><Input placeholder="Street address or landmark" value={mAddress} onChange={e => setMAddress(e.target.value)} /></div>
+            <div><Label className="mb-2 block">Payment methods accepted</Label>
               <div className="grid grid-cols-2 gap-3">
-                {['Lightning', 'On-chain', 'Blink', 'LNURL-pay'].map(m => (
+                {['lightning', 'onchain', 'blink', 'lnurlp'].map(m => (
                   <label key={m} className="flex items-center gap-2 text-sm">
-                    <Checkbox /> {m}
+                    <Checkbox checked={mPayments.includes(m)} onCheckedChange={() => togglePayment(m)} /> {m === 'lnurlp' ? 'LNURL-pay' : m.charAt(0).toUpperCase() + m.slice(1)}
                   </label>
                 ))}
               </div>
             </div>
-            <div>
-              <Label>Website or social link (optional)</Label>
-              <Input placeholder="https://" />
-            </div>
-            <Button type="submit" className="w-full">Submit merchant</Button>
+            <div><Label>Website (optional)</Label><Input placeholder="https://" value={mWebsite} onChange={e => setMWebsite(e.target.value)} /></div>
+            <Button type="submit" className="w-full" disabled={loading}>{loading ? 'Submitting...' : 'Submit merchant'}</Button>
           </form>
         )}
 
         {tab === 'earner' && (
-          <form onSubmit={e => { e.preventDefault(); setSubmitted(true); }} className="space-y-4">
-            <div>
-              <Label>Role / Description</Label>
-              <Input placeholder="e.g. market vendor, freelancer, employee" required />
-            </div>
-            <div>
-              <Label>How do they earn in Bitcoin?</Label>
-              <Select>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div><Label>Role / Description</Label><Input placeholder="e.g. market vendor, freelancer" value={eDesc} onChange={e => setEDesc(e.target.value)} required /></div>
+            <div><Label>How do they earn in Bitcoin?</Label>
+              <Select value={eMethod} onValueChange={setEMethod}>
                 <SelectTrigger><SelectValue placeholder="Select method" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="direct">Direct BTC payment</SelectItem>
@@ -114,50 +146,31 @@ const SubmitPage = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label>Payment method preference</Label>
-              <Select>
+            <div><Label>Payment method preference</Label>
+              <Select value={ePayment} onValueChange={setEPayment}>
                 <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                <SelectContent>
-                  {['Lightning', 'On-chain', 'Blink', 'LNURL-pay'].map(m => (
-                    <SelectItem key={m} value={m.toLowerCase()}>{m}</SelectItem>
-                  ))}
-                </SelectContent>
+                <SelectContent>{['lightning', 'onchain', 'blink', 'lnurlp'].map(m => <SelectItem key={m} value={m}>{m === 'lnurlp' ? 'LNURL-pay' : m.charAt(0).toUpperCase() + m.slice(1)}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <Button type="submit" className="w-full">Submit earner</Button>
+            <Button type="submit" className="w-full" disabled={loading}>{loading ? 'Submitting...' : 'Submit earner'}</Button>
           </form>
         )}
 
         {tab === 'transaction' && (
-          <form onSubmit={e => { e.preventDefault(); setSubmitted(true); }} className="space-y-4">
-            <div>
-              <Label>Amount (sats)</Label>
-              <Input type="number" placeholder="e.g. 50000" required />
-            </div>
-            <div>
-              <Label>Category</Label>
-              <Select>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div><Label>Amount (sats)</Label><Input type="number" placeholder="e.g. 50000" value={tAmount} onChange={e => setTAmount(e.target.value)} required /></div>
+            <div><Label>Category</Label>
+              <Select value={tCategory} onValueChange={setTCategory}>
                 <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
-                <SelectContent>
-                  {['Food', 'Goods', 'Services', 'Education', 'Other'].map(c => (
-                    <SelectItem key={c} value={c.toLowerCase()}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
+                <SelectContent>{['food', 'goods', 'services', 'education', 'other'].map(c => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="flex items-center justify-between rounded-lg border border-border p-3">
-              <div>
-                <Label>Was this circular?</Label>
-                <p className="text-xs text-muted-foreground">Did the sats stay in your community?</p>
-              </div>
-              <Switch />
+              <div><Label>Was this circular?</Label><p className="text-xs text-muted-foreground">Did the sats stay in your community?</p></div>
+              <Switch checked={tCircular} onCheckedChange={setTCircular} />
             </div>
-            <div>
-              <Label>Date</Label>
-              <Input type="date" defaultValue={new Date().toISOString().split('T')[0]} />
-            </div>
-            <Button type="submit" className="w-full">Submit transaction</Button>
+            <div><Label>Date</Label><Input type="date" value={tDate} onChange={e => setTDate(e.target.value)} /></div>
+            <Button type="submit" className="w-full" disabled={loading}>{loading ? 'Submitting...' : 'Submit transaction'}</Button>
           </form>
         )}
       </div>

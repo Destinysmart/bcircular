@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,11 +7,62 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { registerCommunity } from '@/lib/api';
 
-const countries = ['El Salvador', 'Nigeria', 'South Africa', 'Costa Rica', 'Guatemala', 'Switzerland', 'Philippines', 'Senegal', 'Brazil', 'Colombia', 'Kenya', 'Ghana', 'Mexico', 'Argentina', 'Other'];
+const countries = [
+  { name: 'El Salvador', code: 'SV', region: 'Latin America' },
+  { name: 'Nigeria', code: 'NG', region: 'Africa' },
+  { name: 'South Africa', code: 'ZA', region: 'Africa' },
+  { name: 'Costa Rica', code: 'CR', region: 'Latin America' },
+  { name: 'Guatemala', code: 'GT', region: 'Latin America' },
+  { name: 'Switzerland', code: 'CH', region: 'Europe' },
+  { name: 'Philippines', code: 'PH', region: 'Asia' },
+  { name: 'Senegal', code: 'SN', region: 'Africa' },
+  { name: 'Brazil', code: 'BR', region: 'Latin America' },
+  { name: 'Colombia', code: 'CO', region: 'Latin America' },
+  { name: 'Kenya', code: 'KE', region: 'Africa' },
+  { name: 'Ghana', code: 'GH', region: 'Africa' },
+  { name: 'Mexico', code: 'MX', region: 'Latin America' },
+  { name: 'Argentina', code: 'AR', region: 'Latin America' },
+];
 
 const RegisterCommunity = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [name, setName] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState('');
+  const [city, setCity] = useState('');
+  const [description, setDescription] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast({ title: 'Login required', description: 'Please log in to register a community.', variant: 'destructive' });
+      navigate('/login');
+      return;
+    }
+    const country = countries.find(c => c.name === selectedCountry);
+    if (!country) return;
+
+    setLoading(true);
+    try {
+      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      await registerCommunity({
+        name, country: country.name, country_code: country.code,
+        city, region: country.region, description, slug,
+      }, user.id);
+      setSubmitted(true);
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (submitted) {
     return (
@@ -19,10 +71,7 @@ const RegisterCommunity = () => {
         <div className="container py-16 max-w-lg text-center">
           <div className="text-4xl mb-4">🎯</div>
           <h2 className="text-xl font-semibold mb-2">Registration submitted</h2>
-          <p className="text-muted-foreground text-sm">
-            We'll review your community application and get back to you within a few days.
-            Once approved, you'll be able to appoint validators and start tracking.
-          </p>
+          <p className="text-muted-foreground text-sm">We'll review your community and get back to you within a few days.</p>
         </div>
       </div>
     );
@@ -34,47 +83,22 @@ const RegisterCommunity = () => {
       <div className="container py-8 max-w-lg">
         <h1 className="text-2xl font-bold mb-1">Register Your Community</h1>
         <p className="text-sm text-muted-foreground mb-6">Start tracking your Bitcoin circular economy.</p>
-
-        <form onSubmit={e => { e.preventDefault(); setSubmitted(true); }} className="space-y-4">
-          <div>
-            <Label>Community name</Label>
-            <Input placeholder="e.g. Bitcoin Beach" required />
-          </div>
-          <div>
-            <Label>Country</Label>
-            <Select>
+        {!user && <p className="text-sm text-primary mb-4">You'll need to <a href="/login" className="underline">log in</a> to register a community.</p>}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div><Label>Community name</Label><Input placeholder="e.g. Bitcoin Beach" value={name} onChange={e => setName(e.target.value)} required /></div>
+          <div><Label>Country</Label>
+            <Select value={selectedCountry} onValueChange={setSelectedCountry}>
               <SelectTrigger><SelectValue placeholder="Select country" /></SelectTrigger>
-              <SelectContent>
-                {countries.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-              </SelectContent>
+              <SelectContent>{countries.map(c => <SelectItem key={c.code} value={c.name}>{c.name}</SelectItem>)}</SelectContent>
             </Select>
           </div>
-          <div>
-            <Label>City</Label>
-            <Input placeholder="e.g. El Zonte" required />
-          </div>
-          <div>
-            <Label>Description</Label>
-            <Textarea placeholder="Short description of your community's Bitcoin economy" rows={3} />
-          </div>
-          <div className="border-t border-border pt-4 mt-4">
-            <h3 className="text-sm font-medium mb-3">Admin account</h3>
-            <div className="space-y-3">
-              <div>
-                <Label>Your name</Label>
-                <Input placeholder="Full name" required />
-              </div>
-              <div>
-                <Label>Email</Label>
-                <Input type="email" placeholder="you@example.com" required />
-              </div>
-            </div>
-          </div>
+          <div><Label>City</Label><Input placeholder="e.g. El Zonte" value={city} onChange={e => setCity(e.target.value)} required /></div>
+          <div><Label>Description</Label><Textarea placeholder="Short description of your community's Bitcoin economy" value={description} onChange={e => setDescription(e.target.value)} rows={3} /></div>
           <label className="flex items-start gap-2 text-sm text-muted-foreground">
             <Checkbox className="mt-0.5" />
             <span>I will appoint at least 2 validators and ensure submitted data is accurate.</span>
           </label>
-          <Button type="submit" className="w-full">Submit registration</Button>
+          <Button type="submit" className="w-full" disabled={loading || !user}>{loading ? 'Submitting...' : 'Submit registration'}</Button>
         </form>
       </div>
     </div>
