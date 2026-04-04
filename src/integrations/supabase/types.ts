@@ -14,16 +14,361 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      circularity_scores: {
+        Row: {
+          calculated_at: string
+          community_id: string
+          earner_rate_score: number
+          growth_score: number
+          id: string
+          merchant_density_score: number
+          retention_score: number
+          score: number
+          velocity_score: number
+        }
+        Insert: {
+          calculated_at?: string
+          community_id: string
+          earner_rate_score?: number
+          growth_score?: number
+          id?: string
+          merchant_density_score?: number
+          retention_score?: number
+          score: number
+          velocity_score?: number
+        }
+        Update: {
+          calculated_at?: string
+          community_id?: string
+          earner_rate_score?: number
+          growth_score?: number
+          id?: string
+          merchant_density_score?: number
+          retention_score?: number
+          score?: number
+          velocity_score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "circularity_scores_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communities: {
+        Row: {
+          admin_id: string | null
+          city: string
+          country: string
+          country_code: string
+          created_at: string
+          description: string | null
+          id: string
+          member_count: number
+          name: string
+          region: string
+          slug: string
+          status: Database["public"]["Enums"]["community_status"]
+          updated_at: string
+        }
+        Insert: {
+          admin_id?: string | null
+          city: string
+          country: string
+          country_code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          member_count?: number
+          name: string
+          region?: string
+          slug: string
+          status?: Database["public"]["Enums"]["community_status"]
+          updated_at?: string
+        }
+        Update: {
+          admin_id?: string | null
+          city?: string
+          country?: string
+          country_code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          member_count?: number
+          name?: string
+          region?: string
+          slug?: string
+          status?: Database["public"]["Enums"]["community_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      earners: {
+        Row: {
+          community_id: string
+          created_at: string
+          description: string
+          earning_method: string | null
+          id: string
+          payment_method: string | null
+          status: Database["public"]["Enums"]["submission_status"]
+          submitted_by: string | null
+        }
+        Insert: {
+          community_id: string
+          created_at?: string
+          description: string
+          earning_method?: string | null
+          id?: string
+          payment_method?: string | null
+          status?: Database["public"]["Enums"]["submission_status"]
+          submitted_by?: string | null
+        }
+        Update: {
+          community_id?: string
+          created_at?: string
+          description?: string
+          earning_method?: string | null
+          id?: string
+          payment_method?: string | null
+          status?: Database["public"]["Enums"]["submission_status"]
+          submitted_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "earners_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchants: {
+        Row: {
+          address: string | null
+          approved_at: string | null
+          category: string
+          community_id: string
+          created_at: string
+          id: string
+          lat: number | null
+          lng: number | null
+          name: string
+          payment_methods: string[]
+          status: Database["public"]["Enums"]["submission_status"]
+          submitted_by: string | null
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          approved_at?: string | null
+          category?: string
+          community_id: string
+          created_at?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          name: string
+          payment_methods?: string[]
+          status?: Database["public"]["Enums"]["submission_status"]
+          submitted_by?: string | null
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          approved_at?: string | null
+          category?: string
+          community_id?: string
+          created_at?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          name?: string
+          payment_methods?: string[]
+          status?: Database["public"]["Enums"]["submission_status"]
+          submitted_by?: string | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchants_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount_sats: number
+          category: string
+          community_id: string
+          created_at: string
+          id: string
+          is_circular: boolean
+          status: Database["public"]["Enums"]["submission_status"]
+          submitted_by: string | null
+          transaction_date: string
+        }
+        Insert: {
+          amount_sats: number
+          category?: string
+          community_id: string
+          created_at?: string
+          id?: string
+          is_circular?: boolean
+          status?: Database["public"]["Enums"]["submission_status"]
+          submitted_by?: string | null
+          transaction_date?: string
+        }
+        Update: {
+          amount_sats?: number
+          category?: string
+          community_id?: string
+          created_at?: string
+          id?: string
+          is_circular?: boolean
+          status?: Database["public"]["Enums"]["submission_status"]
+          submitted_by?: string | null
+          transaction_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      validation_votes: {
+        Row: {
+          id: string
+          note: string | null
+          submission_id: string
+          submission_type: string
+          validator_id: string
+          vote: Database["public"]["Enums"]["vote_type"]
+          voted_at: string
+        }
+        Insert: {
+          id?: string
+          note?: string | null
+          submission_id: string
+          submission_type: string
+          validator_id: string
+          vote: Database["public"]["Enums"]["vote_type"]
+          voted_at?: string
+        }
+        Update: {
+          id?: string
+          note?: string | null
+          submission_id?: string
+          submission_type?: string
+          validator_id?: string
+          vote?: Database["public"]["Enums"]["vote_type"]
+          voted_at?: string
+        }
+        Relationships: []
+      }
+      validators: {
+        Row: {
+          appointed_at: string
+          community_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          appointed_at?: string
+          community_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          appointed_at?: string
+          community_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "validators_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
+      community_status: "pending" | "active" | "suspended"
+      submission_status: "pending" | "approved" | "rejected"
+      vote_type: "approve" | "reject"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +495,11 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+      community_status: ["pending", "active", "suspended"],
+      submission_status: ["pending", "approved", "rejected"],
+      vote_type: ["approve", "reject"],
+    },
   },
 } as const
