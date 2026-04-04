@@ -85,7 +85,7 @@ const Homepage = () => {
                   <td className="p-3 font-mono text-muted-foreground">{i + 1}</td>
                   <td className="p-3">
                     <Link to={`/c/${c.slug}`} className="hover:text-primary transition-colors">
-                      <span className="mr-2">{getFlagEmoji(c.countryCode || c.country_code || '')}</span>
+                      <span className="mr-2">{getFlagEmoji(c.countryCode || '')}</span>
                       <span className="font-medium">{c.name}</span>
                       <span className="text-muted-foreground text-sm ml-2 hidden sm:inline">{c.city}, {c.country}</span>
                     </Link>
