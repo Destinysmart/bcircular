@@ -187,6 +187,7 @@ export async function registerCommunity(community: {
   region: string;
   description: string;
   slug: string;
+  declared_population?: number;
 }, adminId: string) {
   const { data, error } = await supabase.from('communities').insert({
     ...community,
