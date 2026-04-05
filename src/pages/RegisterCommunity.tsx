@@ -96,6 +96,11 @@ const RegisterCommunity = () => {
           </div>
           <div><Label>City</Label><Input placeholder="e.g. El Zonte" value={city} onChange={e => setCity(e.target.value)} required /></div>
           <div><Label>Description</Label><Textarea placeholder="Short description of your community's Bitcoin economy" value={description} onChange={e => setDescription(e.target.value)} rows={3} /></div>
+          <div>
+            <Label>Approximate community size (people)</Label>
+            <Input type="number" placeholder="e.g. 5000" value={declaredPopulation} onChange={e => setDeclaredPopulation(e.target.value)} required min={1} />
+            <p className="text-xs text-muted-foreground mt-1">Best estimate of how many people live or work in this area. Used for density calculations.</p>
+          </div>
           <label className="flex items-start gap-2 text-sm text-muted-foreground">
             <Checkbox className="mt-0.5" />
             <span>I will appoint at least 2 validators and ensure submitted data is accurate.</span>

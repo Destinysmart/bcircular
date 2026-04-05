@@ -34,6 +34,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Login />} />
             <Route path="/validate" element={<ValidatorDashboard />} />
+            <Route path="/methodology" element={<Methodology />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
