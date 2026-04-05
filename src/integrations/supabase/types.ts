@@ -65,6 +65,7 @@ export type Database = {
           country: string
           country_code: string
           created_at: string
+          declared_population: number
           description: string | null
           id: string
           member_count: number
@@ -80,6 +81,7 @@ export type Database = {
           country: string
           country_code?: string
           created_at?: string
+          declared_population?: number
           description?: string | null
           id?: string
           member_count?: number
@@ -95,6 +97,7 @@ export type Database = {
           country?: string
           country_code?: string
           created_at?: string
+          declared_population?: number
           description?: string | null
           id?: string
           member_count?: number

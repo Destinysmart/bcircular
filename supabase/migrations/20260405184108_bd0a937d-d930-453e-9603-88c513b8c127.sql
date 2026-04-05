@@ -1,0 +1,1 @@
+ALTER TABLE public.communities ADD COLUMN declared_population integer NOT NULL DEFAULT 100;
