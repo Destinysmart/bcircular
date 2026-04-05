@@ -38,6 +38,7 @@ const RegisterCommunity = () => {
   const [selectedCountry, setSelectedCountry] = useState('');
   const [city, setCity] = useState('');
   const [description, setDescription] = useState('');
+  const [declaredPopulation, setDeclaredPopulation] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
