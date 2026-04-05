@@ -205,7 +205,6 @@ export async function fetchAllCommunitiesWithStats() {
     .eq('status', 'active');
   if (error) throw error;
 
-  // Fetch latest scores for each community
   const results = await Promise.all(
     (communities || []).map(async (c) => {
       const [merchantsRes, earnersRes, txRes, scoreRes] = await Promise.all([
@@ -215,6 +214,7 @@ export async function fetchAllCommunitiesWithStats() {
         supabase.from('circularity_scores').select('*').eq('community_id', c.id).order('calculated_at', { ascending: false }).limit(1).maybeSingle(),
       ]);
       const circularSats = (txRes.data || []).filter(t => t.is_circular).reduce((s, t) => s + Number(t.amount_sats), 0);
+      const totalApproved = (merchantsRes.count || 0) + (earnersRes.count || 0) + (txRes.data?.length || 0);
       return {
         ...c,
         merchants: merchantsRes.count || 0,
@@ -222,7 +222,8 @@ export async function fetchAllCommunitiesWithStats() {
         transactions: txRes.data?.length || 0,
         satsCircular: circularSats,
         score: scoreRes.data?.score || 0,
-        weeklyChange: 0, // Would need previous week's score to calculate
+        weeklyChange: 0,
+        totalApproved,
       };
     })
   );
