@@ -56,6 +56,7 @@ const RegisterCommunity = () => {
       await registerCommunity({
         name, country: country.name, country_code: country.code,
         city, region: country.region, description, slug,
+        declared_population: parseInt(declaredPopulation) || 100,
       }, user.id);
       setSubmitted(true);
     } catch (err: any) {
