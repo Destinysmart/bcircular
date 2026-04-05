@@ -12,6 +12,7 @@ import Widget from "./pages/Widget";
 import RegisterCommunity from "./pages/RegisterCommunity";
 import Login from "./pages/Login";
 import ValidatorDashboard from "./pages/ValidatorDashboard";
+import Methodology from "./pages/Methodology";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
