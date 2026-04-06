@@ -36,7 +36,7 @@ const pillars = [
     weight: '15%',
     formula: 'min(((new_merchants_30d + new_earners_30d) / total_participants) × 200, 100)',
     description:
-      'Is the community growing? This measures the rate of new merchant and earner additions over the past 30 days relative to total participants.',
+      'Is the economy growing? This measures the rate of new merchant and earner additions over the past 30 days relative to total participants.',
   },
 ];
 
