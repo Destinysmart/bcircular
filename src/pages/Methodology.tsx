@@ -54,7 +54,7 @@ const dataSources = [
   {
     name: 'Aggregate statistics',
     description:
-      'Future integration with payment providers like Blink will allow communities to supplement self-reported data with aggregate transaction volumes. No individual transaction data will ever be exposed.',
+      'Future integration with payment providers like Blink will allow economies to supplement self-reported data with aggregate transaction volumes. No individual transaction data will ever be exposed.',
   },
 ];
 
