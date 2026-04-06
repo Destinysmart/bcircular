@@ -22,7 +22,7 @@ const pillars = [
     weight: '20%',
     formula: 'min((approved_earners / declared_population) × 500, 100)',
     description:
-      'How many people in the community earn in Bitcoin? This measures the supply side — freelancers, market vendors, employees, and anyone receiving Bitcoin for goods or services.',
+      'How many people in the economy earn in Bitcoin? This measures the supply side — freelancers, market vendors, employees, and anyone receiving Bitcoin for goods or services.',
   },
   {
     name: 'Transaction Velocity',
