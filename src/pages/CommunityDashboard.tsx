@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { Share2, Store, Users, Zap, ArrowUpRight, ChevronDown, Info } from 'lucide-react';
+import { Share2, Store, Users, Zap, ArrowUpRight, ChevronDown, Info, ExternalLink } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
@@ -11,12 +11,13 @@ import ConfidenceBadge from '@/components/ConfidenceBadge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { fetchCommunityBySlug, fetchCommunityMerchants, fetchCommunityEarners, fetchCommunityTransactions, fetchLatestScore, fetchScoreHistory } from '@/lib/api';
+import { supabase } from '@/integrations/supabase/client';
 import { mockCommunities, mockScoreHistory, mockActivity, formatSats, getFlagEmoji } from '@/lib/mock-data';
 
 const pillarDescriptions: Record<string, string> = {
-  'Merchant saturation': 'How many merchants accept Bitcoin relative to community size, with a bonus for category diversity.',
-  'Earner penetration': 'What fraction of the community earns in Bitcoin — freelancers, vendors, employees.',
-  'Retention': 'What percentage of transactions stay circular within the community.',
+  'Merchant saturation': 'How many merchants accept Bitcoin relative to the economy size, with a bonus for category diversity.',
+  'Earner penetration': 'What fraction of the economy earns in Bitcoin — freelancers, vendors, employees.',
+  'Retention': 'What percentage of transactions stay circular within the economy.',
   'Growth': 'Rate of new merchants and earners joining in the past 30 days.',
   'Velocity': 'How actively earners are transacting within the local economy.',
 };
@@ -62,6 +63,24 @@ const CommunityDashboard = () => {
     enabled: !!communityId,
   });
 
+  const { data: profile } = useQuery({
+    queryKey: ['community-profile', communityId],
+    queryFn: async () => {
+      const { data } = await supabase.from('community_profiles').select('*').eq('community_id', communityId!).maybeSingle();
+      return data;
+    },
+    enabled: !!communityId,
+  });
+
+  const { data: adminProfile } = useQuery({
+    queryKey: ['admin-profile', community?.admin_id],
+    queryFn: async () => {
+      const { data } = await supabase.from('profiles').select('display_name').eq('user_id', community!.admin_id!).single();
+      return data;
+    },
+    enabled: !!community?.admin_id,
+  });
+
   const mockCommunity = mockCommunities.find(c => c.slug === slug) || mockCommunities[0];
 
   const displayName = community?.name || mockCommunity.name;
@@ -95,19 +114,54 @@ const CommunityDashboard = () => {
     { label: 'Growth', value: latestScore?.growth_score ?? 68 },
   ];
 
+  const hasVerifiedProfile = profile?.logo_url && community?.admin_id;
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="container py-8">
         <div className="flex flex-col md:flex-row md:items-start gap-8 mb-8">
           <div className="flex-1">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-              <span>{getFlagEmoji(displayCountryCode)}</span>
-              <span>{displayCity}, {displayCountry}</span>
-              <ConfidenceBadge totalApproved={totalApproved} />
+            <div className="flex items-center gap-3 mb-3">
+              {/* Economy logo */}
+              {profile?.logo_url ? (
+                <img src={profile.logo_url} alt={displayName} className="w-16 h-16 rounded-lg object-cover" />
+              ) : (
+                <div className="w-16 h-16 rounded-lg bg-secondary flex items-center justify-center text-xl font-bold text-muted-foreground">
+                  {displayName.split(' ').map(w => w[0]).join('').slice(0, 2)}
+                </div>
+              )}
+              <div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>{getFlagEmoji(displayCountryCode)}</span>
+                  <span>{displayCity}, {displayCountry}</span>
+                  <ConfidenceBadge totalApproved={totalApproved} />
+                </div>
+                <h1 className="text-3xl font-bold">{displayName}</h1>
+              </div>
             </div>
-            <h1 className="text-3xl font-bold mb-2">{displayName}</h1>
-            <p className="text-muted-foreground max-w-lg mb-4">{displayDesc}</p>
+            <p className="text-muted-foreground max-w-lg mb-2">{displayDesc}</p>
+
+            {/* Admin info */}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
+              {adminProfile && (
+                <span>
+                  Managed by {adminProfile.display_name}
+                  {hasVerifiedProfile && <span className="ml-1 text-primary">✓</span>}
+                </span>
+              )}
+              {profile?.website && (
+                <a href={profile.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-primary">
+                  <ExternalLink className="h-3 w-3" /> Website
+                </a>
+              )}
+              {profile?.twitter_handle && (
+                <a href={`https://twitter.com/${profile.twitter_handle.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="hover:text-primary">
+                  @{profile.twitter_handle.replace('@', '')}
+                </a>
+              )}
+            </div>
+
             <div className="flex gap-2">
               <Button variant="outline" size="sm" className="gap-1.5"><Share2 className="h-3.5 w-3.5" /> Share</Button>
               <a href={`/c/${slug}/submit`}><Button size="sm" className="gap-1.5"><ArrowUpRight className="h-3.5 w-3.5" /> Submit data</Button></a>
@@ -161,7 +215,6 @@ const CommunityDashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
-          {/* Score history chart */}
           <div className="rounded-lg border border-border bg-card p-4">
             <h3 className="text-xs uppercase tracking-wider text-muted-foreground mb-4">Score History (last 12 snapshots)</h3>
             <ResponsiveContainer width="100%" height={250}>
@@ -189,7 +242,7 @@ const CommunityDashboard = () => {
 
         <div className="rounded-lg border border-border bg-card p-4">
           <h3 className="text-xs uppercase tracking-wider text-muted-foreground mb-3">Embed Widget</h3>
-          <p className="text-sm text-muted-foreground mb-3">Paste this on your website to show your community's circularity score.</p>
+          <p className="text-sm text-muted-foreground mb-3">Paste this on your website to show your economy's circularity score.</p>
           <pre className="bg-secondary rounded-md p-3 text-xs font-mono text-foreground overflow-x-auto">{widgetCode}</pre>
         </div>
       </div>

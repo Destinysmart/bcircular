@@ -39,11 +39,16 @@ const RegisterCommunity = () => {
   const [city, setCity] = useState('');
   const [description, setDescription] = useState('');
   const [declaredPopulation, setDeclaredPopulation] = useState('');
+  const [economicZoneDesc, setEconomicZoneDesc] = useState('');
+  const [foundingYear, setFoundingYear] = useState('');
+  const [website, setWebsite] = useState('');
+  const [twitter, setTwitter] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
-      toast({ title: 'Login required', description: 'Please log in to register a community.', variant: 'destructive' });
+      toast({ title: 'Login required', description: 'Please log in to register an economy.', variant: 'destructive' });
       navigate('/login');
       return;
     }
@@ -57,6 +62,11 @@ const RegisterCommunity = () => {
         name, country: country.name, country_code: country.code,
         city, region: country.region, description, slug,
         declared_population: parseInt(declaredPopulation) || 100,
+        economic_zone_description: economicZoneDesc,
+        founding_year: parseInt(foundingYear) || undefined,
+        website: website || undefined,
+        twitter_handle: twitter || undefined,
+        contact_email: contactEmail || undefined,
       }, user.id);
       setSubmitted(true);
     } catch (err: any) {
@@ -72,8 +82,15 @@ const RegisterCommunity = () => {
         <Navbar />
         <div className="container py-16 max-w-lg text-center">
           <div className="text-4xl mb-4">🎯</div>
-          <h2 className="text-xl font-semibold mb-2">Registration submitted</h2>
-          <p className="text-muted-foreground text-sm">We'll review your community and get back to you within a few days.</p>
+          <h2 className="text-xl font-semibold mb-2">Your economy is pending approval</h2>
+          <div className="text-sm text-muted-foreground space-y-2">
+            <p>Here's what happens next:</p>
+            <ul className="text-left list-disc list-inside space-y-1">
+              <li>A super-admin will review your registration within 48 hours</li>
+              <li>You'll receive an email once your economy is approved</li>
+              <li>Then you can start appointing validators and submitting data</li>
+            </ul>
+          </div>
         </div>
       </div>
     );
@@ -83,11 +100,11 @@ const RegisterCommunity = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="container py-8 max-w-lg">
-        <h1 className="text-2xl font-bold mb-1">Register Your Community</h1>
+        <h1 className="text-2xl font-bold mb-1">Register Your Circular Economy</h1>
         <p className="text-sm text-muted-foreground mb-6">Start tracking your Bitcoin circular economy.</p>
-        {!user && <p className="text-sm text-primary mb-4">You'll need to <a href="/login" className="underline">log in</a> to register a community.</p>}
+        {!user && <p className="text-sm text-primary mb-4">You'll need to <a href="/login" className="underline">log in</a> to register an economy.</p>}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div><Label>Community name</Label><Input placeholder="e.g. Bitcoin Beach" value={name} onChange={e => setName(e.target.value)} required /></div>
+          <div><Label>Economy name</Label><Input placeholder="e.g. Bitcoin Beach" value={name} onChange={e => setName(e.target.value)} required /></div>
           <div><Label>Country</Label>
             <Select value={selectedCountry} onValueChange={setSelectedCountry}>
               <SelectTrigger><SelectValue placeholder="Select country" /></SelectTrigger>
@@ -95,12 +112,20 @@ const RegisterCommunity = () => {
             </Select>
           </div>
           <div><Label>City</Label><Input placeholder="e.g. El Zonte" value={city} onChange={e => setCity(e.target.value)} required /></div>
-          <div><Label>Description</Label><Textarea placeholder="Short description of your community's Bitcoin economy" value={description} onChange={e => setDescription(e.target.value)} rows={3} /></div>
           <div>
-            <Label>Approximate community size (people)</Label>
-            <Input type="number" placeholder="e.g. 5000" value={declaredPopulation} onChange={e => setDeclaredPopulation(e.target.value)} required min={1} />
-            <p className="text-xs text-muted-foreground mt-1">Best estimate of how many people live or work in this area. Used for density calculations.</p>
+            <Label>Economic zone description</Label>
+            <Textarea placeholder="Describe the geographic area this economy covers (e.g. 'Ikorodu Local Government Area, Lagos, Nigeria')" value={economicZoneDesc} onChange={e => setEconomicZoneDesc(e.target.value)} rows={2} />
           </div>
+          <div><Label>Description</Label><Textarea placeholder="Short description of your Bitcoin circular economy" value={description} onChange={e => setDescription(e.target.value)} rows={3} /></div>
+          <div>
+            <Label>Approximate population (people)</Label>
+            <Input type="number" placeholder="e.g. 5000" value={declaredPopulation} onChange={e => setDeclaredPopulation(e.target.value)} required min={1} />
+            <p className="text-xs text-muted-foreground mt-1">Best estimate of how many people live or work in this economic zone. Used for density calculations.</p>
+          </div>
+          <div><Label>Founding year (when did Bitcoin activity start?)</Label><Input type="number" placeholder="e.g. 2019" value={foundingYear} onChange={e => setFoundingYear(e.target.value)} /></div>
+          <div><Label>Website (optional)</Label><Input placeholder="https://" value={website} onChange={e => setWebsite(e.target.value)} /></div>
+          <div><Label>Twitter handle (optional)</Label><Input placeholder="@handle" value={twitter} onChange={e => setTwitter(e.target.value)} /></div>
+          <div><Label>Contact email</Label><Input type="email" placeholder="For the super-admin to reach you" value={contactEmail} onChange={e => setContactEmail(e.target.value)} /></div>
           <label className="flex items-start gap-2 text-sm text-muted-foreground">
             <Checkbox className="mt-0.5" />
             <span>I will appoint at least 2 validators and ensure submitted data is accurate.</span>

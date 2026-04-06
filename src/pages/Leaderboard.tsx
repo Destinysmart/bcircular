@@ -36,7 +36,7 @@ const Leaderboard = () => {
       <Navbar />
       <div className="container py-8">
         <h1 className="text-2xl font-bold mb-1">Global Leaderboard</h1>
-        <p className="text-sm text-muted-foreground mb-6">Ranked by circularity score across all tracked communities.</p>
+        <p className="text-sm text-muted-foreground mb-6">Ranked by circularity score across all tracked economies.</p>
 
         <div className="flex flex-wrap items-center gap-2 mb-6">
           {regions.map(r => (
@@ -53,7 +53,7 @@ const Leaderboard = () => {
             <thead>
               <tr className="border-b border-border bg-card text-xs uppercase tracking-wider text-muted-foreground">
                 <th className="text-left p-3 w-12">#</th>
-                <th className="text-left p-3">Community</th>
+                <th className="text-left p-3">Economy</th>
                 <th className="text-right p-3 hidden sm:table-cell">Merchants</th>
                 <th className="text-right p-3 hidden sm:table-cell">Earners</th>
                 <th className="p-3 w-32 hidden md:table-cell">Score</th>

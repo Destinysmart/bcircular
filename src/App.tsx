@@ -13,6 +13,8 @@ import RegisterCommunity from "./pages/RegisterCommunity";
 import Login from "./pages/Login";
 import ValidatorDashboard from "./pages/ValidatorDashboard";
 import Methodology from "./pages/Methodology";
+import EconomyAdminDashboard from "./pages/EconomyAdminDashboard";
+import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +37,8 @@ const App = () => (
             <Route path="/signup" element={<Login />} />
             <Route path="/validate" element={<ValidatorDashboard />} />
             <Route path="/methodology" element={<Methodology />} />
+            <Route path="/dashboard/economy/:id" element={<EconomyAdminDashboard />} />
+            <Route path="/admin" element={<SuperAdminDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -13,7 +13,6 @@ const Homepage = () => {
     queryFn: fetchAllCommunitiesWithStats,
   });
 
-  // Use DB data if available, otherwise mock
   const communities = (dbCommunities && dbCommunities.length > 0)
     ? dbCommunities.map(c => ({
         ...c,
@@ -44,12 +43,12 @@ const Homepage = () => {
               <span className="text-primary">circular economy.</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-xl mb-8">
-              Communities submit merchants, earners, and transactions. Validators verify.
+              Economies submit merchants, earners, and transactions. Validators verify.
               Data powers a credibility score. No funds held. Ever.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Link to="/register"><Button size="lg" className="gap-2">Register your community <ArrowRight className="h-4 w-4" /></Button></Link>
-              <Link to="/leaderboard"><Button variant="outline" size="lg">Explore communities</Button></Link>
+              <Link to="/register"><Button size="lg" className="gap-2">Register your economy <ArrowRight className="h-4 w-4" /></Button></Link>
+              <Link to="/leaderboard"><Button variant="outline" size="lg">Explore economies</Button></Link>
             </div>
           </div>
         </div>
@@ -57,7 +56,7 @@ const Homepage = () => {
 
       <section className="container py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <StatCard label="Communities tracked" value={communities.length} icon={<Users className="h-3.5 w-3.5" />} />
+          <StatCard label="Economies tracked" value={communities.length} icon={<Users className="h-3.5 w-3.5" />} />
           <StatCard label="Merchants accepting BTC" value={totalMerchants} icon={<Store className="h-3.5 w-3.5" />} />
           <StatCard label="Sats in circular flow" value={`${(totalSats / 1_000_000).toFixed(0)}M`} icon={<Zap className="h-3.5 w-3.5" />} />
         </div>
@@ -65,7 +64,7 @@ const Homepage = () => {
 
       <section className="container pb-16">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold">Top Communities</h2>
+          <h2 className="text-xl font-semibold">Top Economies</h2>
           <Link to="/leaderboard" className="text-sm text-primary hover:underline flex items-center gap-1">View all <ArrowRight className="h-3.5 w-3.5" /></Link>
         </div>
         <div className="rounded-lg border border-border overflow-hidden">
@@ -73,7 +72,7 @@ const Homepage = () => {
             <thead>
               <tr className="border-b border-border bg-card text-xs uppercase tracking-wider text-muted-foreground">
                 <th className="text-left p-3 w-12">#</th>
-                <th className="text-left p-3">Community</th>
+                <th className="text-left p-3">Economy</th>
                 <th className="text-right p-3 hidden md:table-cell">Merchants</th>
                 <th className="text-right p-3">Score</th>
                 <th className="text-right p-3 hidden sm:table-cell">Change</th>
@@ -109,8 +108,8 @@ const Homepage = () => {
           <h2 className="text-xl font-semibold mb-8 text-center">How It Works</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { step: '01', title: 'Submit', desc: 'Anyone submits merchants, earners, or transactions in their community. No login required.' },
-              { step: '02', title: 'Validate', desc: 'Community validators review and approve submissions using a 2-of-3 consensus model.' },
+              { step: '01', title: 'Submit', desc: 'Anyone submits merchants, earners, or transactions in their local economy. No login required.' },
+              { step: '02', title: 'Validate', desc: 'Economy validators review and approve submissions using a 2-of-3 consensus model.' },
               { step: '03', title: 'Score', desc: 'Approved data generates a circularity score from 0–100, updated weekly.' },
             ].map(s => (
               <div key={s.step} className="space-y-3">
