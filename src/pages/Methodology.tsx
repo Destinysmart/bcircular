@@ -68,7 +68,7 @@ const Methodology = () => (
       </div>
       <h1 className="text-3xl font-bold mb-2">How the Circularity Score Works</h1>
       <p className="text-muted-foreground mb-10">
-        The circularity score is a composite metric (0–100) that measures how effectively a community
+        The circularity score is a composite metric (0–100) that measures how effectively a Bitcoin circular economy
         uses Bitcoin as a medium of exchange. It is calculated from five weighted pillars.
       </p>
 

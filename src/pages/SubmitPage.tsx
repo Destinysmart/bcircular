@@ -166,7 +166,7 @@ const SubmitPage = () => {
               </Select>
             </div>
             <div className="flex items-center justify-between rounded-lg border border-border p-3">
-              <div><Label>Was this circular?</Label><p className="text-xs text-muted-foreground">Did the sats stay in your community?</p></div>
+              <div><Label>Was this circular?</Label><p className="text-xs text-muted-foreground">Did the sats stay in your economy?</p></div>
               <Switch checked={tCircular} onCheckedChange={setTCircular} />
             </div>
             <div><Label>Date</Label><Input type="date" value={tDate} onChange={e => setTDate(e.target.value)} /></div>
