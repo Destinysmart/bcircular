@@ -8,7 +8,7 @@ const pillars = [
     weight: '25%',
     formula: 'min((approved_merchants / declared_population) × 1000 + diversity_bonus, 100)',
     description:
-      'Measures how many merchants accept Bitcoin relative to the community size. A diversity bonus (up to 10 points) rewards communities with merchants across multiple categories (food, retail, services, education, transport, other).',
+      'Measures how many merchants accept Bitcoin relative to the economy size. A diversity bonus (up to 10 points) rewards economies with merchants across multiple categories (food, retail, services, education, transport, other).',
   },
   {
     name: 'Retention Rate',
