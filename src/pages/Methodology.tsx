@@ -49,7 +49,7 @@ const dataSources = [
   {
     name: 'Validator-approved data',
     description:
-      'Each community appoints trusted validators who review submissions using a 2-of-3 consensus model. Only approved data counts toward the circularity score.',
+      'Each economy appoints trusted validators who review submissions using a 2-of-3 consensus model. Only approved data counts toward the circularity score.',
   },
   {
     name: 'Aggregate statistics',
