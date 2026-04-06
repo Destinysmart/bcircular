@@ -86,7 +86,7 @@ const SubmitPage = () => {
           <div className="text-4xl mb-4">✓</div>
           <h2 className="text-xl font-semibold mb-2">Submission received</h2>
           <p className="text-muted-foreground text-sm">
-            Your submission is in the review queue. Community validators will review it within 48 hours.
+            Your submission is in the review queue. Economy validators will review it within 48 hours.
           </p>
           <Button className="mt-6" onClick={() => setSubmitted(false)}>Submit another</Button>
         </div>
