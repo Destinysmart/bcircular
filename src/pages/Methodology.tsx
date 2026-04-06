@@ -15,7 +15,7 @@ const pillars = [
     weight: '25%',
     formula: 'circular_transactions / total_transactions × 100',
     description:
-      'Of all approved transactions, what percentage stayed within the community? A transaction is "circular" when the sats were spent again locally rather than converted to fiat or sent outside.',
+      'Of all approved transactions, what percentage stayed within the economy? A transaction is "circular" when the sats were spent again locally rather than converted to fiat or sent outside.',
   },
   {
     name: 'Earner Penetration',
