@@ -62,52 +62,152 @@ export type Database = {
         Row: {
           admin_id: string | null
           city: string
+          contact_email: string | null
           country: string
           country_code: string
           created_at: string
           declared_population: number
           description: string | null
+          economic_zone_description: string | null
+          founding_year: number | null
           id: string
           member_count: number
           name: string
           region: string
           slug: string
           status: Database["public"]["Enums"]["community_status"]
+          twitter_handle: string | null
           updated_at: string
+          website: string | null
         }
         Insert: {
           admin_id?: string | null
           city: string
+          contact_email?: string | null
           country: string
           country_code?: string
           created_at?: string
           declared_population?: number
           description?: string | null
+          economic_zone_description?: string | null
+          founding_year?: number | null
           id?: string
           member_count?: number
           name: string
           region?: string
           slug: string
           status?: Database["public"]["Enums"]["community_status"]
+          twitter_handle?: string | null
           updated_at?: string
+          website?: string | null
         }
         Update: {
           admin_id?: string | null
           city?: string
+          contact_email?: string | null
           country?: string
           country_code?: string
           created_at?: string
           declared_population?: number
           description?: string | null
+          economic_zone_description?: string | null
+          founding_year?: number | null
           id?: string
           member_count?: number
           name?: string
           region?: string
           slug?: string
           status?: Database["public"]["Enums"]["community_status"]
+          twitter_handle?: string | null
           updated_at?: string
+          website?: string | null
         }
         Relationships: []
+      }
+      community_admins: {
+        Row: {
+          added_at: string
+          community_id: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string
+          community_id: string
+          id?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string
+          community_id?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_admins_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_profiles: {
+        Row: {
+          admin_user_id: string
+          banner_url: string | null
+          community_id: string
+          contact_email: string | null
+          created_at: string
+          economic_zone_description: string | null
+          founding_year: number | null
+          id: string
+          logo_url: string | null
+          twitter_handle: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          admin_user_id: string
+          banner_url?: string | null
+          community_id: string
+          contact_email?: string | null
+          created_at?: string
+          economic_zone_description?: string | null
+          founding_year?: number | null
+          id?: string
+          logo_url?: string | null
+          twitter_handle?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          admin_user_id?: string
+          banner_url?: string | null
+          community_id?: string
+          contact_email?: string | null
+          created_at?: string
+          economic_zone_description?: string | null
+          founding_year?: number | null
+          id?: string
+          logo_url?: string | null
+          twitter_handle?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_profiles_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: true
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       earners: {
         Row: {
@@ -212,6 +312,7 @@ export type Database = {
           display_name: string | null
           email: string | null
           id: string
+          is_super_admin: boolean
           updated_at: string
           user_id: string
         }
@@ -220,6 +321,7 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id?: string
+          is_super_admin?: boolean
           updated_at?: string
           user_id: string
         }
@@ -228,6 +330,7 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id?: string
+          is_super_admin?: boolean
           updated_at?: string
           user_id?: string
         }
