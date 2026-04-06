@@ -47,7 +47,7 @@ const Login = () => {
             <Bitcoin className="h-8 w-8 text-primary mx-auto mb-3" />
             <h1 className="text-xl font-semibold">{isSignup ? 'Create account' : 'Welcome back'}</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              {isSignup ? 'Sign up to track submissions and validate data.' : 'Log in to manage your community.'}
+              {isSignup ? 'Sign up to track submissions and validate data.' : 'Log in to manage your economy.'}
             </p>
           </div>
 

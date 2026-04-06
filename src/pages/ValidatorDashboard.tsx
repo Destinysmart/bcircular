@@ -113,7 +113,7 @@ const ValidatorDashboard = () => {
         {items.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground">
             <p>No pending submissions to review.</p>
-            <p className="text-xs mt-1">You'll see items here when you're appointed as a validator for a community.</p>
+            <p className="text-xs mt-1">You'll see items here when you're appointed as a validator for an economy.</p>
           </div>
         ) : (
           <div className="space-y-4">

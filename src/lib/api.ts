@@ -188,6 +188,11 @@ export async function registerCommunity(community: {
   description: string;
   slug: string;
   declared_population?: number;
+  economic_zone_description?: string;
+  founding_year?: number;
+  website?: string;
+  twitter_handle?: string;
+  contact_email?: string;
 }, adminId: string) {
   const { data, error } = await supabase.from('communities').insert({
     ...community,

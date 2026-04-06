@@ -8,21 +8,21 @@ const pillars = [
     weight: '25%',
     formula: 'min((approved_merchants / declared_population) × 1000 + diversity_bonus, 100)',
     description:
-      'Measures how many merchants accept Bitcoin relative to the community size. A diversity bonus (up to 10 points) rewards communities with merchants across multiple categories (food, retail, services, education, transport, other).',
+      'Measures how many merchants accept Bitcoin relative to the economy size. A diversity bonus (up to 10 points) rewards economies with merchants across multiple categories (food, retail, services, education, transport, other).',
   },
   {
     name: 'Retention Rate',
     weight: '25%',
     formula: 'circular_transactions / total_transactions × 100',
     description:
-      'Of all approved transactions, what percentage stayed within the community? A transaction is "circular" when the sats were spent again locally rather than converted to fiat or sent outside.',
+      'Of all approved transactions, what percentage stayed within the economy? A transaction is "circular" when the sats were spent again locally rather than converted to fiat or sent outside.',
   },
   {
     name: 'Earner Penetration',
     weight: '20%',
     formula: 'min((approved_earners / declared_population) × 500, 100)',
     description:
-      'How many people in the community earn in Bitcoin? This measures the supply side — freelancers, market vendors, employees, and anyone receiving Bitcoin for goods or services.',
+      'How many people in the economy earn in Bitcoin? This measures the supply side — freelancers, market vendors, employees, and anyone receiving Bitcoin for goods or services.',
   },
   {
     name: 'Transaction Velocity',
@@ -36,7 +36,7 @@ const pillars = [
     weight: '15%',
     formula: 'min(((new_merchants_30d + new_earners_30d) / total_participants) × 200, 100)',
     description:
-      'Is the community growing? This measures the rate of new merchant and earner additions over the past 30 days relative to total participants.',
+      'Is the economy growing? This measures the rate of new merchant and earner additions over the past 30 days relative to total participants.',
   },
 ];
 
@@ -49,12 +49,12 @@ const dataSources = [
   {
     name: 'Validator-approved data',
     description:
-      'Each community appoints trusted validators who review submissions using a 2-of-3 consensus model. Only approved data counts toward the circularity score.',
+      'Each economy appoints trusted validators who review submissions using a 2-of-3 consensus model. Only approved data counts toward the circularity score.',
   },
   {
     name: 'Aggregate statistics',
     description:
-      'Future integration with payment providers like Blink will allow communities to supplement self-reported data with aggregate transaction volumes. No individual transaction data will ever be exposed.',
+      'Future integration with payment providers like Blink will allow economies to supplement self-reported data with aggregate transaction volumes. No individual transaction data will ever be exposed.',
   },
 ];
 
@@ -68,7 +68,7 @@ const Methodology = () => (
       </div>
       <h1 className="text-3xl font-bold mb-2">How the Circularity Score Works</h1>
       <p className="text-muted-foreground mb-10">
-        The circularity score is a composite metric (0–100) that measures how effectively a community
+        The circularity score is a composite metric (0–100) that measures how effectively a Bitcoin circular economy
         uses Bitcoin as a medium of exchange. It is calculated from five weighted pillars.
       </p>
 

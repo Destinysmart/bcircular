@@ -86,7 +86,7 @@ const SubmitPage = () => {
           <div className="text-4xl mb-4">✓</div>
           <h2 className="text-xl font-semibold mb-2">Submission received</h2>
           <p className="text-muted-foreground text-sm">
-            Your submission is in the review queue. Community validators will review it within 48 hours.
+            Your submission is in the review queue. Economy validators will review it within 48 hours.
           </p>
           <Button className="mt-6" onClick={() => setSubmitted(false)}>Submit another</Button>
         </div>
@@ -166,7 +166,7 @@ const SubmitPage = () => {
               </Select>
             </div>
             <div className="flex items-center justify-between rounded-lg border border-border p-3">
-              <div><Label>Was this circular?</Label><p className="text-xs text-muted-foreground">Did the sats stay in your community?</p></div>
+              <div><Label>Was this circular?</Label><p className="text-xs text-muted-foreground">Did the sats stay in your economy?</p></div>
               <Switch checked={tCircular} onCheckedChange={setTCircular} />
             </div>
             <div><Label>Date</Label><Input type="date" value={tDate} onChange={e => setTDate(e.target.value)} /></div>
