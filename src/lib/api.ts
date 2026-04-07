@@ -171,7 +171,6 @@ export async function castVote(submissionId: string, submissionType: string, val
   }).select().single();
   if (error) throw error;
 
-  // Trigger process-validation edge function
   await supabase.functions.invoke('process-validation', {
     body: { submission_id: submissionId, submission_type: submissionType },
   });
@@ -200,6 +199,15 @@ export async function registerCommunity(community: {
     status: 'pending',
   }).select().single();
   if (error) throw error;
+
+  // Also insert into community_admins
+  const { error: adminError } = await supabase.from('community_admins').insert({
+    community_id: data.id,
+    user_id: adminId,
+    role: 'owner',
+  });
+  if (adminError) console.error('Failed to insert community_admin:', adminError.message);
+
   return data;
 }
 
