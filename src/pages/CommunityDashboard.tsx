@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { fetchCommunityBySlug, fetchCommunityMerchants, fetchCommunityEarners, fetchCommunityTransactions, fetchLatestScore, fetchScoreHistory } from '@/lib/api';
 import { supabase } from '@/integrations/supabase/client';
-import { mockCommunities, mockScoreHistory, mockActivity, formatSats, getFlagEmoji } from '@/lib/mock-data';
+import { formatSats, getFlagEmoji } from '@/lib/mock-data';
 
 const pillarDescriptions: Record<string, string> = {
   'Merchant saturation': 'How many merchants accept Bitcoin relative to the economy size, with a bonus for category diversity.',
@@ -25,7 +25,7 @@ const pillarDescriptions: Record<string, string> = {
 const CommunityDashboard = () => {
   const { slug } = useParams();
 
-  const { data: community } = useQuery({
+  const { data: community, isLoading, isError, error } = useQuery({
     queryKey: ['community', slug],
     queryFn: () => fetchCommunityBySlug(slug!),
     enabled: !!slug,
@@ -81,40 +81,53 @@ const CommunityDashboard = () => {
     enabled: !!community?.admin_id,
   });
 
-  const mockCommunity = mockCommunities.find(c => c.slug === slug) || mockCommunities[0];
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container py-16 text-center text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
-  const displayName = community?.name || mockCommunity.name;
-  const displayCountryCode = community?.country_code || mockCommunity.countryCode;
-  const displayCity = community?.city || mockCommunity.city;
-  const displayCountry = community?.country || mockCommunity.country;
-  const displayDesc = community?.description || mockCommunity.description;
-  const displayScore = latestScore?.score ?? mockCommunity.score;
-  const displayMerchants = merchants?.length ?? mockCommunity.merchants;
-  const displayEarners = earners?.length ?? mockCommunity.earners;
-  const displayTx = transactions?.length ?? mockCommunity.transactions;
+  if (isError || !community) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container py-16 text-center">
+          <h2 className="text-xl font-semibold mb-2">Economy not found</h2>
+          <p className="text-muted-foreground text-sm mb-4">{isError ? (error as Error).message : `No economy found for "${slug}".`}</p>
+          <Link to="/leaderboard"><Button variant="outline">Back to leaderboard</Button></Link>
+        </div>
+      </div>
+    );
+  }
+
+  const displayScore = latestScore?.score ?? 0;
+  const displayMerchants = merchants?.length ?? 0;
+  const displayEarners = earners?.length ?? 0;
+  const displayTx = transactions?.length ?? 0;
   const circularSats = transactions
     ? transactions.filter(t => t.is_circular).reduce((s, t) => s + Number(t.amount_sats), 0)
-    : mockCommunity.satsCircular;
+    : 0;
 
-  const totalApproved = (merchants?.length || 0) + (earners?.length || 0) + (transactions?.length || 0);
+  const totalApproved = displayMerchants + displayEarners + displayTx;
 
   const chartData = (scoreHistory && scoreHistory.length > 0)
     ? scoreHistory.slice(-12).map(s => ({ date: new Date(s.calculated_at).toLocaleDateString('en', { month: 'short', day: 'numeric' }), score: s.score }))
-    : mockScoreHistory.map(s => ({ date: s.date, score: s.score }));
-
-  const activity = mockActivity;
+    : [];
 
   const widgetCode = `<iframe src="${window.location.origin}/widget/${slug}" width="280" height="120" frameborder="0"></iframe>`;
 
   const pillars = [
-    { label: 'Merchant saturation', value: latestScore?.merchant_density_score ?? 85 },
-    { label: 'Retention', value: latestScore?.retention_score ?? 91 },
-    { label: 'Earner penetration', value: latestScore?.earner_rate_score ?? 72 },
-    { label: 'Velocity', value: latestScore?.velocity_score ?? 79 },
-    { label: 'Growth', value: latestScore?.growth_score ?? 68 },
+    { label: 'Merchant saturation', value: latestScore?.merchant_density_score ?? 0 },
+    { label: 'Retention', value: latestScore?.retention_score ?? 0 },
+    { label: 'Earner penetration', value: latestScore?.earner_rate_score ?? 0 },
+    { label: 'Velocity', value: latestScore?.velocity_score ?? 0 },
+    { label: 'Growth', value: latestScore?.growth_score ?? 0 },
   ];
 
-  const hasVerifiedProfile = profile?.logo_url && community?.admin_id;
+  const hasVerifiedProfile = profile?.logo_url && community.admin_id;
 
   return (
     <div className="min-h-screen bg-background">
@@ -123,26 +136,24 @@ const CommunityDashboard = () => {
         <div className="flex flex-col md:flex-row md:items-start gap-8 mb-8">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-3">
-              {/* Economy logo */}
               {profile?.logo_url ? (
-                <img src={profile.logo_url} alt={displayName} className="w-16 h-16 rounded-lg object-cover" />
+                <img src={profile.logo_url} alt={community.name} className="w-16 h-16 rounded-lg object-cover" />
               ) : (
                 <div className="w-16 h-16 rounded-lg bg-secondary flex items-center justify-center text-xl font-bold text-muted-foreground">
-                  {displayName.split(' ').map(w => w[0]).join('').slice(0, 2)}
+                  {community.name.split(' ').map(w => w[0]).join('').slice(0, 2)}
                 </div>
               )}
               <div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span>{getFlagEmoji(displayCountryCode)}</span>
-                  <span>{displayCity}, {displayCountry}</span>
+                  <span>{getFlagEmoji(community.country_code)}</span>
+                  <span>{community.city}, {community.country}</span>
                   <ConfidenceBadge totalApproved={totalApproved} />
                 </div>
-                <h1 className="text-3xl font-bold">{displayName}</h1>
+                <h1 className="text-3xl font-bold">{community.name}</h1>
               </div>
             </div>
-            <p className="text-muted-foreground max-w-lg mb-2">{displayDesc}</p>
+            <p className="text-muted-foreground max-w-lg mb-2">{community.description}</p>
 
-            {/* Admin info */}
             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
               {adminProfile && (
                 <span>
@@ -175,14 +186,12 @@ const CommunityDashboard = () => {
           </div>
         </div>
 
-        {/* Five pillar scores */}
         <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 mb-4 p-4 rounded-lg border border-border bg-card">
           {pillars.map(p => (
             <ScoreBar key={p.label} label={p.label} value={Math.round(p.value)} />
           ))}
         </div>
 
-        {/* Expandable methodology */}
         <Collapsible className="mb-8">
           <CollapsibleTrigger className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
             <Info className="h-3 w-3" />
@@ -217,26 +226,23 @@ const CommunityDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
           <div className="rounded-lg border border-border bg-card p-4">
             <h3 className="text-xs uppercase tracking-wider text-muted-foreground mb-4">Score History (last 12 snapshots)</h3>
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={chartData}>
-                <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#6b7280' }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} tickLine={false} axisLine={false} width={30} domain={[0, 100]} />
-                <Tooltip contentStyle={{ background: '#0f1729', border: '1px solid #1e293b', borderRadius: '8px', fontSize: '12px' }} labelStyle={{ color: '#9ca3af' }} />
-                <Line type="monotone" dataKey="score" stroke="#f59e0b" strokeWidth={2} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={chartData}>
+                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#6b7280' }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} tickLine={false} axisLine={false} width={30} domain={[0, 100]} />
+                  <Tooltip contentStyle={{ background: '#0f1729', border: '1px solid #1e293b', borderRadius: '8px', fontSize: '12px' }} labelStyle={{ color: '#9ca3af' }} />
+                  <Line type="monotone" dataKey="score" stroke="#f59e0b" strokeWidth={2} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[250px] text-muted-foreground text-sm">No score history yet.</div>
+            )}
           </div>
 
           <div className="rounded-lg border border-border bg-card p-4">
             <h3 className="text-xs uppercase tracking-wider text-muted-foreground mb-4">Recent Activity</h3>
-            <div className="space-y-3">
-              {activity.slice(0, 8).map(a => (
-                <div key={a.id} className="flex items-start justify-between text-sm border-b border-border pb-2 last:border-0">
-                  <span className="text-foreground">{a.description}</span>
-                  <span className="text-muted-foreground text-xs whitespace-nowrap ml-4">{a.timestamp}</span>
-                </div>
-              ))}
-            </div>
+            <div className="flex items-center justify-center h-[250px] text-muted-foreground text-sm">No recent activity.</div>
           </div>
         </div>
 

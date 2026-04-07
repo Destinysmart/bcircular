@@ -5,26 +5,18 @@ import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import StatCard from '@/components/StatCard';
 import { fetchAllCommunitiesWithStats } from '@/lib/api';
-import { mockCommunities, getFlagEmoji, getScoreColor } from '@/lib/mock-data';
+import { getFlagEmoji, getScoreColor } from '@/lib/mock-data';
 
 const Homepage = () => {
-  const { data: dbCommunities } = useQuery({
+  const { data: communities, isLoading, isError, error } = useQuery({
     queryKey: ['communities-stats'],
     queryFn: fetchAllCommunitiesWithStats,
   });
 
-  const communities = (dbCommunities && dbCommunities.length > 0)
-    ? dbCommunities.map(c => ({
-        ...c,
-        slug: c.slug,
-        countryCode: c.country_code,
-        weeklyChange: c.weeklyChange ?? 0,
-      }))
-    : mockCommunities;
-
-  const topCommunities = [...communities].sort((a, b) => (b.score ?? 0) - (a.score ?? 0)).slice(0, 5);
-  const totalMerchants = communities.reduce((s, c) => s + (c.merchants ?? 0), 0);
-  const totalSats = communities.reduce((s, c) => s + (c.satsCircular ?? 0), 0);
+  const list = communities || [];
+  const topCommunities = [...list].sort((a, b) => (b.score ?? 0) - (a.score ?? 0)).slice(0, 5);
+  const totalMerchants = list.reduce((s, c) => s + (c.merchants ?? 0), 0);
+  const totalSats = list.reduce((s, c) => s + (c.satsCircular ?? 0), 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -47,7 +39,7 @@ const Homepage = () => {
               Data powers a credibility score. No funds held. Ever.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Link to="/register"><Button size="lg" className="gap-2">Register your economy <ArrowRight className="h-4 w-4" /></Button></Link>
+              <Link to="/register"><Button size="lg" className="gap-2">Register your circular economy <ArrowRight className="h-4 w-4" /></Button></Link>
               <Link to="/leaderboard"><Button variant="outline" size="lg">Explore economies</Button></Link>
             </div>
           </div>
@@ -55,11 +47,17 @@ const Homepage = () => {
       </section>
 
       <section className="container py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <StatCard label="Economies tracked" value={communities.length} icon={<Users className="h-3.5 w-3.5" />} />
-          <StatCard label="Merchants accepting BTC" value={totalMerchants} icon={<Store className="h-3.5 w-3.5" />} />
-          <StatCard label="Sats in circular flow" value={`${(totalSats / 1_000_000).toFixed(0)}M`} icon={<Zap className="h-3.5 w-3.5" />} />
-        </div>
+        {isLoading ? (
+          <div className="text-center py-8 text-muted-foreground">Loading...</div>
+        ) : isError ? (
+          <div className="text-center py-8 text-destructive">Error loading data: {(error as Error).message}</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <StatCard label="Economies tracked" value={list.length} icon={<Users className="h-3.5 w-3.5" />} />
+            <StatCard label="Merchants accepting BTC" value={totalMerchants} icon={<Store className="h-3.5 w-3.5" />} />
+            <StatCard label="Sats in circular flow" value={totalSats > 0 ? `${(totalSats / 1_000_000).toFixed(0)}M` : '0'} icon={<Zap className="h-3.5 w-3.5" />} />
+          </div>
+        )}
       </section>
 
       <section className="container pb-16">
@@ -67,40 +65,49 @@ const Homepage = () => {
           <h2 className="text-xl font-semibold">Top Economies</h2>
           <Link to="/leaderboard" className="text-sm text-primary hover:underline flex items-center gap-1">View all <ArrowRight className="h-3.5 w-3.5" /></Link>
         </div>
-        <div className="rounded-lg border border-border overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border bg-card text-xs uppercase tracking-wider text-muted-foreground">
-                <th className="text-left p-3 w-12">#</th>
-                <th className="text-left p-3">Economy</th>
-                <th className="text-right p-3 hidden md:table-cell">Merchants</th>
-                <th className="text-right p-3">Score</th>
-                <th className="text-right p-3 hidden sm:table-cell">Change</th>
-              </tr>
-            </thead>
-            <tbody>
-              {topCommunities.map((c, i) => (
-                <tr key={c.id || i} className="border-b border-border last:border-0 hover:bg-card/50 transition-colors">
-                  <td className="p-3 font-mono text-muted-foreground">{i + 1}</td>
-                  <td className="p-3">
-                    <Link to={`/c/${c.slug}`} className="hover:text-primary transition-colors">
-                      <span className="mr-2">{getFlagEmoji(c.countryCode || '')}</span>
-                      <span className="font-medium">{c.name}</span>
-                      <span className="text-muted-foreground text-sm ml-2 hidden sm:inline">{c.city}, {c.country}</span>
-                    </Link>
-                  </td>
-                  <td className="p-3 text-right font-mono hidden md:table-cell">{c.merchants}</td>
-                  <td className={`p-3 text-right font-mono font-medium ${getScoreColor(c.score ?? 0)}`}>{c.score ?? 0}</td>
-                  <td className="p-3 text-right font-mono hidden sm:table-cell">
-                    <span className={(c.weeklyChange ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}>
-                      {(c.weeklyChange ?? 0) >= 0 ? '↑' : '↓'}{Math.abs(c.weeklyChange ?? 0)}
-                    </span>
-                  </td>
+        {isLoading ? (
+          <div className="text-center py-8 text-muted-foreground">Loading...</div>
+        ) : list.length === 0 ? (
+          <div className="text-center py-16 text-muted-foreground">
+            <p>No circular economies registered yet.</p>
+            <Link to="/register" className="text-primary hover:underline text-sm">Be the first to register yours.</Link>
+          </div>
+        ) : (
+          <div className="rounded-lg border border-border overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border bg-card text-xs uppercase tracking-wider text-muted-foreground">
+                  <th className="text-left p-3 w-12">#</th>
+                  <th className="text-left p-3">Economy</th>
+                  <th className="text-right p-3 hidden md:table-cell">Merchants</th>
+                  <th className="text-right p-3">Score</th>
+                  <th className="text-right p-3 hidden sm:table-cell">Change</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {topCommunities.map((c, i) => (
+                  <tr key={c.id || i} className="border-b border-border last:border-0 hover:bg-card/50 transition-colors">
+                    <td className="p-3 font-mono text-muted-foreground">{i + 1}</td>
+                    <td className="p-3">
+                      <Link to={`/c/${c.slug}`} className="hover:text-primary transition-colors">
+                        <span className="mr-2">{getFlagEmoji(c.country_code || '')}</span>
+                        <span className="font-medium">{c.name}</span>
+                        <span className="text-muted-foreground text-sm ml-2 hidden sm:inline">{c.city}, {c.country}</span>
+                      </Link>
+                    </td>
+                    <td className="p-3 text-right font-mono hidden md:table-cell">{c.merchants}</td>
+                    <td className={`p-3 text-right font-mono font-medium ${getScoreColor(c.score ?? 0)}`}>{c.score ?? 0}</td>
+                    <td className="p-3 text-right font-mono hidden sm:table-cell">
+                      <span className={(c.weeklyChange ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                        {(c.weeklyChange ?? 0) >= 0 ? '↑' : '↓'}{Math.abs(c.weeklyChange ?? 0)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       <section className="border-t border-border bg-card/30">
