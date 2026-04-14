@@ -6,13 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { submitMerchant, submitEarner, submitTransaction, fetchCommunityBySlug } from '@/lib/api';
+import { submitMerchant, submitEarner, fetchCommunityBySlug } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
+import { Zap } from 'lucide-react';
 
-type Tab = 'merchant' | 'earner' | 'transaction';
+type Tab = 'merchant' | 'earner';
 
 const SubmitPage = () => {
   const { slug } = useParams();
@@ -34,12 +34,6 @@ const SubmitPage = () => {
   const [eMethod, setEMethod] = useState('');
   const [ePayment, setEPayment] = useState('');
 
-  // Transaction form state
-  const [tAmount, setTAmount] = useState('');
-  const [tCategory, setTCategory] = useState('');
-  const [tCircular, setTCircular] = useState(false);
-  const [tDate, setTDate] = useState(new Date().toISOString().split('T')[0]);
-
   const { data: community } = useQuery({
     queryKey: ['community', slug],
     queryFn: () => fetchCommunityBySlug(slug!),
@@ -60,14 +54,9 @@ const SubmitPage = () => {
           name: mName, category: mCategory, address: mAddress,
           payment_methods: mPayments, website: mWebsite || undefined,
         }, user?.id);
-      } else if (tab === 'earner') {
+      } else {
         await submitEarner(community.id, {
           description: eDesc, earning_method: eMethod, payment_method: ePayment,
-        }, user?.id);
-      } else {
-        await submitTransaction(community.id, {
-          amount_sats: parseInt(tAmount), category: tCategory,
-          is_circular: tCircular, transaction_date: tDate,
         }, user?.id);
       }
       setSubmitted(true);
@@ -99,10 +88,15 @@ const SubmitPage = () => {
       <Navbar />
       <div className="container py-8 max-w-lg">
         <div className="text-sm text-muted-foreground mb-1">{community?.name || slug}</div>
-        <h1 className="text-2xl font-bold mb-6">Submit Data</h1>
+        <h1 className="text-2xl font-bold mb-2">Submit Data</h1>
+
+        <div className="flex items-center gap-2 rounded-lg bg-secondary/50 border border-border p-3 mb-6 text-sm text-muted-foreground">
+          <Zap className="h-4 w-4 text-primary shrink-0" />
+          <span>Transactions are now tracked automatically via Blink Wallet integration. Submit merchants and earners here.</span>
+        </div>
 
         <div className="flex border-b border-border mb-6">
-          {(['merchant', 'earner', 'transaction'] as Tab[]).map(t => (
+          {(['merchant', 'earner'] as Tab[]).map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={`px-4 py-2 text-sm capitalize border-b-2 transition-colors ${tab === t ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
             >{t}</button>
@@ -153,24 +147,6 @@ const SubmitPage = () => {
               </Select>
             </div>
             <Button type="submit" className="w-full" disabled={loading}>{loading ? 'Submitting...' : 'Submit earner'}</Button>
-          </form>
-        )}
-
-        {tab === 'transaction' && (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div><Label>Amount (sats)</Label><Input type="number" placeholder="e.g. 50000" value={tAmount} onChange={e => setTAmount(e.target.value)} required /></div>
-            <div><Label>Category</Label>
-              <Select value={tCategory} onValueChange={setTCategory}>
-                <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
-                <SelectContent>{['food', 'goods', 'services', 'education', 'other'].map(c => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center justify-between rounded-lg border border-border p-3">
-              <div><Label>Was this circular?</Label><p className="text-xs text-muted-foreground">Did the sats stay in your economy?</p></div>
-              <Switch checked={tCircular} onCheckedChange={setTCircular} />
-            </div>
-            <div><Label>Date</Label><Input type="date" value={tDate} onChange={e => setTDate(e.target.value)} /></div>
-            <Button type="submit" className="w-full" disabled={loading}>{loading ? 'Submitting...' : 'Submit transaction'}</Button>
           </form>
         )}
       </div>
