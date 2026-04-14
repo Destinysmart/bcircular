@@ -25,6 +25,7 @@ const pillarDescriptions: Record<string, string> = {
 };
 
 const CommunityDashboard = () => {
+  const { user } = useAuth();
   const { slug } = useParams();
 
   const { data: community, isLoading, isError, error } = useQuery({
