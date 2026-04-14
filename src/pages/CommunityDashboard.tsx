@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { Share2, Store, Users, Zap, ArrowUpRight, ChevronDown, Info, ExternalLink } from 'lucide-react';
+import { Share2, Store, Users, Zap, ArrowUpRight, ChevronDown, Info, ExternalLink, Wallet } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
@@ -13,6 +13,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { fetchCommunityBySlug, fetchCommunityMerchants, fetchCommunityEarners, fetchCommunityTransactions, fetchLatestScore, fetchScoreHistory } from '@/lib/api';
 import { supabase } from '@/integrations/supabase/client';
 import { formatSats, getFlagEmoji } from '@/lib/mock-data';
+import { useAuth } from '@/contexts/AuthContext';
+import BlinkWalletSettings from '@/components/BlinkWalletSettings';
 
 const pillarDescriptions: Record<string, string> = {
   'Merchant saturation': 'How many merchants accept Bitcoin relative to the economy size, with a bonus for category diversity.',
