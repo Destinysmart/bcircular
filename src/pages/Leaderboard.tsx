@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { ArrowUpRight } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import ConfidenceBadge from '@/components/ConfidenceBadge';
 import { fetchAllCommunitiesWithStats } from '@/lib/api';
@@ -32,75 +33,76 @@ const Leaderboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="container py-8">
+      <div className="container py-10">
         <h1 className="text-2xl font-bold mb-1">Global Leaderboard</h1>
-        <p className="text-sm text-muted-foreground mb-6">Ranked by circularity score across all tracked economies.</p>
+        <p className="text-sm text-muted-foreground mb-8">Ranked by circularity score across all tracked economies.</p>
 
-        <div className="flex flex-wrap items-center gap-2 mb-6">
+        <div className="flex flex-wrap items-center gap-2 mb-8">
           {regions.map(r => (
-            <Button key={r} variant={region === r ? 'default' : 'outline'} size="sm" onClick={() => setRegion(r)}>{r}</Button>
+            <Button
+              key={r}
+              variant={region === r ? 'default' : 'outline'}
+              size="sm"
+              className="rounded-full"
+              onClick={() => setRegion(r)}
+            >
+              {r}
+            </Button>
           ))}
-          <div className="ml-auto flex gap-2">
-            <Button variant={sortBy === 'score' ? 'secondary' : 'ghost'} size="sm" onClick={() => setSortBy('score')}>By Score</Button>
-            <Button variant={sortBy === 'merchants' ? 'secondary' : 'ghost'} size="sm" onClick={() => setSortBy('merchants')}>By Merchants</Button>
+          <div className="ml-auto flex gap-1">
+            <Button variant={sortBy === 'score' ? 'secondary' : 'ghost'} size="sm" className="rounded-full" onClick={() => setSortBy('score')}>By Score</Button>
+            <Button variant={sortBy === 'merchants' ? 'secondary' : 'ghost'} size="sm" className="rounded-full" onClick={() => setSortBy('merchants')}>By Merchants</Button>
           </div>
         </div>
 
         {isLoading ? (
-          <div className="text-center py-16 text-muted-foreground">Loading...</div>
+          <div className="text-center py-20 text-muted-foreground text-sm">Loading…</div>
         ) : isError ? (
-          <div className="text-center py-16 text-destructive">Error loading economies: {(error as Error).message}</div>
+          <div className="text-center py-20 text-destructive text-sm">Error: {(error as Error).message}</div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-16 text-muted-foreground">
-            <p>No circular economies registered yet.</p>
-            <Link to="/register" className="text-primary hover:underline text-sm">Be the first to register yours.</Link>
+          <div className="text-center py-20">
+            <p className="text-muted-foreground mb-2">No circular economies registered yet.</p>
+            <Link to="/register" className="text-primary hover:underline text-sm">Be the first →</Link>
           </div>
         ) : (
-          <div className="rounded-lg border border-border overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border bg-card text-xs uppercase tracking-wider text-muted-foreground">
-                  <th className="text-left p-3 w-12">#</th>
-                  <th className="text-left p-3">Economy</th>
-                  <th className="text-right p-3 hidden sm:table-cell">Merchants</th>
-                  <th className="text-right p-3 hidden sm:table-cell">Earners</th>
-                  <th className="p-3 w-32 hidden md:table-cell">Score</th>
-                  <th className="text-right p-3 font-mono">Score</th>
-                  <th className="p-3 hidden lg:table-cell">Confidence</th>
-                  <th className="text-right p-3 hidden sm:table-cell">Δ Week</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((c, i) => (
-                  <tr key={c.id || i} className="border-b border-border last:border-0 hover:bg-card/50 transition-colors">
-                    <td className="p-3 font-mono text-muted-foreground">{i + 1}</td>
-                    <td className="p-3">
-                      <Link to={`/c/${c.slug}`} className="hover:text-primary transition-colors">
-                        <span className="mr-2">{getFlagEmoji(c.countryCode || '')}</span>
-                        <span className="font-medium">{c.name}</span>
-                        <span className="text-muted-foreground text-xs ml-2 hidden md:inline">{c.city}, {c.country}</span>
-                      </Link>
-                    </td>
-                    <td className="p-3 text-right font-mono hidden sm:table-cell">{c.merchants}</td>
-                    <td className="p-3 text-right font-mono hidden sm:table-cell">{c.earners}</td>
-                    <td className="p-3 hidden md:table-cell">
-                      <div className="h-2 rounded-full bg-secondary">
-                        <div className={`h-full rounded-full ${getScoreBgColor(c.score ?? 0)}`} style={{ width: `${c.score ?? 0}%` }} />
-                      </div>
-                    </td>
-                    <td className={`p-3 text-right font-mono font-medium ${getScoreColor(c.score ?? 0)}`}>{c.score ?? 0}</td>
-                    <td className="p-3 hidden lg:table-cell">
-                      <ConfidenceBadge totalApproved={c.totalApproved} />
-                    </td>
-                    <td className="p-3 text-right font-mono hidden sm:table-cell">
-                      <span className={(c.weeklyChange ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}>
-                        {(c.weeklyChange ?? 0) >= 0 ? '↑' : '↓'}{Math.abs(c.weeklyChange ?? 0)}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-1">
+            {filtered.map((c, i) => (
+              <Link
+                key={c.id || i}
+                to={`/c/${c.slug}`}
+                className="group flex items-center gap-4 p-4 rounded-xl hover:bg-secondary/60 transition-colors"
+              >
+                <span className="font-mono text-sm text-muted-foreground w-8 text-right">{i + 1}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span>{getFlagEmoji(c.countryCode || '')}</span>
+                    <span className="font-medium">{c.name}</span>
+                    <span className="text-muted-foreground text-xs hidden md:inline">{c.city}, {c.country}</span>
+                    <ConfidenceBadge totalApproved={c.totalApproved} />
+                  </div>
+                </div>
+                <div className="flex items-center gap-6">
+                  <div className="hidden sm:flex flex-col items-end text-xs text-muted-foreground">
+                    <span>{c.merchants} merchants</span>
+                    <span>{c.earners} earners</span>
+                  </div>
+                  <div className="w-20 hidden md:block">
+                    <div className="h-1.5 rounded-full bg-secondary">
+                      <div className={`h-full rounded-full ${getScoreBgColor(c.score ?? 0)}`} style={{ width: `${c.score ?? 0}%` }} />
+                    </div>
+                  </div>
+                  <span className={`font-mono font-semibold text-lg w-10 text-right ${getScoreColor(c.score ?? 0)}`}>
+                    {c.score ?? 0}
+                  </span>
+                  <div className="hidden sm:block w-12 text-right">
+                    <span className={`font-mono text-xs ${(c.weeklyChange ?? 0) >= 0 ? 'text-score-green' : 'text-score-red'}`}>
+                      {(c.weeklyChange ?? 0) >= 0 ? '↑' : '↓'}{Math.abs(c.weeklyChange ?? 0)}
+                    </span>
+                  </div>
+                  <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+              </Link>
+            ))}
           </div>
         )}
       </div>

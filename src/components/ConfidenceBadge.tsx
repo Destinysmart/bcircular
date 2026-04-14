@@ -20,7 +20,7 @@ const ConfidenceBadge = ({ totalApproved }: ConfidenceBadgeProps) => {
   }
 
   return (
-    <Badge variant={variant} className="font-mono text-[10px]">
+    <Badge variant={variant} className="font-mono text-[10px] rounded-full">
       {level} confidence
     </Badge>
   );

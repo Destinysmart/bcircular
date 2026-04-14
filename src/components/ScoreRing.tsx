@@ -4,15 +4,15 @@ interface ScoreRingProps {
   strokeWidth?: number;
 }
 
-const ScoreRing = ({ score, size = 180, strokeWidth = 12 }: ScoreRingProps) => {
+const ScoreRing = ({ score, size = 160, strokeWidth = 10 }: ScoreRingProps) => {
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const offset = circumference - (score / 100) * circumference;
 
   const getColor = () => {
-    if (score >= 76) return '#22c55e';
-    if (score >= 51) return '#f59e0b';
-    return '#ef4444';
+    if (score >= 76) return 'hsl(var(--score-green))';
+    if (score >= 51) return 'hsl(var(--primary))';
+    return 'hsl(var(--score-red))';
   };
 
   return (
@@ -40,10 +40,10 @@ const ScoreRing = ({ score, size = 180, strokeWidth = 12 }: ScoreRingProps) => {
         />
       </svg>
       <div className="absolute flex flex-col items-center">
-        <span className="font-mono text-4xl font-medium" style={{ color: getColor() }}>
+        <span className="font-mono text-3xl font-semibold" style={{ color: getColor() }}>
           {score}
         </span>
-        <span className="text-xs text-muted-foreground uppercase tracking-widest">Score</span>
+        <span className="text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">Score</span>
       </div>
     </div>
   );

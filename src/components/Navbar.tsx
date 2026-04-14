@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Bitcoin, LogOut, Menu, Shield } from 'lucide-react';
+import { LogOut, Menu, Shield, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
@@ -19,48 +19,78 @@ const Navbar = () => {
     enabled: !!user,
   });
 
+  const navLinks = [
+    { to: '/leaderboard', label: 'Leaderboard' },
+    { to: '/register', label: 'Register' },
+    ...(user ? [{ to: '/validate', label: 'Validate' }] : []),
+  ];
+
   return (
-    <nav className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-50">
-      <div className="container flex h-14 items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <Bitcoin className="h-6 w-6 text-primary" />
+    <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
+      <div className="container flex h-16 items-center justify-between">
+        <Link to="/" className="flex items-center gap-2.5">
+          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+            <span className="text-primary-foreground font-bold text-sm">C</span>
+          </div>
           <span className="font-semibold text-lg tracking-tight">Circular</span>
         </Link>
-        <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
-          <Link to="/leaderboard" className="hover:text-foreground transition-colors">Leaderboard</Link>
-          <Link to="/register" className="hover:text-foreground transition-colors">Register</Link>
-          {user && <Link to="/validate" className="hover:text-foreground transition-colors">Validate</Link>}
+
+        <div className="hidden md:flex items-center gap-1">
+          {navLinks.map(link => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground rounded-md hover:bg-secondary transition-colors"
+            >
+              {link.label}
+            </Link>
+          ))}
           {profile?.is_super_admin && (
-            <Link to="/admin" className="hover:text-foreground transition-colors flex items-center gap-1">
+            <Link
+              to="/admin"
+              className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground rounded-md hover:bg-secondary transition-colors flex items-center gap-1.5"
+            >
               <Shield className="h-3.5 w-3.5" /> Admin
             </Link>
           )}
         </div>
+
         <div className="flex items-center gap-2">
           {user ? (
             <>
-              <span className="text-xs text-muted-foreground hidden sm:inline">{user.email}</span>
-              <Button variant="ghost" size="sm" onClick={signOut}>
+              <span className="text-xs text-muted-foreground hidden sm:inline truncate max-w-[160px]">{user.email}</span>
+              <Button variant="ghost" size="icon" onClick={signOut} className="h-9 w-9">
                 <LogOut className="h-4 w-4" />
               </Button>
             </>
           ) : (
             <Link to="/login">
-              <Button variant="ghost" size="sm">Log in</Button>
+              <Button size="sm" variant="outline">Log in</Button>
             </Link>
           )}
-          <button className="md:hidden" onClick={() => setMobileOpen(!mobileOpen)}>
-            <Menu className="h-5 w-5" />
+          <button
+            className="md:hidden p-2 rounded-md hover:bg-secondary transition-colors"
+            onClick={() => setMobileOpen(!mobileOpen)}
+          >
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
       </div>
+
       {mobileOpen && (
-        <div className="md:hidden border-t border-border p-4 space-y-2 text-sm">
-          <Link to="/leaderboard" className="block py-1 text-muted-foreground hover:text-foreground" onClick={() => setMobileOpen(false)}>Leaderboard</Link>
-          <Link to="/register" className="block py-1 text-muted-foreground hover:text-foreground" onClick={() => setMobileOpen(false)}>Register</Link>
-          {user && <Link to="/validate" className="block py-1 text-muted-foreground hover:text-foreground" onClick={() => setMobileOpen(false)}>Validate</Link>}
+        <div className="md:hidden border-t border-border bg-background px-4 py-3 space-y-1">
+          {navLinks.map(link => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className="block px-3 py-2 text-sm text-muted-foreground hover:text-foreground rounded-md hover:bg-secondary"
+              onClick={() => setMobileOpen(false)}
+            >
+              {link.label}
+            </Link>
+          ))}
           {profile?.is_super_admin && (
-            <Link to="/admin" className="block py-1 text-muted-foreground hover:text-foreground" onClick={() => setMobileOpen(false)}>Admin</Link>
+            <Link to="/admin" className="block px-3 py-2 text-sm text-muted-foreground hover:text-foreground rounded-md hover:bg-secondary" onClick={() => setMobileOpen(false)}>Admin</Link>
           )}
         </div>
       )}
