@@ -14,6 +14,114 @@ export type Database = {
   }
   public: {
     Tables: {
+      blink_api_keys: {
+        Row: {
+          api_key_encrypted: string
+          community_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          last_used_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          api_key_encrypted: string
+          community_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_used_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          api_key_encrypted?: string
+          community_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_used_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blink_api_keys_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: true
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blink_transactions: {
+        Row: {
+          blink_created_at: string
+          blink_tx_id: string
+          community_id: string
+          counterparty_wallet_id: string | null
+          created_at: string
+          direction: string
+          id: string
+          is_internal: boolean
+          memo: string | null
+          settlement_amount: number
+          settlement_currency: string
+          status: string
+          wallet_id: string
+        }
+        Insert: {
+          blink_created_at: string
+          blink_tx_id: string
+          community_id: string
+          counterparty_wallet_id?: string | null
+          created_at?: string
+          direction: string
+          id?: string
+          is_internal?: boolean
+          memo?: string | null
+          settlement_amount: number
+          settlement_currency?: string
+          status?: string
+          wallet_id: string
+        }
+        Update: {
+          blink_created_at?: string
+          blink_tx_id?: string
+          community_id?: string
+          counterparty_wallet_id?: string | null
+          created_at?: string
+          direction?: string
+          id?: string
+          is_internal?: boolean
+          memo?: string | null
+          settlement_amount?: number
+          settlement_currency?: string
+          status?: string
+          wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blink_transactions_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blink_transactions_counterparty_wallet_id_fkey"
+            columns: ["counterparty_wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blink_transactions_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       circularity_scores: {
         Row: {
           calculated_at: string
@@ -450,6 +558,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "validators_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wallets: {
+        Row: {
+          balance_sats: number
+          blink_wallet_id: string
+          community_id: string
+          created_at: string
+          id: string
+          last_synced_at: string | null
+          updated_at: string
+          user_id: string
+          wallet_currency: string
+        }
+        Insert: {
+          balance_sats?: number
+          blink_wallet_id: string
+          community_id: string
+          created_at?: string
+          id?: string
+          last_synced_at?: string | null
+          updated_at?: string
+          user_id: string
+          wallet_currency?: string
+        }
+        Update: {
+          balance_sats?: number
+          blink_wallet_id?: string
+          community_id?: string
+          created_at?: string
+          id?: string
+          last_synced_at?: string | null
+          updated_at?: string
+          user_id?: string
+          wallet_currency?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallets_community_id_fkey"
             columns: ["community_id"]
             isOneToOne: false
             referencedRelation: "communities"
