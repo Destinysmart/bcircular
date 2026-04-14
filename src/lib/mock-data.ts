@@ -1,13 +1,13 @@
 export const getScoreColor = (score: number): string => {
-  if (score >= 76) return 'text-emerald-400';
+  if (score >= 76) return 'text-score-green';
   if (score >= 51) return 'text-primary';
-  return 'text-red-400';
+  return 'text-score-red';
 };
 
 export const getScoreBgColor = (score: number): string => {
-  if (score >= 76) return 'bg-emerald-400';
+  if (score >= 76) return 'bg-score-green';
   if (score >= 51) return 'bg-primary';
-  return 'bg-red-400';
+  return 'bg-score-red';
 };
 
 export const getScoreLabel = (score: number): string => {
