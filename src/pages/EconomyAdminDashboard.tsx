@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchCommunityBySlug, fetchLatestScore, fetchPendingSubmissions, fetchCommunityMerchants, fetchCommunityEarners, fetchCommunityTransactions } from '@/lib/api';
 import { CheckCircle, XCircle, Upload, Trash2, RefreshCw } from 'lucide-react';
+import BlinkWalletSettings from '@/components/BlinkWalletSettings';
 
 const EconomyAdminDashboard = () => {
   const { id } = useParams();
@@ -343,6 +344,11 @@ const EconomyAdminDashboard = () => {
               ))}
             </div>
           )}
+        </section>
+
+        {/* Blink Wallet Integration */}
+        <section className="mb-6">
+          <BlinkWalletSettings communityId={communityId!} isAdmin={true} />
         </section>
 
         {/* Score Section */}
