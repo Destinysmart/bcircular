@@ -226,7 +226,13 @@ const CommunityDashboard = () => {
           <MerchantMap merchants={merchants || []} />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
+        {/* Wallet Integration */}
+        {user && (
+          <div className="mb-8">
+            <BlinkWalletSettings communityId={communityId!} isAdmin={community.admin_id === user.id} />
+          </div>
+        )}
+
           <div className="rounded-lg border border-border bg-card p-4">
             <h3 className="text-xs uppercase tracking-wider text-muted-foreground mb-4">Score History (last 12 snapshots)</h3>
             {chartData.length > 0 ? (
