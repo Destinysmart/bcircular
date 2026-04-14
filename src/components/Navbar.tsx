@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { LogOut, Menu, Shield, X } from 'lucide-react';
+import { LogOut, Menu, Shield, Settings, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
@@ -59,6 +59,11 @@ const Navbar = () => {
           {user ? (
             <>
               <span className="text-xs text-muted-foreground hidden sm:inline truncate max-w-[160px]">{user.email}</span>
+              <Link to="/settings">
+                <Button variant="ghost" size="icon" className="h-9 w-9">
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </Link>
               <Button variant="ghost" size="icon" onClick={signOut} className="h-9 w-9">
                 <LogOut className="h-4 w-4" />
               </Button>
