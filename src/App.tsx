@@ -16,6 +16,7 @@ import Methodology from "./pages/Methodology";
 import EconomyAdminDashboard from "./pages/EconomyAdminDashboard";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import ProofOfCircularity from "./pages/ProofOfCircularity";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/register" element={<RegisterCommunity />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Login />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/validate" element={<ValidatorDashboard />} />
             <Route path="/methodology" element={<Methodology />} />
             <Route path="/dashboard/economy/:id" element={<EconomyAdminDashboard />} />
