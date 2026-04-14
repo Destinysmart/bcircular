@@ -179,6 +179,7 @@ const CommunityDashboard = () => {
             <div className="flex gap-2">
               <Button variant="outline" size="sm" className="gap-1.5"><Share2 className="h-3.5 w-3.5" /> Share</Button>
               <a href={`/c/${slug}/submit`}><Button size="sm" className="gap-1.5"><ArrowUpRight className="h-3.5 w-3.5" /> Submit data</Button></a>
+              <Link to={`/c/${slug}/report`}><Button variant="outline" size="sm" className="gap-1.5"><Shield className="h-3.5 w-3.5" /> Proof of Circularity</Button></Link>
             </div>
           </div>
           <div className="flex flex-col items-center gap-2">
