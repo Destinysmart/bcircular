@@ -1,18 +1,21 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Bitcoin } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 const Login = () => {
   const [isSignup, setIsSignup] = useState(false);
+  const [isForgot, setIsForgot] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
@@ -22,7 +25,14 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      if (isSignup) {
+      if (isForgot) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+        toast({ title: 'Check your email', description: 'We sent you a password reset link.' });
+        setIsForgot(false);
+      } else if (isSignup) {
         const { error } = await signUp(email, password, name);
         if (error) throw error;
         toast({ title: 'Account created', description: 'Check your email to confirm your account.' });
@@ -38,44 +48,88 @@ const Login = () => {
     }
   };
 
+  const title = isForgot ? 'Reset password' : isSignup ? 'Create account' : 'Welcome back';
+  const subtitle = isForgot
+    ? 'Enter your email and we\'ll send you a reset link.'
+    : isSignup
+      ? 'Sign up to track submissions and validate data.'
+      : 'Log in to manage your economy.';
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="container flex items-center justify-center py-16">
+      <div className="container flex items-center justify-center py-20">
         <div className="w-full max-w-sm space-y-6">
           <div className="text-center">
-            <Bitcoin className="h-8 w-8 text-primary mx-auto mb-3" />
-            <h1 className="text-xl font-semibold">{isSignup ? 'Create account' : 'Welcome back'}</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {isSignup ? 'Sign up to track submissions and validate data.' : 'Log in to manage your economy.'}
-            </p>
+            <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center mx-auto mb-4">
+              <span className="text-primary-foreground font-bold text-lg">C</span>
+            </div>
+            <h1 className="text-xl font-semibold">{title}</h1>
+            <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {isSignup && (
-              <div>
+            {isSignup && !isForgot && (
+              <div className="space-y-1.5">
                 <Label>Name</Label>
                 <Input placeholder="Full name" value={name} onChange={e => setName(e.target.value)} />
               </div>
             )}
-            <div>
+            <div className="space-y-1.5">
               <Label>Email</Label>
               <Input type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required />
             </div>
-            <div>
-              <Label>Password</Label>
-              <Input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Loading...' : isSignup ? 'Sign up' : 'Log in'}
+            {!isForgot && (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label>Password</Label>
+                  {!isSignup && (
+                    <button
+                      type="button"
+                      onClick={() => { setIsForgot(true); }}
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Forgot password?
+                    </button>
+                  )}
+                </div>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    required
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+            )}
+            <Button type="submit" className="w-full rounded-full" disabled={loading}>
+              {loading ? 'Loading...' : isForgot ? 'Send reset link' : isSignup ? 'Sign up' : 'Log in'}
             </Button>
           </form>
 
           <div className="text-center text-sm text-muted-foreground">
-            {isSignup ? 'Already have an account?' : "Don't have an account?"}{' '}
-            <button onClick={() => setIsSignup(!isSignup)} className="text-primary hover:underline">
-              {isSignup ? 'Log in' : 'Sign up'}
-            </button>
+            {isForgot ? (
+              <button onClick={() => setIsForgot(false)} className="text-primary hover:underline">
+                Back to login
+              </button>
+            ) : (
+              <>
+                {isSignup ? 'Already have an account?' : "Don't have an account?"}{' '}
+                <button onClick={() => setIsSignup(!isSignup)} className="text-primary hover:underline">
+                  {isSignup ? 'Log in' : 'Sign up'}
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
