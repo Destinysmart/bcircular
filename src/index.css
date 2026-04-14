@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,54 +6,93 @@
 
 @layer base {
   :root {
-    --background: 222 47% 8%;
-    --foreground: 210 40% 96%;
+    --background: 0 0% 100%;
+    --foreground: 240 10% 6%;
 
-    --card: 222 41% 11%;
-    --card-foreground: 210 40% 96%;
+    --card: 0 0% 99%;
+    --card-foreground: 240 10% 6%;
 
-    --popover: 222 41% 11%;
-    --popover-foreground: 210 40% 96%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 6%;
 
-    --primary: 43 96% 56%;
-    --primary-foreground: 222 47% 8%;
+    --primary: 239 84% 67%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 222 30% 16%;
-    --secondary-foreground: 210 40% 96%;
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 6% 10%;
 
-    --muted: 222 30% 16%;
-    --muted-foreground: 215 20% 55%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
 
-    --accent: 43 96% 56%;
-    --accent-foreground: 222 47% 8%;
+    --accent: 240 5% 96%;
+    --accent-foreground: 240 6% 10%;
 
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 222 30% 20%;
-    --input: 222 30% 20%;
-    --ring: 43 96% 56%;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 239 84% 67%;
 
-    --radius: 0.5rem;
+    --radius: 0.625rem;
 
-    --sidebar-background: 222 41% 9%;
-    --sidebar-foreground: 210 40% 96%;
-    --sidebar-primary: 43 96% 56%;
-    --sidebar-primary-foreground: 222 47% 8%;
-    --sidebar-accent: 222 30% 16%;
-    --sidebar-accent-foreground: 210 40% 96%;
-    --sidebar-border: 222 30% 20%;
-    --sidebar-ring: 43 96% 56%;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 6% 10%;
+    --sidebar-primary: 239 84% 67%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 5% 96%;
+    --sidebar-accent-foreground: 240 6% 10%;
+    --sidebar-border: 240 6% 90%;
+    --sidebar-ring: 239 84% 67%;
 
-    --score-red: 0 72% 51%;
-    --score-amber: 43 96% 56%;
-    --score-green: 142 71% 45%;
+    --score-red: 0 84% 60%;
+    --score-amber: 38 92% 50%;
+    --score-green: 160 84% 39%;
 
-    --chart-1: 43 96% 56%;
-    --chart-2: 200 80% 50%;
-    --chart-3: 142 71% 45%;
+    --chart-1: 239 84% 67%;
+    --chart-2: 160 84% 39%;
+    --chart-3: 38 92% 50%;
     --chart-4: 280 65% 60%;
-    --chart-5: 0 72% 51%;
+    --chart-5: 0 84% 60%;
+  }
+
+  .dark {
+    --background: 240 10% 4%;
+    --foreground: 0 0% 95%;
+
+    --card: 240 10% 6%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 240 10% 6%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 239 84% 67%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 4% 16%;
+    --secondary-foreground: 0 0% 95%;
+
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 55%;
+
+    --accent: 240 4% 16%;
+    --accent-foreground: 0 0% 95%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 4% 16%;
+    --input: 240 4% 16%;
+    --ring: 239 84% 67%;
+
+    --sidebar-background: 240 10% 5%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 239 84% 67%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 4% 16%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 240 4% 16%;
+    --sidebar-ring: 239 84% 67%;
   }
 }
 
@@ -73,16 +112,16 @@
 
 @layer utilities {
   .font-mono-data {
-    font-family: 'DM Mono', monospace;
+    font-family: 'JetBrains Mono', monospace;
   }
 
   .score-gradient-red {
-    @apply text-red-500;
+    color: hsl(var(--score-red));
   }
   .score-gradient-amber {
-    color: hsl(var(--primary));
+    color: hsl(var(--score-amber));
   }
   .score-gradient-green {
-    @apply text-emerald-500;
+    color: hsl(var(--score-green));
   }
 }
