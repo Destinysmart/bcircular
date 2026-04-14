@@ -15,6 +15,7 @@ import ValidatorDashboard from "./pages/ValidatorDashboard";
 import Methodology from "./pages/Methodology";
 import EconomyAdminDashboard from "./pages/EconomyAdminDashboard";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
+import ProofOfCircularity from "./pages/ProofOfCircularity";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/c/:slug" element={<CommunityDashboard />} />
             <Route path="/c/:slug/submit" element={<SubmitPage />} />
+            <Route path="/c/:slug/report" element={<ProofOfCircularity />} />
             <Route path="/widget/:slug" element={<Widget />} />
             <Route path="/register" element={<RegisterCommunity />} />
             <Route path="/login" element={<Login />} />
