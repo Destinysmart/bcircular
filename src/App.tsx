@@ -17,6 +17,7 @@ import EconomyAdminDashboard from "./pages/EconomyAdminDashboard";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import ProofOfCircularity from "./pages/ProofOfCircularity";
 import ResetPassword from "./pages/ResetPassword";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ const App = () => (
             <Route path="/methodology" element={<Methodology />} />
             <Route path="/dashboard/economy/:id" element={<EconomyAdminDashboard />} />
             <Route path="/admin" element={<SuperAdminDashboard />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
