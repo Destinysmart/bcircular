@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { Share2, Store, Users, Zap, ArrowUpRight, ChevronDown, Info, ExternalLink, Wallet } from 'lucide-react';
+import { Share2, Store, Users, Zap, ArrowUpRight, ChevronDown, Info, ExternalLink, Wallet, Shield } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
