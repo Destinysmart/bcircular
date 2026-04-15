@@ -9,7 +9,7 @@ import ConfidenceBadge from '@/components/ConfidenceBadge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { CheckCircle, XCircle, RefreshCw, Shield } from 'lucide-react';
+import { CheckCircle, XCircle, RefreshCw, Shield, Trash2 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 const SuperAdminDashboard = () => {
@@ -120,11 +120,31 @@ const SuperAdminDashboard = () => {
     toast({ title: `Economy ${status}` });
   };
 
-  const handleDeleteCommunity = async (communityId: string) => {
-    // This requires a cascade delete — for now just suspend
-    await supabase.from('communities').update({ status: 'suspended' as any }).eq('id', communityId);
-    queryClient.invalidateQueries({ queryKey: ['admin-communities'] });
-    toast({ title: 'Economy suspended (deletion requires manual DB action)' });
+  const handleDeleteCommunity = async (communityId: string, communityName: string) => {
+    if (!confirm(`Permanently delete "${communityName}" and all its data? This cannot be undone.`)) return;
+    // Delete related data first, then the community
+    await Promise.all([
+      supabase.from('circularity_scores').delete().eq('community_id', communityId),
+      supabase.from('validation_votes').delete().in('submission_id',
+        (await supabase.from('merchants').select('id').eq('community_id', communityId)).data?.map(m => m.id) || []
+      ),
+      supabase.from('merchants').delete().eq('community_id', communityId),
+      supabase.from('earners').delete().eq('community_id', communityId),
+      supabase.from('transactions').delete().eq('community_id', communityId),
+      supabase.from('validators').delete().eq('community_id', communityId),
+      supabase.from('community_admins').delete().eq('community_id', communityId),
+      supabase.from('community_profiles').delete().eq('community_id', communityId),
+      supabase.from('blink_api_keys').delete().eq('community_id', communityId),
+      supabase.from('wallets').delete().eq('community_id', communityId),
+      supabase.from('blink_transactions').delete().eq('community_id', communityId),
+    ]);
+    const { error } = await supabase.from('communities').delete().eq('id', communityId);
+    if (error) {
+      toast({ title: 'Delete failed', description: error.message, variant: 'destructive' });
+    } else {
+      queryClient.invalidateQueries({ queryKey: ['admin-communities'] });
+      toast({ title: `"${communityName}" deleted` });
+    }
   };
 
   const handleOverrideSubmission = async (table: string, id: string, status: 'approved' | 'rejected') => {
@@ -214,7 +234,12 @@ const SuperAdminDashboard = () => {
                     {c.status === 'active' ? (
                       <Button size="sm" variant="outline" className="text-destructive" onClick={() => handleCommunityAction(c.id, 'suspended')}>Suspend</Button>
                     ) : (
-                      <Button size="sm" variant="outline" onClick={() => handleCommunityAction(c.id, 'active')}>Activate</Button>
+                      <>
+                        <Button size="sm" variant="outline" onClick={() => handleCommunityAction(c.id, 'active')}>Activate</Button>
+                        <Button size="sm" variant="destructive" className="gap-1" onClick={() => handleDeleteCommunity(c.id, c.name)}>
+                          <Trash2 className="h-3 w-3" /> Delete
+                        </Button>
+                      </>
                     )}
                   </div>
                 </div>
