@@ -114,13 +114,21 @@ const SatsFlowGraph = ({ communityId }: SatsFlowGraphProps) => {
     });
 
     const nodes = Array.from(nodeMap.values());
-    const links = Array.from(linkMap.values());
 
     // Remove external node if no external flows
     if (nodeMap.get(externalId)!.txCount === 0) {
       const idx = nodes.findIndex(n => n.id === externalId);
       if (idx >= 0) nodes.splice(idx, 1);
     }
+
+    const validNodeIds = new Set(nodes.map(n => n.id));
+
+    // Filter links to only those where both source and target exist in nodes
+    const links = Array.from(linkMap.values()).filter(l => {
+      const srcId = typeof l.source === 'string' ? l.source : (l.source as FlowNode).id;
+      const tgtId = typeof l.target === 'string' ? l.target : (l.target as FlowNode).id;
+      return validNodeIds.has(srcId) && validNodeIds.has(tgtId);
+    });
 
     // Remove orphan nodes (no transactions)
     const activeNodeIds = new Set<string>();
