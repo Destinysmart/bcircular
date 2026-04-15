@@ -280,7 +280,7 @@ const CommunityDashboard = () => {
         {/* Wallet Integration */}
         {user && (
           <div className="mb-10">
-            <BlinkWalletSettings communityId={communityId!} isAdmin={community.admin_id === user.id} />
+            <BlinkWalletSettings communityId={communityId!} isAdmin={community.admin_id === user.id || isCommunityAdmin || isSuperAdmin} />
           </div>
         )}
 
