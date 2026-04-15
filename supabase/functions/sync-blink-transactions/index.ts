@@ -125,8 +125,43 @@ Deno.serve(async (req) => {
     // 2. Fetch wallets from Blink
     const walletsData = await blinkGraphQL(blinkApiKey, WALLETS_QUERY)
     const blinkWallets = walletsData.me.defaultAccount.wallets
+    console.log('Blink wallets found:', blinkWallets.map((w: any) => ({ id: w.id, currency: w.walletCurrency, balance: w.balance })))
 
-    // 3. Get existing wallets for this economy to know which Blink wallet IDs are connected
+    // 3. Auto-register any Blink wallets not yet in the DB for this economy
+    // Get the community admin_id to use as the user_id for auto-registered wallets
+    const { data: communityRow } = await supabase
+      .from('communities')
+      .select('admin_id')
+      .eq('id', community_id)
+      .single()
+
+    for (const bw of blinkWallets) {
+      const { data: existing } = await supabase
+        .from('wallets')
+        .select('id')
+        .eq('community_id', community_id)
+        .eq('blink_wallet_id', bw.id)
+        .maybeSingle()
+
+      if (!existing) {
+        console.log('Auto-registering Blink wallet:', bw.id, bw.walletCurrency)
+        await supabase.from('wallets').insert({
+          community_id,
+          blink_wallet_id: bw.id,
+          wallet_currency: bw.walletCurrency,
+          balance_sats: bw.balance,
+          user_id: communityRow?.admin_id || community_id, // fallback
+          last_synced_at: new Date().toISOString(),
+        })
+      } else {
+        await supabase.from('wallets').update({
+          balance_sats: bw.balance,
+          last_synced_at: new Date().toISOString(),
+        }).eq('id', existing.id)
+      }
+    }
+
+    // 4. Reload connected wallets after auto-registration
     const { data: connectedWallets } = await supabase
       .from('wallets')
       .select('*')
@@ -136,17 +171,6 @@ Deno.serve(async (req) => {
     const economyBlinkWalletIds = new Set(
       (connectedWallets || []).map(w => w.blink_wallet_id)
     )
-
-    // Update balances for connected wallets
-    for (const bw of blinkWallets) {
-      const matchingWallet = connectedWallets?.find(w => w.blink_wallet_id === bw.id)
-      if (matchingWallet) {
-        await supabase.from('wallets').update({
-          balance_sats: bw.balance,
-          last_synced_at: new Date().toISOString(),
-        }).eq('id', matchingWallet.id)
-      }
-    }
 
     // 4. Fetch transactions for each connected wallet
     let totalSynced = 0
