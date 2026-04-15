@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Homepage from "./pages/Homepage";
 import Home from "./pages/Home";
+import RootRedirect from "./components/RootRedirect";
 import Leaderboard from "./pages/Leaderboard";
 import CommunityDashboard from "./pages/CommunityDashboard";
 import SubmitPage from "./pages/SubmitPage";
@@ -23,12 +24,7 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const RootPage = () => {
-  // useAuth must be used inside AuthProvider, but RootPage is rendered inside it via Routes
-  const { user, loading } = React.useContext(React.createContext<any>(null));
-  return null;
-};
-
+const App = () => (
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
