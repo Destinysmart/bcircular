@@ -23,6 +23,12 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const RootPage = () => {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  return user ? <Home /> : <Homepage />;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -31,7 +37,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Homepage />} />
+            <Route path="/" element={<RootPage />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/c/:slug" element={<CommunityDashboard />} />
             <Route path="/c/:slug/submit" element={<SubmitPage />} />
