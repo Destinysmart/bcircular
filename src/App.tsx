@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Homepage from "./pages/Homepage";
+import Home from "./pages/Home";
+import RootRedirect from "./components/RootRedirect";
 import Leaderboard from "./pages/Leaderboard";
 import CommunityDashboard from "./pages/CommunityDashboard";
 import SubmitPage from "./pages/SubmitPage";
@@ -30,7 +32,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Homepage />} />
+            <Route path="/" element={<RootRedirect />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/c/:slug" element={<CommunityDashboard />} />
             <Route path="/c/:slug/submit" element={<SubmitPage />} />
