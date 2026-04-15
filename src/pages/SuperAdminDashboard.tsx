@@ -115,7 +115,11 @@ const SuperAdminDashboard = () => {
   });
 
   const handleCommunityAction = async (communityId: string, status: 'active' | 'suspended') => {
-    await supabase.from('communities').update({ status }).eq('id', communityId);
+    const { error, count } = await supabase.from('communities').update({ status }).eq('id', communityId);
+    if (error) {
+      toast({ title: 'Failed', description: error.message, variant: 'destructive' });
+      return;
+    }
     queryClient.invalidateQueries({ queryKey: ['admin-communities'] });
     toast({ title: `Economy ${status}` });
   };
