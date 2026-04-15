@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { LogOut, Menu, Shield, Settings, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -13,7 +14,7 @@ const Navbar = () => {
   const { data: profile } = useQuery({
     queryKey: ['my-profile-nav', user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('profiles').select('is_super_admin').eq('user_id', user!.id).single();
+      const { data } = await supabase.from('profiles').select('is_super_admin, display_name, avatar_url').eq('user_id', user!.id).single();
       return data;
     },
     enabled: !!user,
@@ -58,11 +59,16 @@ const Navbar = () => {
         <div className="flex items-center gap-2">
           {user ? (
             <>
-              <span className="text-xs text-muted-foreground hidden sm:inline truncate max-w-[160px]">{user.email}</span>
-              <Link to="/settings">
-                <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <Settings className="h-4 w-4" />
-                </Button>
+              <Link to="/settings" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <Avatar className="h-7 w-7">
+                  <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.display_name || ''} />
+                  <AvatarFallback className="text-[10px] font-medium bg-primary/10 text-primary">
+                    {(profile?.display_name || user.email || '?').slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm text-foreground hidden sm:inline truncate max-w-[140px]">
+                  {profile?.display_name || user.email}
+                </span>
               </Link>
               <Button variant="ghost" size="icon" onClick={signOut} className="h-9 w-9">
                 <LogOut className="h-4 w-4" />
