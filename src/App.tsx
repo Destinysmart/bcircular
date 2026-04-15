@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Homepage from "./pages/Homepage";
+import Home from "./pages/Home";
 import Leaderboard from "./pages/Leaderboard";
 import CommunityDashboard from "./pages/CommunityDashboard";
 import SubmitPage from "./pages/SubmitPage";
