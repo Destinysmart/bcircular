@@ -152,7 +152,11 @@ const SuperAdminDashboard = () => {
   };
 
   const handleOverrideSubmission = async (table: string, id: string, status: 'approved' | 'rejected') => {
-    await supabase.from(table as any).update({ status }).eq('id', id);
+    const { error } = await supabase.from(table as any).update({ status }).eq('id', id);
+    if (error) {
+      toast({ title: 'Failed', description: error.message, variant: 'destructive' });
+      return;
+    }
     queryClient.invalidateQueries({ queryKey: ['admin-pending-merchants'] });
     queryClient.invalidateQueries({ queryKey: ['admin-pending-earners'] });
     queryClient.invalidateQueries({ queryKey: ['admin-pending-transactions'] });
