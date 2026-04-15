@@ -24,9 +24,9 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const RootPage = () => {
-  const { user, loading } = useAuth();
-  if (loading) return null;
-  return user ? <Home /> : <Homepage />;
+  // useAuth must be used inside AuthProvider, but RootPage is rendered inside it via Routes
+  const { user, loading } = React.useContext(React.createContext<any>(null));
+  return null;
 };
 
 const App = () => (
