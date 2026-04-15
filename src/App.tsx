@@ -32,7 +32,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<RootPage />} />
+            <Route path="/" element={<RootRedirect />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/c/:slug" element={<CommunityDashboard />} />
             <Route path="/c/:slug/submit" element={<SubmitPage />} />
