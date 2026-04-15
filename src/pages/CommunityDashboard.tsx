@@ -105,6 +105,33 @@ const CommunityDashboard = () => {
     enabled: !!communityId,
   });
 
+  // Check if user is a community admin or super admin
+  const { data: isCommunityAdmin } = useQuery({
+    queryKey: ['is-community-admin', communityId, user?.id],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('community_admins')
+        .select('id', { count: 'exact', head: true })
+        .eq('community_id', communityId!)
+        .eq('user_id', user!.id);
+      return (count || 0) > 0;
+    },
+    enabled: !!communityId && !!user,
+  });
+
+  const { data: isSuperAdmin } = useQuery({
+    queryKey: ['is-super-admin', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('is_super_admin')
+        .eq('user_id', user!.id)
+        .single();
+      return data?.is_super_admin || false;
+    },
+    enabled: !!user,
+  });
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
