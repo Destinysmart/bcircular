@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, ArrowUpRight, Globe, MapPin, Plus, Search, Shield, Store, Users, Zap } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, BookOpen, Globe, MapPin, Plus, Repeat, Search, Shield, Store, TrendingUp, Users, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -252,6 +252,48 @@ const Home = () => {
             ))}
           </motion.div>
         )}
+      </section>
+
+      {/* What is circularity? */}
+      <section className="border-t border-border bg-secondary/20">
+        <div className="container py-16">
+          <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} custom={0} className="max-w-2xl mx-auto text-center mb-10">
+            <h2 className="text-xl font-semibold mb-3">What is circularity?</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              A circular Bitcoin economy is one where sats earned locally are also spent locally — creating a self-sustaining loop of value. The more sats stay within the community, the stronger the economy becomes.
+            </p>
+          </motion.div>
+
+          <motion.div
+            variants={stagger}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-40px' }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto"
+          >
+            {[
+              { icon: <Repeat className="h-5 w-5" />, title: 'Retention', desc: 'Sats that stay within the economy instead of leaking out to external wallets.' },
+              { icon: <TrendingUp className="h-5 w-5" />, title: 'Velocity', desc: 'How many times each sat changes hands — higher velocity means a healthier economy.' },
+              { icon: <Users className="h-5 w-5" />, title: 'Growth', desc: 'New merchants accepting Bitcoin and new earners joining the circular flow.' },
+            ].map(item => (
+              <motion.div key={item.title} variants={fadeUp} className="text-center p-5 rounded-xl border border-border bg-card">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-3 text-primary">
+                  {item.icon}
+                </div>
+                <h3 className="text-sm font-semibold mb-1.5">{item.title}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} custom={1} className="text-center mt-8">
+            <Link to="/methodology" className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
+              <BookOpen className="h-3.5 w-3.5" />
+              Read the full methodology
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </motion.div>
+        </div>
       </section>
     </div>
   );
