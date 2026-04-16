@@ -1,0 +1,1 @@
+UPDATE public.communities SET bbox_north = 6.72, bbox_south = 6.56, bbox_east = 3.52, bbox_west = 3.45 WHERE id = '15dd8cac-3ea8-400f-ae3c-0344b7ed1209';
