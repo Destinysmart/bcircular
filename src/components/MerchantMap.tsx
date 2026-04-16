@@ -10,6 +10,7 @@ interface MerchantMapProps {
     lat: number | null;
     lng: number | null;
     payment_methods: string[] | null;
+    source?: string;
   }>;
 }
 
@@ -39,9 +40,10 @@ const MerchantMap = ({ merchants }: MerchantMapProps) => {
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
     validMerchants.forEach(m => {
+      const isBtcmap = m.source === 'btcmap';
       const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
         `<div style="color:#0a0f1e;font-size:13px">
-          <strong>${m.name}</strong><br/>
+          <strong>${m.name}</strong>${isBtcmap ? ' <span style="background:#f59e0b;color:#0a0f1e;padding:1px 5px;border-radius:4px;font-size:10px;font-weight:600">BTCMap ⚡</span>' : ''}<br/>
           <span style="text-transform:capitalize">${m.category}</span><br/>
           <span style="color:#666">${(m.payment_methods || []).join(', ')}</span>
         </div>`
@@ -50,7 +52,7 @@ const MerchantMap = ({ merchants }: MerchantMapProps) => {
       const el = document.createElement('div');
       el.style.width = '12px';
       el.style.height = '12px';
-      el.style.backgroundColor = '#f59e0b';
+      el.style.backgroundColor = isBtcmap ? '#f59e0b' : '#818cf8';
       el.style.borderRadius = '50%';
       el.style.border = '2px solid #0a0f1e';
       el.style.cursor = 'pointer';
