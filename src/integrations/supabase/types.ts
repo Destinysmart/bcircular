@@ -169,6 +169,11 @@ export type Database = {
       communities: {
         Row: {
           admin_id: string | null
+          bbox_east: number | null
+          bbox_north: number | null
+          bbox_south: number | null
+          bbox_west: number | null
+          btcmap_last_synced: string | null
           city: string
           contact_email: string | null
           country: string
@@ -190,6 +195,11 @@ export type Database = {
         }
         Insert: {
           admin_id?: string | null
+          bbox_east?: number | null
+          bbox_north?: number | null
+          bbox_south?: number | null
+          bbox_west?: number | null
+          btcmap_last_synced?: string | null
           city: string
           contact_email?: string | null
           country: string
@@ -211,6 +221,11 @@ export type Database = {
         }
         Update: {
           admin_id?: string | null
+          bbox_east?: number | null
+          bbox_north?: number | null
+          bbox_south?: number | null
+          bbox_west?: number | null
+          btcmap_last_synced?: string | null
           city?: string
           contact_email?: string | null
           country?: string
@@ -362,6 +377,7 @@ export type Database = {
         Row: {
           address: string | null
           approved_at: string | null
+          btcmap_id: string | null
           category: string
           community_id: string
           created_at: string
@@ -370,6 +386,7 @@ export type Database = {
           lng: number | null
           name: string
           payment_methods: string[]
+          source: string | null
           status: Database["public"]["Enums"]["submission_status"]
           submitted_by: string | null
           website: string | null
@@ -377,6 +394,7 @@ export type Database = {
         Insert: {
           address?: string | null
           approved_at?: string | null
+          btcmap_id?: string | null
           category?: string
           community_id: string
           created_at?: string
@@ -385,6 +403,7 @@ export type Database = {
           lng?: number | null
           name: string
           payment_methods?: string[]
+          source?: string | null
           status?: Database["public"]["Enums"]["submission_status"]
           submitted_by?: string | null
           website?: string | null
@@ -392,6 +411,7 @@ export type Database = {
         Update: {
           address?: string | null
           approved_at?: string | null
+          btcmap_id?: string | null
           category?: string
           community_id?: string
           created_at?: string
@@ -400,6 +420,7 @@ export type Database = {
           lng?: number | null
           name?: string
           payment_methods?: string[]
+          source?: string | null
           status?: Database["public"]["Enums"]["submission_status"]
           submitted_by?: string | null
           website?: string | null
