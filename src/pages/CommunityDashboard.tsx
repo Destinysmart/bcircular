@@ -156,6 +156,7 @@ const CommunityDashboard = () => {
 
   const displayScore = latestScore?.score ?? 0;
   const displayMerchants = merchants?.length ?? 0;
+  const btcmapCount = merchants?.filter(m => (m as any).source === 'btcmap').length ?? 0;
   const displayEarners = earners?.length ?? 0;
   const hasBlinkData = (blinkTxStats || 0) > 0;
 
@@ -249,7 +250,12 @@ const CommunityDashboard = () => {
 
         {/* Key Metrics */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-          <StatCard label="Merchants" value={displayMerchants} icon={<Store className="h-3.5 w-3.5" />} />
+          <StatCard
+            label="Merchants"
+            value={displayMerchants}
+            icon={<Store className="h-3.5 w-3.5" />}
+            subtitle={btcmapCount > 0 ? `${btcmapCount} BTCMap · ${displayMerchants - btcmapCount} self-reported` : undefined}
+          />
           <StatCard label="Earners" value={displayEarners} icon={<Users className="h-3.5 w-3.5" />} />
           <StatCard label="Wallets" value={walletCount ?? 0} icon={<Wallet className="h-3.5 w-3.5" />} />
           <StatCard
