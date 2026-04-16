@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
       // Fetch all data in parallel
       const [communityRes, merchantsRes, earnersRes, txRes, blinkTxRes, walletsRes] = await Promise.all([
         supabase.from('communities').select('declared_population').eq('id', communityId).single(),
-        supabase.from('merchants').select('id, category, created_at').eq('community_id', communityId).eq('status', 'approved'),
+        supabase.from('merchants').select('id, category, created_at, source').eq('community_id', communityId).eq('status', 'approved'),
         supabase.from('earners').select('id, created_at').eq('community_id', communityId).eq('status', 'approved'),
         supabase.from('transactions').select('id, amount_sats, is_circular, created_at').eq('community_id', communityId).eq('status', 'approved'),
         supabase.from('blink_transactions').select('id, direction, settlement_amount, is_internal, counterparty_wallet_id, wallet_id, blink_created_at').eq('community_id', communityId),
@@ -57,9 +57,13 @@ Deno.serve(async (req) => {
       const hasBlinkData = blinkTx.length > 0
 
       // ── Pillar 1: Merchant Saturation (25%) ──
+      // BTCMap merchants count 1.5× because they're independently verified
+      const btcmapCount = m.filter((x: any) => x.source === 'btcmap').length
+      const selfReportedCount = m.filter((x: any) => x.source !== 'btcmap').length
+      const weightedMerchantCount = (btcmapCount * 1.5) + selfReportedCount
       const uniqueCategories = new Set(m.map((x: any) => x.category)).size
       const diversityBonus = Math.min(uniqueCategories * 2, 10)
-      const saturation = Math.min((m.length / pop) * 1000 + diversityBonus, 100)
+      const saturation = Math.min((weightedMerchantCount / pop) * 1000 + diversityBonus, 100)
 
       // ── Pillar 2: Retention Rate (25%) ──
       // Use Blink data if available (more accurate), else fall back to self-reported
