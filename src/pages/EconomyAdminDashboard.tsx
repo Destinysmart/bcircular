@@ -12,8 +12,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchCommunityBySlug, fetchLatestScore, fetchPendingSubmissions, fetchCommunityMerchants, fetchCommunityEarners, fetchCommunityTransactions } from '@/lib/api';
-import { CheckCircle, XCircle, Upload, Trash2, RefreshCw } from 'lucide-react';
+import { CheckCircle, XCircle, Upload, Trash2, RefreshCw, MapPin } from 'lucide-react';
 import BlinkWalletSettings from '@/components/BlinkWalletSettings';
+import BBoxPicker from '@/components/BBoxPicker';
 
 const EconomyAdminDashboard = () => {
   const { id } = useParams();
@@ -105,6 +106,47 @@ const EconomyAdminDashboard = () => {
   const [validatorEmail, setValidatorEmail] = useState('');
   const [saving, setSaving] = useState(false);
   const [recalculating, setRecalculating] = useState(false);
+  const [savingBbox, setSavingBbox] = useState(false);
+  const [syncingBtcmap, setSyncingBtcmap] = useState(false);
+
+  const handleSaveBbox = async (bbox: { north: number; south: number; east: number; west: number }) => {
+    if (!communityId) return;
+    setSavingBbox(true);
+    try {
+      await supabase.from('communities').update({
+        bbox_north: bbox.north,
+        bbox_south: bbox.south,
+        bbox_east: bbox.east,
+        bbox_west: bbox.west,
+      }).eq('id', communityId);
+      queryClient.invalidateQueries({ queryKey: ['community-by-id', id] });
+      toast({ title: 'Bounding box saved' });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setSavingBbox(false);
+    }
+  };
+
+  const handleSyncBtcmap = async () => {
+    if (!communityId) return;
+    setSyncingBtcmap(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-btcmap', {
+        body: { community_id: communityId },
+      });
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ['merchants', communityId] });
+      toast({ title: 'BTCMap sync complete', description: `${data.synced} merchants synced from BTCMap.` });
+    } catch (err: any) {
+      toast({ title: 'BTCMap sync failed', description: err.message, variant: 'destructive' });
+    } finally {
+      setSyncingBtcmap(false);
+    }
+  };
+
+  const hasBbox = community?.bbox_north != null && community?.bbox_south != null &&
+    community?.bbox_east != null && community?.bbox_west != null;
 
   useEffect(() => {
     if (community) {
@@ -342,6 +384,40 @@ const EconomyAdminDashboard = () => {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+        </section>
+
+        {/* BTCMap Integration */}
+        <section className="rounded-lg border border-border bg-card p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-2">BTCMap Integration</h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            Import verified Bitcoin-accepting merchants from <a href="https://btcmap.org" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">BTCMap</a> within your economic zone. BTCMap merchants receive a 1.5× trust weight.
+          </p>
+
+          <BBoxPicker
+            initialBBox={{
+              north: community?.bbox_north ? Number(community.bbox_north) : undefined,
+              south: community?.bbox_south ? Number(community.bbox_south) : undefined,
+              east: community?.bbox_east ? Number(community.bbox_east) : undefined,
+              west: community?.bbox_west ? Number(community.bbox_west) : undefined,
+            }}
+            onSave={handleSaveBbox}
+            saving={savingBbox}
+          />
+
+          {hasBbox && (
+            <div className="mt-4 pt-4 border-t border-border">
+              <div className="flex items-center gap-3">
+                <Button onClick={handleSyncBtcmap} disabled={syncingBtcmap} variant="outline" size="sm" className="gap-1.5">
+                  <RefreshCw className={`h-3.5 w-3.5 ${syncingBtcmap ? 'animate-spin' : ''}`} /> Sync BTCMap data
+                </Button>
+                {community?.btcmap_last_synced && (
+                  <span className="text-xs text-muted-foreground">
+                    Last synced: {new Date(community.btcmap_last_synced).toLocaleString()}
+                  </span>
+                )}
+              </div>
             </div>
           )}
         </section>
