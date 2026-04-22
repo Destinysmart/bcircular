@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, ArrowUpRight, BookOpen, Globe, MapPin, Plus, Repeat, Search, Shield, Store, TrendingUp, Users, Zap } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, BookOpen, Globe, MapPin, Plus, Repeat, Search, Shield, Store, TrendingUp, UserPlus, Users, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,6 +46,27 @@ const Home = () => {
       return data || [];
     },
     enabled: !!user,
+  });
+
+  const { data: myEconomySummaries } = useQuery({
+    queryKey: ['my-economy-summaries', user?.id, myEconomies?.map(e => e.id).join(',')],
+    queryFn: async () => {
+      const rows = await Promise.all((myEconomies || []).map(async (eco) => {
+        const [scoreRes, pendingMerchants, pendingEarners, pendingTx] = await Promise.all([
+          supabase.from('circularity_scores').select('score, calculated_at').eq('community_id', eco.id).order('calculated_at', { ascending: false }).limit(1).maybeSingle(),
+          supabase.from('merchants').select('id', { count: 'exact', head: true }).eq('community_id', eco.id).eq('status', 'pending'),
+          supabase.from('earners').select('id', { count: 'exact', head: true }).eq('community_id', eco.id).eq('status', 'pending'),
+          supabase.from('transactions').select('id', { count: 'exact', head: true }).eq('community_id', eco.id).eq('status', 'pending'),
+        ]);
+        return {
+          communityId: eco.id,
+          score: scoreRes.data?.score ?? 0,
+          pending: (pendingMerchants.count || 0) + (pendingEarners.count || 0) + (pendingTx.count || 0),
+        };
+      }));
+      return Object.fromEntries(rows.map(row => [row.communityId, row]));
+    },
+    enabled: !!user && !!myEconomies?.length,
   });
 
   // User's validator roles
@@ -116,6 +137,15 @@ const Home = () => {
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-sm truncate">{eco.name}</div>
                   <div className="text-xs text-muted-foreground">{eco.city}, {eco.country}</div>
+                  <div className="mt-3 grid gap-2 text-xs">
+                    <div className="flex items-center justify-between rounded-md bg-secondary/50 px-2 py-1.5"><span>Your score this week</span><span className="font-mono font-bold text-score-amber">{myEconomySummaries?.[eco.id]?.score ?? 0}</span></div>
+                    <div className="rounded-md bg-score-amber/10 px-2 py-1.5 text-score-amber">You have {myEconomySummaries?.[eco.id]?.pending ?? 0} submissions awaiting validator review</div>
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-score-amber px-2 py-1 font-semibold text-background"><Store className="h-3 w-3" /> Add merchant</span>
+                      <span className="inline-flex items-center gap-1 rounded-md bg-score-amber px-2 py-1 font-semibold text-background"><UserPlus className="h-3 w-3" /> Add earner</span>
+                      <span className="inline-flex items-center gap-1 rounded-md bg-score-amber px-2 py-1 font-semibold text-background"><Zap className="h-3 w-3" /> Sync BTCMap</span>
+                    </div>
+                  </div>
                 </div>
                 <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-muted-foreground capitalize">{eco.status}</span>
                 <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
