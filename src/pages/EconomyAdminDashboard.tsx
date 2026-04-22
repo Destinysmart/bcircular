@@ -12,7 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchCommunityBySlug, fetchLatestScore, fetchPendingSubmissions, fetchCommunityMerchants, fetchCommunityEarners, fetchCommunityTransactions } from '@/lib/api';
-import { AlertTriangle, CheckCircle, XCircle, Upload, Trash2, RefreshCw, MapPin, Download, Printer } from 'lucide-react';
+import { AlertTriangle, CheckCircle, XCircle, Trash2, RefreshCw, MapPin, Download, Printer } from 'lucide-react';
 import BlinkWalletSettings from '@/components/BlinkWalletSettings';
 import BBoxPicker from '@/components/BBoxPicker';
 import EconomyLogo from '@/components/EconomyLogo';
@@ -244,29 +244,6 @@ const EconomyAdminDashboard = () => {
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !communityId || !user) return;
-    if (file.size > 2 * 1024 * 1024) {
-      toast({ title: 'File too large', description: 'Max 2MB', variant: 'destructive' });
-      return;
-    }
-    const ext = file.name.split('.').pop();
-    const path = `${communityId}/logo.${ext}`;
-    const { error } = await supabase.storage.from('community-assets').upload(path, file, { upsert: true });
-    if (error) { toast({ title: 'Upload error', description: error.message, variant: 'destructive' }); return; }
-    const { data: { publicUrl } } = supabase.storage.from('community-assets').getPublicUrl(path);
-
-    const { data: existing } = await supabase.from('community_profiles').select('id').eq('community_id', communityId).maybeSingle();
-    if (existing) {
-      await supabase.from('community_profiles').update({ logo_url: publicUrl }).eq('community_id', communityId);
-    } else {
-      await supabase.from('community_profiles').insert({ community_id: communityId, admin_user_id: user.id, logo_url: publicUrl });
-    }
-    queryClient.invalidateQueries({ queryKey: ['community-profile', communityId] });
-    toast({ title: 'Logo uploaded' });
   };
 
   const handleAppointValidator = async () => {
