@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
@@ -12,9 +12,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchCommunityBySlug, fetchLatestScore, fetchPendingSubmissions, fetchCommunityMerchants, fetchCommunityEarners, fetchCommunityTransactions } from '@/lib/api';
-import { CheckCircle, XCircle, Upload, Trash2, RefreshCw, MapPin } from 'lucide-react';
+import { CheckCircle, XCircle, Upload, Trash2, RefreshCw, MapPin, Download, Printer } from 'lucide-react';
 import BlinkWalletSettings from '@/components/BlinkWalletSettings';
 import BBoxPicker from '@/components/BBoxPicker';
+import { QRCodeCanvas } from 'qrcode.react';
 
 const EconomyAdminDashboard = () => {
   const { id } = useParams();
@@ -108,6 +109,7 @@ const EconomyAdminDashboard = () => {
   const [recalculating, setRecalculating] = useState(false);
   const [savingBbox, setSavingBbox] = useState(false);
   const [syncingBtcmap, setSyncingBtcmap] = useState(false);
+  const qrRef = useRef<HTMLDivElement>(null);
 
   const handleSaveBbox = async (bbox: { north: number; south: number; east: number; west: number }) => {
     if (!communityId) return;
@@ -266,6 +268,19 @@ const EconomyAdminDashboard = () => {
       setRecalculating(false);
     }
   };
+
+  const quickSubmitUrl = community ? `${window.location.origin}/quick-submit?economy=${community.slug}` : '';
+
+  const handleDownloadQr = () => {
+    const canvas = qrRef.current?.querySelector('canvas');
+    if (!canvas || !community) return;
+    const link = document.createElement('a');
+    link.download = `${community.slug}-quick-submit-qr.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  };
+
+  const handlePrintQr = () => window.print();
 
   if (authLoading || !community) {
     return <div className="min-h-screen bg-background"><Navbar /><div className="container py-16 text-center text-muted-foreground">Loading...</div></div>;
