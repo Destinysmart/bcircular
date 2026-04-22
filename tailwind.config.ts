@@ -56,6 +56,9 @@ export default {
           amber: "hsl(var(--score-amber))",
           green: "hsl(var(--score-green))",
         },
+        chart: {
+          4: "hsl(var(--chart-4))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

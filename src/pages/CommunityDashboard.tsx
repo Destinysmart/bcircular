@@ -1,7 +1,8 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Share2, Store, Users, Zap, ChevronDown, Info, ExternalLink, Shield, Wallet, Scale } from 'lucide-react';
+import { Share2, Store, Users, Zap, ChevronDown, Info, ExternalLink, Shield, Wallet, Scale, PlusCircle } from 'lucide-react';
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import ScoreRing from '@/components/ScoreRing';
 import ScoreBar from '@/components/ScoreBar';
@@ -13,11 +14,16 @@ import SatsMovementPanel from '@/components/SatsMovementPanel';
 import BlinkWalletSettings from '@/components/BlinkWalletSettings';
 import StatCard from '@/components/StatCard';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { fetchCommunityBySlug, fetchCommunityMerchants, fetchCommunityEarners, fetchLatestScore, fetchScoreHistory } from '@/lib/api';
+import { fetchCommunityBySlug, fetchCommunityMerchants, fetchCommunityEarners, fetchLatestScore, fetchScoreHistory, submitEarner } from '@/lib/api';
 import { supabase } from '@/integrations/supabase/client';
 import { getFlagEmoji } from '@/lib/mock-data';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 const pillarDescriptions: Record<string, string> = {
   'Merchant saturation': 'How many merchants accept Bitcoin relative to the economy size.',
@@ -30,6 +36,11 @@ const pillarDescriptions: Record<string, string> = {
 const CommunityDashboard = () => {
   const { user } = useAuth();
   const { slug } = useParams();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [earnerOpen, setEarnerOpen] = useState(false);
+  const [earnerDescription, setEarnerDescription] = useState('');
+  const [earnerPaymentMethod, setEarnerPaymentMethod] = useState('Lightning');
 
   const { data: community, isLoading, isError, error } = useQuery({
     queryKey: ['community', slug],
@@ -145,6 +156,18 @@ const CommunityDashboard = () => {
     enabled: !!user,
   });
 
+  const addEarnerMutation = useMutation({
+    mutationFn: () => submitEarner(communityId!, { description: earnerDescription, payment_method: earnerPaymentMethod }, user?.id),
+    onSuccess: () => {
+      setEarnerDescription('');
+      setEarnerPaymentMethod('Lightning');
+      setEarnerOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['earners', communityId] });
+      toast({ title: 'Earner submitted', description: 'Validators will review this earner within 48 hours.' });
+    },
+    onError: (err: Error) => toast({ title: 'Could not add earner', description: err.message, variant: 'destructive' }),
+  });
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -172,6 +195,7 @@ const CommunityDashboard = () => {
   const btcmapCount = merchants?.filter(m => (m as any).source === 'btcmap').length ?? 0;
   const displayEarners = earners?.length ?? 0;
   const hasBlinkData = (blinkTxStats || 0) > 0;
+  const canAdminEconomy = !!user && (community.admin_id === user.id || !!isCommunityAdmin || !!isSuperAdmin);
 
   const chartData = (scoreHistory && scoreHistory.length > 0)
     ? scoreHistory.slice(-12).map(s => ({
@@ -195,6 +219,17 @@ const CommunityDashboard = () => {
       <Navbar />
       <div className="container py-10">
         {/* Header */}
+        <div className="mb-8 rounded-2xl border border-score-amber/20 bg-foreground p-6 text-background shadow-[0_0_30px_hsl(var(--score-amber)/0.10)]">
+          <div className="hero-dot-grid absolute" />
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="mb-2 text-sm text-score-amber">{getFlagEmoji(community.country_code)} {community.city}, {community.country}</div>
+              <div className="text-3xl font-extrabold text-background">{community.name}</div>
+            </div>
+            <div className="font-mono text-5xl font-extrabold text-score-amber">{displayScore}</div>
+          </div>
+        </div>
+
         <div className="flex flex-col md:flex-row md:items-start gap-8 mb-10">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-4">
@@ -211,7 +246,7 @@ const CommunityDashboard = () => {
                   <span>{community.city}, {community.country}</span>
                   <ConfidenceBadge totalApproved={displayMerchants + displayEarners} proofCount={proofCount} />
                 </div>
-                <h1 className="text-2xl font-bold">{community.name}</h1>
+                <h1 className="text-[28px] font-bold">{community.name}</h1>
               </div>
             </div>
             {community.description && (
@@ -225,14 +260,29 @@ const CommunityDashboard = () => {
                 <a href={profile.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-foreground transition-colors"><ExternalLink className="h-3 w-3" /> Website</a>
               )}
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button variant="outline" size="sm" className="gap-1.5 rounded-full"><Share2 className="h-3.5 w-3.5" /> Share</Button>
               <a href={`/c/${slug}/submit`}><Button variant="outline" size="sm" className="gap-1.5 rounded-full"><Store className="h-3.5 w-3.5" /> Add merchant / earner</Button></a>
-              <Link to={`/c/${slug}/proofs`}><Button variant="outline" size="sm" className="gap-1.5 rounded-full border-score-amber text-score-amber hover:text-score-amber"><Shield className="h-3.5 w-3.5" /> Proof of Circularity</Button></Link>
+              {canAdminEconomy && (
+                <Dialog open={earnerOpen} onOpenChange={setEarnerOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-1.5 rounded-full border-score-amber text-score-amber hover:text-score-amber"><PlusCircle className="h-3.5 w-3.5" /> Add earner</Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader><DialogTitle>Add earner</DialogTitle></DialogHeader>
+                    <div className="space-y-4">
+                      <div><Label>Role description</Label><Textarea value={earnerDescription} onChange={e => setEarnerDescription(e.target.value)} placeholder="e.g. Freelance designer paid in sats" /></div>
+                      <div><Label>Payment method</Label><Input value={earnerPaymentMethod} onChange={e => setEarnerPaymentMethod(e.target.value)} placeholder="Lightning, on-chain, or both" /></div>
+                      <Button className="w-full" disabled={!earnerDescription.trim() || addEarnerMutation.isPending} onClick={() => addEarnerMutation.mutate()}>{addEarnerMutation.isPending ? 'Submitting…' : 'Submit earner'}</Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )}
+              <Link to={`/c/${slug}/proofs`}><Button size="sm" className="gap-1.5 rounded-full bg-score-amber text-background hover:bg-score-amber/90"><Shield className="h-3.5 w-3.5" /> Proof of Circularity</Button></Link>
             </div>
           </div>
           <div className="flex flex-col items-center gap-2">
-            <ScoreRing score={displayScore} />
+            <ScoreRing score={displayScore} size={180} strokeWidth={12} />
             <span className="text-xs text-muted-foreground">
               {latestScore ? `Updated ${new Date(latestScore.calculated_at).toLocaleDateString()}` : 'No score yet'}
             </span>
@@ -269,15 +319,15 @@ const CommunityDashboard = () => {
           <StatCard
             label="Merchants"
             value={displayMerchants}
-            icon={<Store className="h-3.5 w-3.5" />}
+            icon={<Store className="h-6 w-6 text-score-amber" />}
             subtitle={btcmapCount > 0 ? `${btcmapCount} BTCMap · ${displayMerchants - btcmapCount} self-reported` : undefined}
           />
-          <StatCard label="Earners" value={displayEarners} icon={<Users className="h-3.5 w-3.5" />} />
-          <StatCard label="Wallets" value={walletCount ?? 0} icon={<Wallet className="h-3.5 w-3.5" />} />
+          <StatCard label="Earners" value={displayEarners} icon={<Users className="h-6 w-6 text-score-green" />} />
+          <StatCard label="Wallets" value={walletCount ?? 0} icon={<Wallet className="h-6 w-6 text-primary" />} />
           <StatCard
             label="Transactions"
             value={hasBlinkData ? (blinkTxStats || 0).toLocaleString() : '—'}
-            icon={<Zap className="h-3.5 w-3.5" />}
+            icon={<Zap className="h-6 w-6 text-chart-4" />}
             subtitle={hasBlinkData ? 'Auto-synced via Blink' : undefined}
           />
         </div>

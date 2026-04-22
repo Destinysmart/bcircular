@@ -111,6 +111,17 @@
 }
 
 @layer utilities {
+  .hero-dot-grid {
+    background-image: radial-gradient(circle, hsl(var(--score-amber) / 0.18) 1px, transparent 1px);
+    background-size: 24px 24px;
+    animation: grid-drift 18s linear infinite;
+  }
+
+  @keyframes grid-drift {
+    from { background-position: 0 0; }
+    to { background-position: 48px 48px; }
+  }
+
   .font-mono-data {
     font-family: 'JetBrains Mono', monospace;
   }
