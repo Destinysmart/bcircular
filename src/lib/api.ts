@@ -50,6 +50,33 @@ export async function fetchCommunityTransactions(communityId: string) {
   return data;
 }
 
+export async function fetchProofs(communityId: string, status = 'approved') {
+  const { data, error } = await (supabase as any)
+    .from('proofs')
+    .select('*')
+    .eq('community_id', communityId)
+    .eq('status', status)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function submitProof(proof: {
+  community_id: string;
+  submitted_by: string;
+  title: string;
+  description?: string | null;
+  proof_type: 'photo' | 'video' | 'receipt' | 'screenshot';
+  media_url?: string | null;
+  merchant_name?: string | null;
+  amount_sats?: number | null;
+  is_circular: boolean;
+}) {
+  const { data, error } = await (supabase as any).from('proofs').insert(proof).select().single();
+  if (error) throw error;
+  return data;
+}
+
 export async function fetchLatestScore(communityId: string) {
   const { data, error } = await supabase
     .from('circularity_scores')
@@ -83,6 +110,17 @@ export async function fetchPendingSubmissions(communityId: string) {
     earners: earners.data || [],
     transactions: transactions.data || [],
   };
+}
+
+export async function fetchPendingProofs(communityId: string) {
+  const { data, error } = await (supabase as any)
+    .from('proofs')
+    .select('*')
+    .eq('community_id', communityId)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return data || [];
 }
 
 export async function fetchValidatorCommunities(userId: string) {
@@ -178,6 +216,11 @@ export async function castVote(submissionId: string, submissionType: string, val
   return data;
 }
 
+export async function updateProofStatus(proofId: string, status: 'approved' | 'rejected') {
+  const { error } = await (supabase as any).from('proofs').update({ status }).eq('id', proofId);
+  if (error) throw error;
+}
+
 export async function registerCommunity(community: {
   name: string;
   country: string;
@@ -220,11 +263,12 @@ export async function fetchAllCommunitiesWithStats() {
 
   const results = await Promise.all(
     (communities || []).map(async (c) => {
-      const [merchantsRes, earnersRes, txRes, scoreRes] = await Promise.all([
+      const [merchantsRes, earnersRes, txRes, scoreRes, proofRes] = await Promise.all([
         supabase.from('merchants').select('id', { count: 'exact', head: true }).eq('community_id', c.id).eq('status', 'approved'),
         supabase.from('earners').select('id', { count: 'exact', head: true }).eq('community_id', c.id).eq('status', 'approved'),
         supabase.from('transactions').select('amount_sats, is_circular').eq('community_id', c.id).eq('status', 'approved'),
         supabase.from('circularity_scores').select('*').eq('community_id', c.id).order('calculated_at', { ascending: false }).limit(1).maybeSingle(),
+        (supabase as any).from('proofs').select('id', { count: 'exact', head: true }).eq('community_id', c.id).eq('status', 'approved'),
       ]);
       const circularSats = (txRes.data || []).filter(t => t.is_circular).reduce((s, t) => s + Number(t.amount_sats), 0);
       const totalApproved = (merchantsRes.count || 0) + (earnersRes.count || 0) + (txRes.data?.length || 0);
@@ -237,9 +281,21 @@ export async function fetchAllCommunitiesWithStats() {
         score: scoreRes.data?.score || 0,
         weeklyChange: 0,
         totalApproved,
+        proofCount: proofRes.count || 0,
       };
     })
   );
 
   return results;
+}
+
+export async function fetchComparisonDetails(communityId: string) {
+  const [merchantsRes, scoreRes, proofRes] = await Promise.all([
+    supabase.from('merchants').select('*').eq('community_id', communityId).eq('status', 'approved'),
+    supabase.from('circularity_scores').select('*').eq('community_id', communityId).order('calculated_at', { ascending: false }).limit(1).maybeSingle(),
+    (supabase as any).from('proofs').select('id', { count: 'exact', head: true }).eq('community_id', communityId).eq('status', 'approved'),
+  ]);
+  if (merchantsRes.error) throw merchantsRes.error;
+  if (scoreRes.error) throw scoreRes.error;
+  return { merchants: merchantsRes.data || [], score: scoreRes.data, proofCount: proofRes.count || 0 };
 }
