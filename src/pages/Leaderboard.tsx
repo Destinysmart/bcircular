@@ -88,7 +88,6 @@ const Leaderboard = () => {
                 <span className="font-mono text-sm text-muted-foreground w-8 text-right">{i + 1}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span>{getFlagEmoji(c.countryCode || '')}</span>
                     <span className="text-lg">{getFlagEmoji(c.countryCode || '')}</span>
                     <span className="font-medium">{c.name}</span>
                     <span className="text-muted-foreground text-xs hidden md:inline">{c.city}, {c.country}</span>
