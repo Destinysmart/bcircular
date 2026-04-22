@@ -12,7 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchCommunityBySlug, fetchLatestScore, fetchPendingSubmissions, fetchCommunityMerchants, fetchCommunityEarners, fetchCommunityTransactions } from '@/lib/api';
-import { CheckCircle, XCircle, Upload, Trash2, RefreshCw, MapPin, Download, Printer } from 'lucide-react';
+import { AlertTriangle, CheckCircle, XCircle, Upload, Trash2, RefreshCw, MapPin, Download, Printer } from 'lucide-react';
 import BlinkWalletSettings from '@/components/BlinkWalletSettings';
 import BBoxPicker from '@/components/BBoxPicker';
 import { QRCodeCanvas } from 'qrcode.react';
@@ -297,6 +297,8 @@ const EconomyAdminDashboard = () => {
     { label: 'Growth', value: latestScore?.growth_score ?? 0 },
   ];
 
+  const zeroPillar = pillars.find(p => Math.round(p.value) === 0);
+
   const allPending = [
     ...(pending?.merchants || []).map(m => ({ id: m.id, type: 'merchant' as const, title: m.name, detail: m.category })),
     ...(pending?.earners || []).map(e => ({ id: e.id, type: 'earner' as const, title: e.description, detail: e.earning_method || '' })),
@@ -309,6 +311,16 @@ const EconomyAdminDashboard = () => {
       <div className="container py-8 max-w-4xl">
         <h1 className="text-2xl font-bold mb-1">Economy Admin Dashboard</h1>
         <p className="text-sm text-muted-foreground mb-8">{community.name}</p>
+
+        {zeroPillar && (
+          <div className="mb-6 flex flex-col gap-3 rounded-lg border border-score-amber/40 bg-score-amber/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3 text-sm">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-score-amber" />
+              <span><span className="font-semibold text-score-amber">Your {zeroPillar.label} score is 0.</span> Add earners to your economy to improve your circularity score.</span>
+            </div>
+            <Button size="sm" className="bg-score-amber text-background hover:bg-score-amber/90" onClick={() => navigate(`/c/${community.slug}/submit`)}>Add earners →</Button>
+          </div>
+        )}
 
         {/* Profile Section */}
         <section className="rounded-lg border border-border bg-card p-6 mb-6">
