@@ -367,6 +367,56 @@ const EconomyAdminDashboard = () => {
           </div>
         )}
 
+        {/* Branding Section */}
+        <section className="rounded-lg border border-border bg-card p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-4">Branding</h2>
+          <div className="space-y-6">
+            <div>
+              <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Banner image</div>
+              {(community as any).banner_url ? (
+                <div className="space-y-2">
+                  <img src={(community as any).banner_url} alt={`${community.name} banner`} className="h-[200px] w-full rounded-xl object-cover" />
+                  <button className="text-xs text-destructive hover:underline" onClick={() => removeBrandingImage('banner')}>Remove</button>
+                </div>
+              ) : (
+                <UploadZone
+                  id="upload-banner"
+                  label={uploadingBanner ? 'Uploading banner…' : 'Drag & drop or click to upload'}
+                  hint="Recommended: 1200×300px · Max 5MB · JPG, PNG, WebP supported"
+                  accept="image/jpeg,image/png,image/webp"
+                  onFile={(file) => uploadBrandingImage(file, 'banner')}
+                  previewClassName="h-[160px] w-full"
+                />
+              )}
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-[120px_1fr] sm:items-center">
+              <div>
+                {(community as any).logo_url ? (
+                  <div className="space-y-2 text-center sm:text-left">
+                    <EconomyLogo economy={{ name: community.name, logo_url: (community as any).logo_url }} size="lg" />
+                    <button className="text-xs text-destructive hover:underline" onClick={() => removeBrandingImage('logo')}>Remove</button>
+                  </div>
+                ) : (
+                  <UploadZone
+                    id="upload-logo"
+                    label={uploadingLogo ? 'Uploading logo…' : 'Logo'}
+                    hint="Click or drop"
+                    accept="image/jpeg,image/png,image/svg+xml,image/webp"
+                    onFile={(file) => uploadBrandingImage(file, 'logo')}
+                    className="aspect-square p-4"
+                    previewClassName="h-20 w-20 rounded-full"
+                  />
+                )}
+              </div>
+              <div>
+                <div className="font-medium">Upload your economy logo</div>
+                <p className="text-sm text-muted-foreground">Recommended: 400×400px. Will appear as a circle. Max 2MB · JPG, PNG, SVG, WebP.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Profile Section */}
         <section className="rounded-lg border border-border bg-card p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">Economy Profile</h2>
