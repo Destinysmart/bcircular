@@ -7,7 +7,7 @@ import { CheckCircle, XCircle, Clock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { fetchValidatorCommunities, fetchPendingSubmissions, fetchVotesForSubmission, castVote } from '@/lib/api';
+import { fetchValidatorCommunities, fetchPendingSubmissions, fetchVotesForSubmission, castVote, fetchPendingProofs, updateProofStatus } from '@/lib/api';
 
 interface PendingItem {
   id: string;
@@ -23,6 +23,8 @@ const ValidatorDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [items, setItems] = useState<PendingItem[]>([]);
+  const [proofs, setProofs] = useState<any[]>([]);
+  const [tab, setTab] = useState<'submissions' | 'proofs'>('submissions');
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [voting, setVoting] = useState<string | null>(null);
@@ -44,7 +46,9 @@ const ValidatorDashboard = () => {
       const allItems: PendingItem[] = [];
 
       for (const v of validatorData || []) {
-        const pending = await fetchPendingSubmissions(v.community_id);
+        const [pending, pendingProofs] = await Promise.all([fetchPendingSubmissions(v.community_id), fetchPendingProofs(v.community_id)]);
+        allItems.push(...[]);
+        setProofs(prev => prev);
 
         for (const m of pending.merchants) {
           const votes = await fetchVotesForSubmission(m.id);
@@ -73,6 +77,8 @@ const ValidatorDashboard = () => {
         }
       }
       setItems(allItems);
+      const proofLists = await Promise.all((validatorData || []).map(v => fetchPendingProofs(v.community_id)));
+      setProofs(proofLists.flat());
     } catch (err: any) {
       toast({ title: 'Error loading items', description: err.message, variant: 'destructive' });
     } finally {
@@ -86,6 +92,19 @@ const ValidatorDashboard = () => {
     try {
       await castVote(item.id, item.type, user.id, vote, notes[item.id]);
       toast({ title: `Vote cast: ${vote}` });
+      loadItems();
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setVoting(null);
+    }
+  };
+
+  const handleProofStatus = async (proofId: string, status: 'approved' | 'rejected') => {
+    setVoting(proofId);
+    try {
+      await updateProofStatus(proofId, status);
+      toast({ title: `Proof ${status}` });
       loadItems();
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
@@ -108,9 +127,36 @@ const ValidatorDashboard = () => {
       <Navbar />
       <div className="container py-8">
         <h1 className="text-2xl font-bold mb-1">Validator Dashboard</h1>
-        <p className="text-sm text-muted-foreground mb-6">{items.length} items pending review</p>
+        <p className="text-sm text-muted-foreground mb-6">{items.length + proofs.length} items pending review</p>
 
-        {items.length === 0 ? (
+        <div className="mb-6 flex border-b border-border">
+          <button onClick={() => setTab('submissions')} className={`px-4 py-2 text-sm border-b-2 ${tab === 'submissions' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground'}`}>Submissions</button>
+          <button onClick={() => setTab('proofs')} className={`px-4 py-2 text-sm border-b-2 ${tab === 'proofs' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground'}`}>Proofs</button>
+        </div>
+
+        {tab === 'proofs' ? (
+          proofs.length === 0 ? (
+            <div className="text-center py-16 text-muted-foreground">No pending proofs to review.</div>
+          ) : (
+            <div className="space-y-4">
+              {proofs.map(proof => (
+                <div key={proof.id} className="rounded-lg border border-border bg-card p-4">
+                  <div className="mb-3 flex items-start justify-between gap-4">
+                    <div>
+                      <div className="mb-1 flex items-center gap-2"><Badge variant="outline" className="text-xs capitalize">{proof.proof_type}</Badge><span className="font-medium">{proof.title}</span></div>
+                      <p className="text-sm text-muted-foreground">{proof.description || 'No description'}{proof.merchant_name ? ` · ${proof.merchant_name}` : ''}{proof.amount_sats ? ` · ${Number(proof.amount_sats).toLocaleString()} sats` : ''}</p>
+                    </div>
+                    {proof.media_url && <a href={proof.media_url} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">View media</a>}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" className="gap-1.5" disabled={voting === proof.id} onClick={() => handleProofStatus(proof.id, 'approved')}><CheckCircle className="h-3.5 w-3.5" /> Approve</Button>
+                    <Button size="sm" variant="outline" className="gap-1.5 text-destructive hover:text-destructive" disabled={voting === proof.id} onClick={() => handleProofStatus(proof.id, 'rejected')}><XCircle className="h-3.5 w-3.5" /> Reject</Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        ) : items.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground">
             <p>No pending submissions to review.</p>
             <p className="text-xs mt-1">You'll see items here when you're appointed as a validator for an economy.</p>
