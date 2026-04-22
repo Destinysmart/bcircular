@@ -8,6 +8,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import circularLogo from '@/assets/circular-logo.png';
 
 const Login = () => {
   const [isSignup, setIsSignup] = useState(false);
@@ -61,9 +62,7 @@ const Login = () => {
       <div className="container flex items-center justify-center py-20">
         <div className="w-full max-w-sm space-y-6">
           <div className="text-center">
-            <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center mx-auto mb-4">
-              <span className="text-primary-foreground font-bold text-lg">C</span>
-            </div>
+            <img src={circularLogo} alt="Circular" className="mx-auto mb-4 h-16 w-auto object-contain" />
             <h1 className="text-xl font-semibold">{title}</h1>
             <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
           </div>
