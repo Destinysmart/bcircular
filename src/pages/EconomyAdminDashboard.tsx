@@ -398,25 +398,6 @@ const EconomyAdminDashboard = () => {
         <section className="rounded-lg border border-border bg-card p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">Economy Profile</h2>
 
-          <div className="flex items-center gap-4 mb-6">
-            {profile?.logo_url ? (
-              <img src={profile.logo_url} alt="Logo" className="w-16 h-16 rounded-lg object-cover" />
-            ) : (
-              <div className="w-16 h-16 rounded-lg bg-secondary flex items-center justify-center text-xl font-bold text-muted-foreground">
-                {community.name.split(' ').map(w => w[0]).join('').slice(0, 2)}
-              </div>
-            )}
-            <div>
-              <Label htmlFor="logo-upload" className="cursor-pointer">
-                <Button variant="outline" size="sm" className="gap-1.5" asChild>
-                  <span><Upload className="h-3.5 w-3.5" /> Upload logo</span>
-                </Button>
-              </Label>
-              <input id="logo-upload" type="file" accept="image/png,image/jpeg,image/svg+xml" className="hidden" onChange={handleLogoUpload} />
-              <p className="text-xs text-muted-foreground mt-1">PNG, JPG, or SVG. Max 2MB.</p>
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div><Label>Economy name</Label><Input value={name} onChange={e => setName(e.target.value)} /></div>
             <div><Label>Declared population</Label><Input type="number" value={declaredPop} onChange={e => setDeclaredPop(e.target.value)} /></div>
