@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Proof media is publicly readable" ON storage.objects;
