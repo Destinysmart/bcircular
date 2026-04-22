@@ -1,7 +1,8 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Share2, Store, Users, Zap, ChevronDown, Info, ExternalLink, Shield, Wallet, Scale } from 'lucide-react';
+import { Share2, Store, Users, Zap, ChevronDown, Info, ExternalLink, Shield, Wallet, Scale, PlusCircle } from 'lucide-react';
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import ScoreRing from '@/components/ScoreRing';
 import ScoreBar from '@/components/ScoreBar';
@@ -13,11 +14,16 @@ import SatsMovementPanel from '@/components/SatsMovementPanel';
 import BlinkWalletSettings from '@/components/BlinkWalletSettings';
 import StatCard from '@/components/StatCard';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { fetchCommunityBySlug, fetchCommunityMerchants, fetchCommunityEarners, fetchLatestScore, fetchScoreHistory } from '@/lib/api';
+import { fetchCommunityBySlug, fetchCommunityMerchants, fetchCommunityEarners, fetchLatestScore, fetchScoreHistory, submitEarner } from '@/lib/api';
 import { supabase } from '@/integrations/supabase/client';
 import { getFlagEmoji } from '@/lib/mock-data';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 const pillarDescriptions: Record<string, string> = {
   'Merchant saturation': 'How many merchants accept Bitcoin relative to the economy size.',
@@ -30,6 +36,11 @@ const pillarDescriptions: Record<string, string> = {
 const CommunityDashboard = () => {
   const { user } = useAuth();
   const { slug } = useParams();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [earnerOpen, setEarnerOpen] = useState(false);
+  const [earnerDescription, setEarnerDescription] = useState('');
+  const [earnerPaymentMethod, setEarnerPaymentMethod] = useState('Lightning');
 
   const { data: community, isLoading, isError, error } = useQuery({
     queryKey: ['community', slug],
@@ -143,6 +154,18 @@ const CommunityDashboard = () => {
       return data?.is_super_admin || false;
     },
     enabled: !!user,
+  });
+
+  const addEarnerMutation = useMutation({
+    mutationFn: () => submitEarner(communityId!, { description: earnerDescription, payment_method: earnerPaymentMethod }, user?.id),
+    onSuccess: () => {
+      setEarnerDescription('');
+      setEarnerPaymentMethod('Lightning');
+      setEarnerOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['earners', communityId] });
+      toast({ title: 'Earner submitted', description: 'Validators will review this earner within 48 hours.' });
+    },
+    onError: (err: Error) => toast({ title: 'Could not add earner', description: err.message, variant: 'destructive' }),
   });
 
   if (isLoading) {
