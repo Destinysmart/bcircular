@@ -10,6 +10,7 @@ import { fetchCommunities, submitEarner, submitMerchant, submitTransaction } fro
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import circularLogo from '@/assets/circular-logo.png';
 
 type SubmitKind = 'merchant' | 'earner' | 'transaction';
 
@@ -89,7 +90,7 @@ const QuickSubmit = () => {
   return (
     <main className="min-h-screen bg-background px-4 py-5">
       <div className="mx-auto max-w-sm">
-        <div className="mb-5 flex items-center gap-2"><div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold">C</div><div><h1 className="font-semibold">Quick Submit</h1><p className="text-xs text-muted-foreground">{economy?.name || 'Select economy'}</p></div></div>
+        <div className="mb-5 flex items-center gap-2"><img src={circularLogo} alt="Circular" className="h-9 w-auto object-contain" /><div><h1 className="font-semibold">Quick Submit</h1><p className="text-xs text-muted-foreground">{economy?.name || 'Select economy'}</p></div></div>
         {!kind ? (
           <section className="space-y-3">
             <h2 className="text-xl font-bold">What are you submitting?</h2>

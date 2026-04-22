@@ -1,6 +1,7 @@
 import Navbar from '@/components/Navbar';
-import { Bitcoin, ExternalLink } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import circularLogo from '@/assets/circular-logo.png';
 
 const pillars = [
   {
@@ -62,8 +63,8 @@ const Methodology = () => (
   <div className="min-h-screen bg-background">
     <Navbar />
     <div className="container py-12 max-w-3xl">
-      <div className="flex items-center gap-2 text-primary text-sm font-mono mb-4">
-        <Bitcoin className="h-4 w-4" />
+      <div className="flex items-center gap-3 text-primary text-sm font-mono mb-4">
+        <img src={circularLogo} alt="Circular" className="h-12 w-auto object-contain" />
         <span>METHODOLOGY</span>
       </div>
       <h1 className="text-3xl font-bold mb-2">How the Circularity Score Works</h1>
@@ -137,7 +138,7 @@ const Methodology = () => (
 
     <footer className="border-t border-border py-8 mt-8">
       <div className="container flex items-center justify-between text-xs text-muted-foreground">
-        <div className="flex items-center gap-2"><Bitcoin className="h-4 w-4 text-primary" /><span>Circular — Bitcoin Circular Economy Tracker</span></div>
+        <div className="flex items-center gap-2"><img src={circularLogo} alt="Circular" className="h-6 w-auto object-contain" /><span>Circular — Bitcoin Circular Economy Tracker</span></div>
         <span>No funds held. Ever.</span>
       </div>
     </footer>

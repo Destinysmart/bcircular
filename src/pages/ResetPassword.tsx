@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import circularLogo from '@/assets/circular-logo.png';
 
 const ResetPassword = () => {
   const [password, setPassword] = useState('');
@@ -76,9 +77,7 @@ const ResetPassword = () => {
       <div className="container flex items-center justify-center py-20">
         <div className="w-full max-w-sm space-y-6">
           <div className="text-center">
-            <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center mx-auto mb-4">
-              <span className="text-primary-foreground font-bold text-lg">C</span>
-            </div>
+            <img src={circularLogo} alt="Circular" className="mx-auto mb-4 h-16 w-auto object-contain" />
             <h1 className="text-xl font-semibold">Set new password</h1>
             <p className="text-sm text-muted-foreground mt-1">Enter your new password below.</p>
           </div>

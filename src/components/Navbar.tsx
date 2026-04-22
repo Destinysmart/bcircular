@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import circularLogo from '@/assets/circular-logo.png';
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
@@ -31,11 +32,8 @@ const Navbar = () => {
   return (
     <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
       <div className="container flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center gap-2.5">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-sm">C</span>
-          </div>
-          <span className="font-semibold text-lg tracking-tight text-score-amber">Circular</span>
+        <Link to="/" className="flex items-center">
+          <img src={circularLogo} alt="Circular" className="h-9 w-auto object-contain" />
         </Link>
 
         <div className="hidden md:flex items-center gap-1">
