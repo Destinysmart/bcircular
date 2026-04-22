@@ -75,15 +75,6 @@ const CommunityDashboard = () => {
     enabled: !!communityId,
   });
 
-  const { data: profile } = useQuery({
-    queryKey: ['community-profile', communityId],
-    queryFn: async () => {
-      const { data } = await supabase.from('community_profiles').select('*').eq('community_id', communityId!).maybeSingle();
-      return data;
-    },
-    enabled: !!communityId,
-  });
-
   const { data: adminProfile } = useQuery({
     queryKey: ['admin-profile', community?.admin_id],
     queryFn: async () => {
@@ -199,6 +190,7 @@ const CommunityDashboard = () => {
   const canAdminEconomy = !!user && (community.admin_id === user.id || !!isCommunityAdmin || !!isSuperAdmin);
   const logoUrl = (community as any).logo_url as string | null | undefined;
   const bannerUrl = (community as any).banner_url as string | null | undefined;
+  const websiteUrl = (community as any).website as string | null | undefined;
 
   const chartData = (scoreHistory && scoreHistory.length > 0)
     ? scoreHistory.slice(-12).map(s => ({
@@ -269,10 +261,10 @@ const CommunityDashboard = () => {
             )}
             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
               {adminProfile && (
-                <span>Managed by {adminProfile.display_name}{profile?.logo_url && community.admin_id && <span className="ml-1 text-primary">✓</span>}</span>
+                <span>Managed by {adminProfile.display_name}{logoUrl && community.admin_id && <span className="ml-1 text-primary">✓</span>}</span>
               )}
-              {profile?.website && (
-                <a href={profile.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-foreground transition-colors"><ExternalLink className="h-3 w-3" /> Website</a>
+              {websiteUrl && (
+                <a href={websiteUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-foreground transition-colors"><ExternalLink className="h-3 w-3" /> Website</a>
               )}
             </div>
             <div className="flex flex-wrap gap-2">
