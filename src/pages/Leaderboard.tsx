@@ -10,6 +10,12 @@ import { Button } from '@/components/ui/button';
 
 const regions = ['All', 'Africa', 'Latin America', 'Europe', 'Asia'];
 
+const scoreBorderColor = (score: number) => {
+  if (score > 75) return 'border-l-score-green';
+  if (score >= 50) return 'border-l-score-amber';
+  return 'border-l-score-red';
+};
+
 const Leaderboard = () => {
   const navigate = useNavigate();
   const [region, setRegion] = useState('All');
@@ -35,6 +41,9 @@ const Leaderboard = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="container py-10">
+        <div className="mb-6 rounded-xl border border-score-amber/30 bg-foreground px-5 py-4 font-mono text-sm font-semibold text-score-amber shadow-[0_0_24px_hsl(var(--score-amber)/0.10)]">
+          🌍 {list.length} Bitcoin circular economies tracked globally
+        </div>
         <h1 className="text-2xl font-bold mb-1">Global Leaderboard</h1>
         <p className="text-sm text-muted-foreground mb-8">Ranked by circularity score across all tracked economies.</p>
 
@@ -74,12 +83,13 @@ const Leaderboard = () => {
               <div
                 key={c.id || i}
                 onClick={() => navigate(`/c/${c.slug}`)}
-                className="group flex items-center gap-4 p-4 rounded-xl hover:bg-secondary/60 transition-colors"
+                className={`group flex items-center gap-4 rounded-xl border-l-4 ${scoreBorderColor(c.score ?? 0)} p-4 transition-all hover:bg-secondary/60 hover:shadow-[0_0_24px_hsl(var(--score-amber)/0.12)]`}
               >
                 <span className="font-mono text-sm text-muted-foreground w-8 text-right">{i + 1}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span>{getFlagEmoji(c.countryCode || '')}</span>
+                    <span className="text-lg">{getFlagEmoji(c.countryCode || '')}</span>
                     <span className="font-medium">{c.name}</span>
                     <span className="text-muted-foreground text-xs hidden md:inline">{c.city}, {c.country}</span>
                     <ConfidenceBadge totalApproved={c.totalApproved} />
@@ -95,7 +105,7 @@ const Leaderboard = () => {
                       <div className={`h-full rounded-full ${getScoreBgColor(c.score ?? 0)}`} style={{ width: `${c.score ?? 0}%` }} />
                     </div>
                   </div>
-                  <span className={`font-mono font-semibold text-lg w-10 text-right ${getScoreColor(c.score ?? 0)}`}>
+                  <span className={`font-mono text-2xl font-extrabold w-12 text-right ${getScoreColor(c.score ?? 0)}`}>
                     {c.score ?? 0}
                   </span>
                   <div className="hidden sm:block w-12 text-right">
