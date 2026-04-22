@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useMemo } from 'react';
 import Navbar from '@/components/Navbar';
+import EconomyLogo from '@/components/EconomyLogo';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchAllCommunitiesWithStats } from '@/lib/api';
 import { supabase } from '@/integrations/supabase/client';
@@ -131,9 +132,7 @@ const Home = () => {
                 to={`/dashboard/economy/${eco.id}`}
                 className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:bg-secondary/50 transition-colors group"
               >
-                <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <Globe className="h-4 w-4 text-primary" />
-                </div>
+                <EconomyLogo economy={eco as any} size="md" className="shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-sm truncate">{eco.name}</div>
                   <div className="text-xs text-muted-foreground">{eco.city}, {eco.country}</div>
