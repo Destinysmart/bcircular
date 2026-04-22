@@ -44,11 +44,11 @@ const ValidatorDashboard = () => {
     try {
       const validatorData = await fetchValidatorCommunities(user.id);
       const allItems: PendingItem[] = [];
+      const allProofs: any[] = [];
 
       for (const v of validatorData || []) {
         const [pending, pendingProofs] = await Promise.all([fetchPendingSubmissions(v.community_id), fetchPendingProofs(v.community_id)]);
-        allItems.push(...[]);
-        setProofs(prev => prev);
+        allProofs.push(...pendingProofs);
 
         for (const m of pending.merchants) {
           const votes = await fetchVotesForSubmission(m.id);
@@ -77,8 +77,7 @@ const ValidatorDashboard = () => {
         }
       }
       setItems(allItems);
-      const proofLists = await Promise.all((validatorData || []).map(v => fetchPendingProofs(v.community_id)));
-      setProofs(proofLists.flat());
+      setProofs(allProofs);
     } catch (err: any) {
       toast({ title: 'Error loading items', description: err.message, variant: 'destructive' });
     } finally {
