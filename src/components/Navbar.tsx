@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { LogOut, Menu, Shield, Settings, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
+  const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const { data: profile } = useQuery({
@@ -34,7 +35,7 @@ const Navbar = () => {
           <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
             <span className="text-primary-foreground font-bold text-sm">C</span>
           </div>
-          <span className="font-semibold text-lg tracking-tight">Circular</span>
+          <span className="font-semibold text-lg tracking-tight text-score-amber">Circular</span>
         </Link>
 
         <div className="hidden md:flex items-center gap-1">
@@ -42,7 +43,7 @@ const Navbar = () => {
             <Link
               key={link.to}
               to={link.to}
-              className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground rounded-md hover:bg-secondary transition-colors"
+              className={`border-b-2 px-3 py-2 text-sm rounded-md transition-colors ${location.pathname === link.to ? 'border-score-amber text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary'}`}
             >
               {link.label}
             </Link>
