@@ -346,6 +346,25 @@ const EconomyAdminDashboard = () => {
           <Button onClick={handleSaveProfile} disabled={saving}>{saving ? 'Saving...' : 'Save changes'}</Button>
         </section>
 
+        {/* Quick Submit QR Code */}
+        <section className="rounded-lg border border-border bg-card p-6 mb-6 print:shadow-none" ref={qrRef}>
+          <h2 className="text-lg font-semibold mb-2">Quick Submit QR Code</h2>
+          <p className="text-sm text-muted-foreground mb-4">Print this and display it at merchant locations. Customers scan it to instantly submit a merchant or transaction.</p>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div className="w-fit rounded-lg border border-border bg-background p-4">
+              <QRCodeCanvas value={quickSubmitUrl} size={180} includeMargin />
+              <p className="mt-2 text-center text-sm font-medium">{community.name}</p>
+            </div>
+            <div className="space-y-2">
+              <p className="break-all font-mono text-xs text-muted-foreground">{quickSubmitUrl}</p>
+              <div className="flex flex-wrap gap-2 print:hidden">
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={handleDownloadQr}><Download className="h-3.5 w-3.5" /> Download QR</Button>
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={handlePrintQr}><Printer className="h-3.5 w-3.5" /> Print QR</Button>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Validators Section */}
         <section className="rounded-lg border border-border bg-card p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">Validators ({validators?.length || 0})</h2>
