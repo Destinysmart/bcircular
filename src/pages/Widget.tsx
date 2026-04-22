@@ -1,9 +1,9 @@
 import { useParams } from 'react-router-dom';
-import { Bitcoin } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchCommunityBySlug, fetchLatestScore } from '@/lib/api';
 import { supabase } from '@/integrations/supabase/client';
 import { getScoreColor } from '@/lib/mock-data';
+import circularLogo from '@/assets/circular-logo.png';
 
 const Widget = () => {
   const { slug } = useParams();
@@ -62,9 +62,8 @@ const Widget = () => {
         </div>
       </div>
       <div className="flex items-center gap-1 text-xs text-muted-foreground">
-        <Bitcoin className="h-3 w-3 text-primary" />
         <a href={`https://circular.btc/c/${community.slug}`} target="_blank" rel="noopener" className="hover:text-primary">
-          Powered by Circular
+          <img src={circularLogo} alt="Circular" className="h-8 w-auto object-contain" />
         </a>
       </div>
     </div>

@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import { fetchAllCommunitiesWithStats } from '@/lib/api';
 import { getFlagEmoji, getScoreColor } from '@/lib/mock-data';
+import circularLogo from '@/assets/circular-logo.png';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -46,11 +47,20 @@ const Homepage = () => {
         <div className="absolute inset-0 hero-dot-grid opacity-70" aria-hidden="true" />
         <div className="container relative pt-24 pb-20 md:pt-32 md:pb-28">
         <div className="max-w-2xl">
-          <motion.h1
+          <motion.img
+            src={circularLogo}
+            alt="Circular"
             variants={fadeUp}
             initial="hidden"
             animate="visible"
             custom={0}
+            className="mx-auto mb-8 h-20 w-auto object-contain md:mx-0"
+          />
+          <motion.h1
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            custom={1}
             className="text-5xl md:text-[4rem] lg:text-[4.75rem] font-extrabold leading-[0.98] tracking-tight mb-6"
           >
             Measure the Bitcoin
@@ -61,7 +71,7 @@ const Homepage = () => {
             variants={fadeUp}
             initial="hidden"
             animate="visible"
-            custom={1}
+            custom={2}
             className="text-lg text-muted-foreground leading-relaxed max-w-lg mb-10"
           >
             Real-time intelligence for Bitcoin communities. Track merchants, earners, and sats flow — powered by live wallet data.
@@ -70,7 +80,7 @@ const Homepage = () => {
             variants={fadeUp}
             initial="hidden"
             animate="visible"
-            custom={2}
+            custom={3}
             className="flex flex-wrap gap-3"
           >
             <Link to="/register">
@@ -220,9 +230,7 @@ const Homepage = () => {
       <footer className="border-t border-border py-10">
         <div className="container flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
-            <div className="h-5 w-5 rounded bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-[10px]">C</span>
-            </div>
+            <img src={circularLogo} alt="Circular" className="h-5 w-auto object-contain" />
             <span>Circular — Bitcoin Circular Economy Tracker</span>
           </div>
           <span>No funds held. Ever.</span>
