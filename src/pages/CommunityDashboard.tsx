@@ -319,15 +319,15 @@ const CommunityDashboard = () => {
           <StatCard
             label="Merchants"
             value={displayMerchants}
-            icon={<Store className="h-3.5 w-3.5" />}
+            icon={<Store className="h-6 w-6 text-score-amber" />}
             subtitle={btcmapCount > 0 ? `${btcmapCount} BTCMap · ${displayMerchants - btcmapCount} self-reported` : undefined}
           />
-          <StatCard label="Earners" value={displayEarners} icon={<Users className="h-3.5 w-3.5" />} />
-          <StatCard label="Wallets" value={walletCount ?? 0} icon={<Wallet className="h-3.5 w-3.5" />} />
+          <StatCard label="Earners" value={displayEarners} icon={<Users className="h-6 w-6 text-score-green" />} />
+          <StatCard label="Wallets" value={walletCount ?? 0} icon={<Wallet className="h-6 w-6 text-primary" />} />
           <StatCard
             label="Transactions"
             value={hasBlinkData ? (blinkTxStats || 0).toLocaleString() : '—'}
-            icon={<Zap className="h-3.5 w-3.5" />}
+            icon={<Zap className="h-6 w-6 text-chart-4" />}
             subtitle={hasBlinkData ? 'Auto-synced via Blink' : undefined}
           />
         </div>
