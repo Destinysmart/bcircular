@@ -13,6 +13,7 @@ import LiveActivityFeed from '@/components/LiveActivityFeed';
 import SatsMovementPanel from '@/components/SatsMovementPanel';
 import BlinkWalletSettings from '@/components/BlinkWalletSettings';
 import StatCard from '@/components/StatCard';
+import EconomyLogo from '@/components/EconomyLogo';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -196,6 +197,8 @@ const CommunityDashboard = () => {
   const displayEarners = earners?.length ?? 0;
   const hasBlinkData = (blinkTxStats || 0) > 0;
   const canAdminEconomy = !!user && (community.admin_id === user.id || !!isCommunityAdmin || !!isSuperAdmin);
+  const logoUrl = (community as any).logo_url as string | null | undefined;
+  const bannerUrl = (community as any).banner_url as string | null | undefined;
 
   const chartData = (scoreHistory && scoreHistory.length > 0)
     ? scoreHistory.slice(-12).map(s => ({
@@ -219,27 +222,39 @@ const CommunityDashboard = () => {
       <Navbar />
       <div className="container py-10">
         {/* Header */}
-        <div className="mb-8 rounded-2xl border border-score-amber/20 bg-foreground p-6 text-background shadow-[0_0_30px_hsl(var(--score-amber)/0.10)]">
-          <div className="hero-dot-grid absolute" />
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="mb-2 text-sm text-score-amber">{getFlagEmoji(community.country_code)} {community.city}, {community.country}</div>
-              <div className="text-3xl font-extrabold text-background">{community.name}</div>
+        <div className="relative mb-8 overflow-hidden rounded-2xl border border-score-amber/20 bg-foreground shadow-[0_0_30px_hsl(var(--score-amber)/0.10)]">
+          {bannerUrl ? (
+            <>
+              <img src={bannerUrl} alt={`${community.name} banner`} className="h-[280px] w-full object-cover object-center" />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/70 to-background" />
+              <div className="absolute bottom-6 left-6 flex items-end gap-4">
+                <EconomyLogo economy={{ name: community.name, logo_url: logoUrl }} size="lg" className="border-4" />
+                <div className="pb-1">
+                  <div className="text-3xl font-extrabold text-foreground">{community.name}</div>
+                  <div className="text-sm text-muted-foreground">{getFlagEmoji(community.country_code)} {community.city}, {community.country}</div>
+                </div>
+              </div>
+              <div className="absolute right-6 top-6 font-mono text-5xl font-extrabold text-score-amber">{displayScore}</div>
+            </>
+          ) : (
+            <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-4">
+                <EconomyLogo economy={{ name: community.name, logo_url: logoUrl }} size="lg" />
+                <div>
+                  <div className="mb-2 text-sm text-score-amber">{getFlagEmoji(community.country_code)} {community.city}, {community.country}</div>
+                  <div className="text-3xl font-extrabold text-background">{community.name}</div>
+                  {!logoUrl && canAdminEconomy && <Link to={`/dashboard/economy/${community.id}`} className="mt-2 inline-block text-sm text-score-amber hover:underline">Upload logo →</Link>}
+                </div>
+              </div>
+              <div className="font-mono text-5xl font-extrabold text-score-amber">{displayScore}</div>
             </div>
-            <div className="font-mono text-5xl font-extrabold text-score-amber">{displayScore}</div>
-          </div>
+          )}
         </div>
 
         <div className="flex flex-col md:flex-row md:items-start gap-8 mb-10">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-4">
-              {profile?.logo_url ? (
-                <img src={profile.logo_url} alt={community.name} className="w-12 h-12 rounded-xl object-cover" />
-              ) : (
-                <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center text-sm font-bold text-muted-foreground">
-                  {community.name.split(' ').map(w => w[0]).join('').slice(0, 2)}
-                </div>
-              )}
+              <EconomyLogo economy={{ name: community.name, logo_url: logoUrl }} size="md" />
               <div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-0.5">
                   <span>{getFlagEmoji(community.country_code)}</span>

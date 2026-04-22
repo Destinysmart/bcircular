@@ -169,6 +169,7 @@ export type Database = {
       communities: {
         Row: {
           admin_id: string | null
+          banner_url: string | null
           bbox_east: number | null
           bbox_north: number | null
           bbox_south: number | null
@@ -184,6 +185,7 @@ export type Database = {
           economic_zone_description: string | null
           founding_year: number | null
           id: string
+          logo_url: string | null
           member_count: number
           name: string
           region: string
@@ -195,6 +197,7 @@ export type Database = {
         }
         Insert: {
           admin_id?: string | null
+          banner_url?: string | null
           bbox_east?: number | null
           bbox_north?: number | null
           bbox_south?: number | null
@@ -210,6 +213,7 @@ export type Database = {
           economic_zone_description?: string | null
           founding_year?: number | null
           id?: string
+          logo_url?: string | null
           member_count?: number
           name: string
           region?: string
@@ -221,6 +225,7 @@ export type Database = {
         }
         Update: {
           admin_id?: string | null
+          banner_url?: string | null
           bbox_east?: number | null
           bbox_north?: number | null
           bbox_south?: number | null
@@ -236,6 +241,7 @@ export type Database = {
           economic_zone_description?: string | null
           founding_year?: number | null
           id?: string
+          logo_url?: string | null
           member_count?: number
           name?: string
           region?: string

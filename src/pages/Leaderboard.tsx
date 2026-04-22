@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowUpRight, Scale } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import ConfidenceBadge from '@/components/ConfidenceBadge';
+import EconomyLogo from '@/components/EconomyLogo';
 import { fetchAllCommunitiesWithStats } from '@/lib/api';
 import { getFlagEmoji, getScoreColor, getScoreBgColor } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
@@ -86,6 +87,7 @@ const Leaderboard = () => {
                 className={`group flex items-center gap-4 rounded-xl border-l-4 ${scoreBorderColor(c.score ?? 0)} p-4 transition-all hover:bg-secondary/60 hover:shadow-[0_0_24px_hsl(var(--score-amber)/0.12)]`}
               >
                 <span className="font-mono text-sm text-muted-foreground w-8 text-right">{i + 1}</span>
+                <EconomyLogo economy={c as any} size="sm" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-lg">{getFlagEmoji(c.countryCode || '')}</span>

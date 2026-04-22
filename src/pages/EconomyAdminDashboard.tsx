@@ -12,9 +12,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchCommunityBySlug, fetchLatestScore, fetchPendingSubmissions, fetchCommunityMerchants, fetchCommunityEarners, fetchCommunityTransactions } from '@/lib/api';
-import { AlertTriangle, CheckCircle, XCircle, Upload, Trash2, RefreshCw, MapPin, Download, Printer } from 'lucide-react';
+import { AlertTriangle, CheckCircle, XCircle, Trash2, RefreshCw, MapPin, Download, Printer } from 'lucide-react';
 import BlinkWalletSettings from '@/components/BlinkWalletSettings';
 import BBoxPicker from '@/components/BBoxPicker';
+import EconomyLogo from '@/components/EconomyLogo';
+import UploadZone from '@/components/UploadZone';
 import { QRCodeCanvas } from 'qrcode.react';
 
 const EconomyAdminDashboard = () => {
@@ -109,7 +111,50 @@ const EconomyAdminDashboard = () => {
   const [recalculating, setRecalculating] = useState(false);
   const [savingBbox, setSavingBbox] = useState(false);
   const [syncingBtcmap, setSyncingBtcmap] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
   const qrRef = useRef<HTMLDivElement>(null);
+
+  const uploadBrandingImage = async (file: File, type: 'logo' | 'banner') => {
+    if (!communityId || !community) return;
+    const isLogo = type === 'logo';
+    const maxSize = isLogo ? 2 * 1024 * 1024 : 5 * 1024 * 1024;
+    const allowedTypes = isLogo ? ['image/jpeg', 'image/png', 'image/svg+xml', 'image/webp'] : ['image/jpeg', 'image/png', 'image/webp'];
+    if (file.size > maxSize) {
+      toast({ title: isLogo ? 'Logo must be under 2MB' : 'Banner must be under 5MB', variant: 'destructive' });
+      return;
+    }
+    if (!allowedTypes.includes(file.type)) {
+      toast({ title: 'Unsupported file type', description: isLogo ? 'Use JPG, PNG, SVG, or WebP.' : 'Use JPG, PNG, or WebP.', variant: 'destructive' });
+      return;
+    }
+    const setUploading = isLogo ? setUploadingLogo : setUploadingBanner;
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${community.id}-${type}-${Date.now()}.${fileExt}`;
+      const bucket = isLogo ? 'economy-logos' : 'economy-banners';
+      const column = isLogo ? 'logo_url' : 'banner_url';
+      const { error } = await supabase.storage.from(bucket).upload(fileName, file, { upsert: true });
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(fileName);
+      await supabase.from('communities').update({ [column]: publicUrl } as any).eq('id', community.id);
+      queryClient.invalidateQueries({ queryKey: ['community-by-id', id] });
+      toast({ title: isLogo ? 'Logo updated ✓' : 'Banner updated ✓' });
+    } catch (err: any) {
+      toast({ title: 'Upload failed', description: err.message, variant: 'destructive' });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeBrandingImage = async (type: 'logo' | 'banner') => {
+    if (!communityId || !community) return;
+    const column = type === 'logo' ? 'logo_url' : 'banner_url';
+    await supabase.from('communities').update({ [column]: null } as any).eq('id', community.id);
+    queryClient.invalidateQueries({ queryKey: ['community-by-id', id] });
+    toast({ title: type === 'logo' ? 'Logo removed' : 'Banner removed' });
+  };
 
   const handleSaveBbox = async (bbox: { north: number; south: number; east: number; west: number }) => {
     if (!communityId) return;
@@ -199,29 +244,6 @@ const EconomyAdminDashboard = () => {
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !communityId || !user) return;
-    if (file.size > 2 * 1024 * 1024) {
-      toast({ title: 'File too large', description: 'Max 2MB', variant: 'destructive' });
-      return;
-    }
-    const ext = file.name.split('.').pop();
-    const path = `${communityId}/logo.${ext}`;
-    const { error } = await supabase.storage.from('community-assets').upload(path, file, { upsert: true });
-    if (error) { toast({ title: 'Upload error', description: error.message, variant: 'destructive' }); return; }
-    const { data: { publicUrl } } = supabase.storage.from('community-assets').getPublicUrl(path);
-
-    const { data: existing } = await supabase.from('community_profiles').select('id').eq('community_id', communityId).maybeSingle();
-    if (existing) {
-      await supabase.from('community_profiles').update({ logo_url: publicUrl }).eq('community_id', communityId);
-    } else {
-      await supabase.from('community_profiles').insert({ community_id: communityId, admin_user_id: user.id, logo_url: publicUrl });
-    }
-    queryClient.invalidateQueries({ queryKey: ['community-profile', communityId] });
-    toast({ title: 'Logo uploaded' });
   };
 
   const handleAppointValidator = async () => {
@@ -322,28 +344,59 @@ const EconomyAdminDashboard = () => {
           </div>
         )}
 
+        {/* Branding Section */}
+        <section className="rounded-lg border border-border bg-card p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-4">Branding</h2>
+          <div className="space-y-6">
+            <div>
+              <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Banner image</div>
+              {(community as any).banner_url ? (
+                <div className="space-y-2">
+                  <img src={(community as any).banner_url} alt={`${community.name} banner`} className="h-[200px] w-full rounded-xl object-cover" />
+                  <button className="text-xs text-destructive hover:underline" onClick={() => removeBrandingImage('banner')}>Remove</button>
+                </div>
+              ) : (
+                <UploadZone
+                  id="upload-banner"
+                  label={uploadingBanner ? 'Uploading banner…' : 'Drag & drop or click to upload'}
+                  hint="Recommended: 1200×300px · Max 5MB · JPG, PNG, WebP supported"
+                  accept="image/jpeg,image/png,image/webp"
+                  onFile={(file) => uploadBrandingImage(file, 'banner')}
+                  previewClassName="h-[160px] w-full"
+                />
+              )}
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-[120px_1fr] sm:items-center">
+              <div>
+                {(community as any).logo_url ? (
+                  <div className="space-y-2 text-center sm:text-left">
+                    <EconomyLogo economy={{ name: community.name, logo_url: (community as any).logo_url }} size="lg" />
+                    <button className="text-xs text-destructive hover:underline" onClick={() => removeBrandingImage('logo')}>Remove</button>
+                  </div>
+                ) : (
+                  <UploadZone
+                    id="upload-logo"
+                    label={uploadingLogo ? 'Uploading logo…' : 'Logo'}
+                    hint="Click or drop"
+                    accept="image/jpeg,image/png,image/svg+xml,image/webp"
+                    onFile={(file) => uploadBrandingImage(file, 'logo')}
+                    className="aspect-square p-4"
+                    previewClassName="h-20 w-20 rounded-full"
+                  />
+                )}
+              </div>
+              <div>
+                <div className="font-medium">Upload your economy logo</div>
+                <p className="text-sm text-muted-foreground">Recommended: 400×400px. Will appear as a circle. Max 2MB · JPG, PNG, SVG, WebP.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Profile Section */}
         <section className="rounded-lg border border-border bg-card p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">Economy Profile</h2>
-
-          <div className="flex items-center gap-4 mb-6">
-            {profile?.logo_url ? (
-              <img src={profile.logo_url} alt="Logo" className="w-16 h-16 rounded-lg object-cover" />
-            ) : (
-              <div className="w-16 h-16 rounded-lg bg-secondary flex items-center justify-center text-xl font-bold text-muted-foreground">
-                {community.name.split(' ').map(w => w[0]).join('').slice(0, 2)}
-              </div>
-            )}
-            <div>
-              <Label htmlFor="logo-upload" className="cursor-pointer">
-                <Button variant="outline" size="sm" className="gap-1.5" asChild>
-                  <span><Upload className="h-3.5 w-3.5" /> Upload logo</span>
-                </Button>
-              </Label>
-              <input id="logo-upload" type="file" accept="image/png,image/jpeg,image/svg+xml" className="hidden" onChange={handleLogoUpload} />
-              <p className="text-xs text-muted-foreground mt-1">PNG, JPG, or SVG. Max 2MB.</p>
-            </div>
-          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div><Label>Economy name</Label><Input value={name} onChange={e => setName(e.target.value)} /></div>
