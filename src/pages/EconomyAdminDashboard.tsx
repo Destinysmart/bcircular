@@ -15,6 +15,8 @@ import { fetchCommunityBySlug, fetchLatestScore, fetchPendingSubmissions, fetchC
 import { AlertTriangle, CheckCircle, XCircle, Upload, Trash2, RefreshCw, MapPin, Download, Printer } from 'lucide-react';
 import BlinkWalletSettings from '@/components/BlinkWalletSettings';
 import BBoxPicker from '@/components/BBoxPicker';
+import EconomyLogo from '@/components/EconomyLogo';
+import UploadZone from '@/components/UploadZone';
 import { QRCodeCanvas } from 'qrcode.react';
 
 const EconomyAdminDashboard = () => {
@@ -109,7 +111,50 @@ const EconomyAdminDashboard = () => {
   const [recalculating, setRecalculating] = useState(false);
   const [savingBbox, setSavingBbox] = useState(false);
   const [syncingBtcmap, setSyncingBtcmap] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
   const qrRef = useRef<HTMLDivElement>(null);
+
+  const uploadBrandingImage = async (file: File, type: 'logo' | 'banner') => {
+    if (!communityId || !community) return;
+    const isLogo = type === 'logo';
+    const maxSize = isLogo ? 2 * 1024 * 1024 : 5 * 1024 * 1024;
+    const allowedTypes = isLogo ? ['image/jpeg', 'image/png', 'image/svg+xml', 'image/webp'] : ['image/jpeg', 'image/png', 'image/webp'];
+    if (file.size > maxSize) {
+      toast({ title: isLogo ? 'Logo must be under 2MB' : 'Banner must be under 5MB', variant: 'destructive' });
+      return;
+    }
+    if (!allowedTypes.includes(file.type)) {
+      toast({ title: 'Unsupported file type', description: isLogo ? 'Use JPG, PNG, SVG, or WebP.' : 'Use JPG, PNG, or WebP.', variant: 'destructive' });
+      return;
+    }
+    const setUploading = isLogo ? setUploadingLogo : setUploadingBanner;
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${community.id}-${type}-${Date.now()}.${fileExt}`;
+      const bucket = isLogo ? 'economy-logos' : 'economy-banners';
+      const column = isLogo ? 'logo_url' : 'banner_url';
+      const { error } = await supabase.storage.from(bucket).upload(fileName, file, { upsert: true });
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(fileName);
+      await supabase.from('communities').update({ [column]: publicUrl } as any).eq('id', community.id);
+      queryClient.invalidateQueries({ queryKey: ['community-by-id', id] });
+      toast({ title: isLogo ? 'Logo updated ✓' : 'Banner updated ✓' });
+    } catch (err: any) {
+      toast({ title: 'Upload failed', description: err.message, variant: 'destructive' });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeBrandingImage = async (type: 'logo' | 'banner') => {
+    if (!communityId || !community) return;
+    const column = type === 'logo' ? 'logo_url' : 'banner_url';
+    await supabase.from('communities').update({ [column]: null } as any).eq('id', community.id);
+    queryClient.invalidateQueries({ queryKey: ['community-by-id', id] });
+    toast({ title: type === 'logo' ? 'Logo removed' : 'Banner removed' });
+  };
 
   const handleSaveBbox = async (bbox: { north: number; south: number; east: number; west: number }) => {
     if (!communityId) return;
