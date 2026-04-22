@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 export async function fetchCommunities() {
   const { data, error } = await supabase
     .from('communities')
-    .select('*')
+    .select('*, logo_url, banner_url')
     .eq('status', 'active')
     .order('name');
   if (error) throw error;
@@ -13,7 +13,7 @@ export async function fetchCommunities() {
 export async function fetchCommunityBySlug(slug: string) {
   const { data, error } = await supabase
     .from('communities')
-    .select('*')
+    .select('*, logo_url, banner_url')
     .eq('slug', slug)
     .single();
   if (error) throw error;
@@ -257,7 +257,7 @@ export async function registerCommunity(community: {
 export async function fetchAllCommunitiesWithStats() {
   const { data: communities, error } = await supabase
     .from('communities')
-    .select('*')
+    .select('*, logo_url, banner_url')
     .eq('status', 'active');
   if (error) throw error;
 
