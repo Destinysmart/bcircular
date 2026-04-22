@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Scale } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import ConfidenceBadge from '@/components/ConfidenceBadge';
 import { fetchAllCommunitiesWithStats } from '@/lib/api';
@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 const regions = ['All', 'Africa', 'Latin America', 'Europe', 'Asia'];
 
 const Leaderboard = () => {
+  const navigate = useNavigate();
   const [region, setRegion] = useState('All');
   const [sortBy, setSortBy] = useState<'score' | 'merchants'>('score');
 
@@ -50,6 +51,9 @@ const Leaderboard = () => {
             </Button>
           ))}
           <div className="ml-auto flex gap-1">
+            <Link to="/compare">
+              <Button variant="outline" size="sm" className="rounded-full gap-1.5"><Scale className="h-3.5 w-3.5" /> Compare economies</Button>
+            </Link>
             <Button variant={sortBy === 'score' ? 'secondary' : 'ghost'} size="sm" className="rounded-full" onClick={() => setSortBy('score')}>By Score</Button>
             <Button variant={sortBy === 'merchants' ? 'secondary' : 'ghost'} size="sm" className="rounded-full" onClick={() => setSortBy('merchants')}>By Merchants</Button>
           </div>
@@ -67,9 +71,9 @@ const Leaderboard = () => {
         ) : (
           <div className="space-y-1">
             {filtered.map((c, i) => (
-              <Link
+              <div
                 key={c.id || i}
-                to={`/c/${c.slug}`}
+                onClick={() => navigate(`/c/${c.slug}`)}
                 className="group flex items-center gap-4 p-4 rounded-xl hover:bg-secondary/60 transition-colors"
               >
                 <span className="font-mono text-sm text-muted-foreground w-8 text-right">{i + 1}</span>
@@ -99,9 +103,12 @@ const Leaderboard = () => {
                       {(c.weeklyChange ?? 0) >= 0 ? '↑' : '↓'}{Math.abs(c.weeklyChange ?? 0)}
                     </span>
                   </div>
+                  <button onClick={(event) => { event.stopPropagation(); navigate(`/compare?a=${c.slug}`); }} className="text-muted-foreground hover:text-primary" aria-label={`Compare ${c.name}`}>
+                    <Scale className="h-4 w-4" />
+                  </button>
                   <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         )}

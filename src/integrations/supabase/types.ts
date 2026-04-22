@@ -471,6 +471,59 @@ export type Database = {
         }
         Relationships: []
       }
+      proofs: {
+        Row: {
+          amount_sats: number | null
+          community_id: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_circular: boolean | null
+          media_url: string | null
+          merchant_name: string | null
+          proof_type: string
+          status: string | null
+          submitted_by: string | null
+          title: string
+        }
+        Insert: {
+          amount_sats?: number | null
+          community_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_circular?: boolean | null
+          media_url?: string | null
+          merchant_name?: string | null
+          proof_type: string
+          status?: string | null
+          submitted_by?: string | null
+          title: string
+        }
+        Update: {
+          amount_sats?: number | null
+          community_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_circular?: boolean | null
+          media_url?: string | null
+          merchant_name?: string | null
+          proof_type?: string
+          status?: string | null
+          submitted_by?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proofs_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transactions: {
         Row: {
           amount_sats: number

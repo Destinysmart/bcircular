@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
@@ -12,9 +12,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchCommunityBySlug, fetchLatestScore, fetchPendingSubmissions, fetchCommunityMerchants, fetchCommunityEarners, fetchCommunityTransactions } from '@/lib/api';
-import { CheckCircle, XCircle, Upload, Trash2, RefreshCw, MapPin } from 'lucide-react';
+import { CheckCircle, XCircle, Upload, Trash2, RefreshCw, MapPin, Download, Printer } from 'lucide-react';
 import BlinkWalletSettings from '@/components/BlinkWalletSettings';
 import BBoxPicker from '@/components/BBoxPicker';
+import { QRCodeCanvas } from 'qrcode.react';
 
 const EconomyAdminDashboard = () => {
   const { id } = useParams();
@@ -108,6 +109,7 @@ const EconomyAdminDashboard = () => {
   const [recalculating, setRecalculating] = useState(false);
   const [savingBbox, setSavingBbox] = useState(false);
   const [syncingBtcmap, setSyncingBtcmap] = useState(false);
+  const qrRef = useRef<HTMLDivElement>(null);
 
   const handleSaveBbox = async (bbox: { north: number; south: number; east: number; west: number }) => {
     if (!communityId) return;
@@ -267,6 +269,19 @@ const EconomyAdminDashboard = () => {
     }
   };
 
+  const quickSubmitUrl = community ? `${window.location.origin}/quick-submit?economy=${community.slug}` : '';
+
+  const handleDownloadQr = () => {
+    const canvas = qrRef.current?.querySelector('canvas');
+    if (!canvas || !community) return;
+    const link = document.createElement('a');
+    link.download = `${community.slug}-quick-submit-qr.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  };
+
+  const handlePrintQr = () => window.print();
+
   if (authLoading || !community) {
     return <div className="min-h-screen bg-background"><Navbar /><div className="container py-16 text-center text-muted-foreground">Loading...</div></div>;
   }
@@ -329,6 +344,25 @@ const EconomyAdminDashboard = () => {
           <div className="mb-4"><Label>Description</Label><Textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} /></div>
           <div className="mb-4"><Label>Economic zone description</Label><Textarea value={ecoZoneDesc} onChange={e => setEcoZoneDesc(e.target.value)} rows={2} placeholder="Describe the geographic area this economy covers" /></div>
           <Button onClick={handleSaveProfile} disabled={saving}>{saving ? 'Saving...' : 'Save changes'}</Button>
+        </section>
+
+        {/* Quick Submit QR Code */}
+        <section className="rounded-lg border border-border bg-card p-6 mb-6 print:shadow-none" ref={qrRef}>
+          <h2 className="text-lg font-semibold mb-2">Quick Submit QR Code</h2>
+          <p className="text-sm text-muted-foreground mb-4">Print this and display it at merchant locations. Customers scan it to instantly submit a merchant or transaction.</p>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div className="w-fit rounded-lg border border-border bg-background p-4">
+              <QRCodeCanvas value={quickSubmitUrl} size={180} includeMargin />
+              <p className="mt-2 text-center text-sm font-medium">{community.name}</p>
+            </div>
+            <div className="space-y-2">
+              <p className="break-all font-mono text-xs text-muted-foreground">{quickSubmitUrl}</p>
+              <div className="flex flex-wrap gap-2 print:hidden">
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={handleDownloadQr}><Download className="h-3.5 w-3.5" /> Download QR</Button>
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={handlePrintQr}><Printer className="h-3.5 w-3.5" /> Print QR</Button>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* Validators Section */}

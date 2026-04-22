@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { Share2, Store, Users, Zap, ChevronDown, Info, ExternalLink, Shield, Wallet } from 'lucide-react';
+import { Share2, Store, Users, Zap, ChevronDown, Info, ExternalLink, Shield, Wallet, Scale } from 'lucide-react';
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
@@ -105,6 +105,19 @@ const CommunityDashboard = () => {
     enabled: !!communityId,
   });
 
+  const { data: proofCount } = useQuery({
+    queryKey: ['approved-proof-count', communityId],
+    queryFn: async () => {
+      const { count } = await (supabase as any)
+        .from('proofs')
+        .select('id', { count: 'exact', head: true })
+        .eq('community_id', communityId!)
+        .eq('status', 'approved');
+      return count || 0;
+    },
+    enabled: !!communityId,
+  });
+
   // Check if user is a community admin or super admin
   const { data: isCommunityAdmin } = useQuery({
     queryKey: ['is-community-admin', communityId, user?.id],
@@ -196,7 +209,7 @@ const CommunityDashboard = () => {
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-0.5">
                   <span>{getFlagEmoji(community.country_code)}</span>
                   <span>{community.city}, {community.country}</span>
-                  <ConfidenceBadge totalApproved={displayMerchants + displayEarners} />
+                  <ConfidenceBadge totalApproved={displayMerchants + displayEarners} proofCount={proofCount} />
                 </div>
                 <h1 className="text-2xl font-bold">{community.name}</h1>
               </div>
@@ -215,7 +228,7 @@ const CommunityDashboard = () => {
             <div className="flex gap-2">
               <Button variant="outline" size="sm" className="gap-1.5 rounded-full"><Share2 className="h-3.5 w-3.5" /> Share</Button>
               <a href={`/c/${slug}/submit`}><Button variant="outline" size="sm" className="gap-1.5 rounded-full"><Store className="h-3.5 w-3.5" /> Add merchant / earner</Button></a>
-              <Link to={`/c/${slug}/report`}><Button variant="outline" size="sm" className="gap-1.5 rounded-full"><Shield className="h-3.5 w-3.5" /> Proof of Circularity</Button></Link>
+              <Link to={`/c/${slug}/proofs`}><Button variant="outline" size="sm" className="gap-1.5 rounded-full border-score-amber text-score-amber hover:text-score-amber"><Shield className="h-3.5 w-3.5" /> Proof of Circularity</Button></Link>
             </div>
           </div>
           <div className="flex flex-col items-center gap-2">
@@ -223,6 +236,9 @@ const CommunityDashboard = () => {
             <span className="text-xs text-muted-foreground">
               {latestScore ? `Updated ${new Date(latestScore.calculated_at).toLocaleDateString()}` : 'No score yet'}
             </span>
+            <Link to={`/compare?a=${community.slug}`} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+              <Scale className="h-3 w-3" /> Compare with another economy →
+            </Link>
           </div>
         </div>
 

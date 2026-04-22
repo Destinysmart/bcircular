@@ -38,13 +38,14 @@ Deno.serve(async (req) => {
 
     for (const communityId of communityIds) {
       // Fetch all data in parallel
-      const [communityRes, merchantsRes, earnersRes, txRes, blinkTxRes, walletsRes] = await Promise.all([
+      const [communityRes, merchantsRes, earnersRes, txRes, blinkTxRes, walletsRes, proofRes] = await Promise.all([
         supabase.from('communities').select('declared_population').eq('id', communityId).single(),
         supabase.from('merchants').select('id, category, created_at, source').eq('community_id', communityId).eq('status', 'approved'),
         supabase.from('earners').select('id, created_at').eq('community_id', communityId).eq('status', 'approved'),
         supabase.from('transactions').select('id, amount_sats, is_circular, created_at').eq('community_id', communityId).eq('status', 'approved'),
         supabase.from('blink_transactions').select('id, direction, settlement_amount, is_internal, counterparty_wallet_id, wallet_id, blink_created_at').eq('community_id', communityId),
         supabase.from('wallets').select('id, user_id').eq('community_id', communityId),
+        supabase.from('proofs').select('*', { count: 'exact', head: true }).eq('community_id', communityId).eq('status', 'approved'),
       ])
 
       const pop = Math.max(communityRes.data?.declared_population || 100, 1)
@@ -53,6 +54,7 @@ Deno.serve(async (req) => {
       const tx = txRes.data || []
       const blinkTx = blinkTxRes.data || []
       const wallets = walletsRes.data || []
+      const proofCount = proofRes.count || 0
 
       const hasBlinkData = blinkTx.length > 0
 
@@ -189,6 +191,8 @@ Deno.serve(async (req) => {
           effectiveEarners,
           connectedWallets: wallets.length,
           blinkTransactions: blinkTx.length,
+          proofCount,
+          confidence: proofCount >= 5 ? 'High' : proofCount >= 1 ? 'Medium' : 'Low',
         },
       })
     }
