@@ -20,6 +20,9 @@ import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import ProofOfCircularity from "./pages/ProofOfCircularity";
 import ResetPassword from "./pages/ResetPassword";
 import Settings from "./pages/Settings";
+import Proofs from "./pages/Proofs";
+import QuickSubmit from "./pages/QuickSubmit";
+import Compare from "./pages/Compare";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,7 +40,10 @@ const App = () => (
             <Route path="/c/:slug" element={<CommunityDashboard />} />
             <Route path="/c/:slug/submit" element={<SubmitPage />} />
             <Route path="/c/:slug/report" element={<ProofOfCircularity />} />
+            <Route path="/c/:slug/proofs" element={<Proofs />} />
             <Route path="/widget/:slug" element={<Widget />} />
+            <Route path="/quick-submit" element={<QuickSubmit />} />
+            <Route path="/compare" element={<Compare />} />
             <Route path="/register" element={<RegisterCommunity />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Login />} />
