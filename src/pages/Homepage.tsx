@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Store, Users, Zap, ArrowUpRight } from 'lucide-react';
+import { ArrowRight, Store, Users, Zap, ArrowUpRight, Link2, ShieldCheck, Gauge } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
@@ -42,18 +42,20 @@ const Homepage = () => {
       <Navbar />
 
       {/* Hero */}
-      <section className="container pt-24 pb-20 md:pt-32 md:pb-28">
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 hero-dot-grid opacity-70" aria-hidden="true" />
+        <div className="container relative pt-24 pb-20 md:pt-32 md:pb-28">
         <div className="max-w-2xl">
           <motion.h1
             variants={fadeUp}
             initial="hidden"
             animate="visible"
             custom={0}
-            className="text-4xl md:text-[3.5rem] font-extrabold leading-[1.1] tracking-tight mb-6"
+            className="text-5xl md:text-[4rem] lg:text-[4.75rem] font-extrabold leading-[0.98] tracking-tight mb-6"
           >
             Measure the Bitcoin
             <br />
-            circular economy.
+            <span className="text-score-amber">circular economy.</span>
           </motion.h1>
           <motion.p
             variants={fadeUp}
@@ -84,6 +86,7 @@ const Homepage = () => {
             </Link>
           </motion.div>
         </div>
+        </div>
       </section>
 
       {/* Stats row */}
@@ -99,19 +102,19 @@ const Homepage = () => {
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: '-40px' }}
-              className="grid grid-cols-1 md:grid-cols-3 gap-px bg-border rounded-2xl overflow-hidden"
+              className="grid grid-cols-1 md:grid-cols-3 gap-4"
             >
               {[
                 { label: 'Economies tracked', value: list.length, icon: <Users className="h-4 w-4" /> },
                 { label: 'Merchants accepting BTC', value: totalMerchants, icon: <Store className="h-4 w-4" /> },
                 { label: 'Sats in circular flow', value: totalSats > 0 ? `${(totalSats / 1_000_000).toFixed(0)}M` : '0', icon: <Zap className="h-4 w-4" /> },
               ].map(stat => (
-                <motion.div key={stat.label} variants={scaleIn} className="bg-card p-8">
+                <motion.div key={stat.label} variants={scaleIn} className="rounded-2xl border border-score-amber/30 bg-foreground p-8 shadow-[0_0_30px_hsl(var(--score-amber)/0.10)]">
                   <div className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wider mb-3">
                     {stat.icon}
                     {stat.label}
                   </div>
-                  <div className="font-mono text-3xl font-semibold text-foreground">{stat.value}</div>
+                  <div className="font-mono text-4xl font-bold text-score-amber">{stat.value}</div>
                 </motion.div>
               ))}
             </motion.div>
@@ -195,14 +198,15 @@ const Homepage = () => {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: '-40px' }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-3xl mx-auto"
+            className="relative grid grid-cols-1 md:grid-cols-3 gap-12 max-w-3xl mx-auto before:hidden md:before:block before:absolute before:left-[16%] before:right-[16%] before:top-7 before:border-t before:border-dashed before:border-score-amber/50"
           >
             {[
-              { step: '01', title: 'Connect', desc: 'Link your Blink wallet. Transactions sync automatically — no manual entry needed.' },
-              { step: '02', title: 'Validate', desc: 'Community validators verify merchants and earners with a consensus model.' },
-              { step: '03', title: 'Score', desc: 'Data powers a circularity score from 0–100 based on retention, velocity, and growth.' },
+              { step: '01', icon: <Link2 className="h-5 w-5" />, title: 'Connect', desc: 'Link your Blink wallet. Transactions sync automatically — no manual entry needed.' },
+              { step: '02', icon: <ShieldCheck className="h-5 w-5" />, title: 'Validate', desc: 'Community validators verify merchants and earners with a consensus model.' },
+              { step: '03', icon: <Gauge className="h-5 w-5" />, title: 'Score', desc: 'Data powers a circularity score from 0–100 based on retention, velocity, and growth.' },
             ].map(s => (
-              <motion.div key={s.step} variants={fadeUp} className="text-center md:text-left">
+              <motion.div key={s.step} variants={fadeUp} className="relative text-center md:text-left">
+                <div className="relative z-10 mx-auto md:mx-0 mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-score-amber/40 bg-background text-score-amber shadow-[0_0_24px_hsl(var(--score-amber)/0.16)]">{s.icon}</div>
                 <div className="font-mono text-primary text-sm font-medium mb-3">{s.step}</div>
                 <h3 className="text-base font-semibold mb-2">{s.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
