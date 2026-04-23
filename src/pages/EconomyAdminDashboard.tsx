@@ -12,9 +12,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchCommunityBySlug, fetchLatestScore, fetchPendingSubmissions, fetchCommunityMerchants, fetchCommunityEarners, fetchCommunityTransactions } from '@/lib/api';
-import { AlertTriangle, CheckCircle, XCircle, Trash2, RefreshCw, MapPin, Download, Printer } from 'lucide-react';
+import { AlertTriangle, CheckCircle, XCircle, Trash2, RefreshCw, Download, Printer, ExternalLink } from 'lucide-react';
 import BlinkWalletSettings from '@/components/BlinkWalletSettings';
-import BBoxPicker from '@/components/BBoxPicker';
 import EconomyLogo from '@/components/EconomyLogo';
 import UploadZone from '@/components/UploadZone';
 import { QRCodeCanvas } from 'qrcode.react';
@@ -109,8 +108,9 @@ const EconomyAdminDashboard = () => {
   const [validatorEmail, setValidatorEmail] = useState('');
   const [saving, setSaving] = useState(false);
   const [recalculating, setRecalculating] = useState(false);
-  const [savingBbox, setSavingBbox] = useState(false);
   const [syncingBtcmap, setSyncingBtcmap] = useState(false);
+  const [btcmapAreaId, setBtcmapAreaId] = useState('');
+  const [btcmapSyncResult, setBtcmapSyncResult] = useState<any>(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const qrRef = useRef<HTMLDivElement>(null);
@@ -156,44 +156,34 @@ const EconomyAdminDashboard = () => {
     toast({ title: type === 'logo' ? 'Logo removed' : 'Banner removed' });
   };
 
-  const handleSaveBbox = async (bbox: { north: number; south: number; east: number; west: number }) => {
-    if (!communityId) return;
-    setSavingBbox(true);
-    try {
-      await supabase.from('communities').update({
-        bbox_north: bbox.north,
-        bbox_south: bbox.south,
-        bbox_east: bbox.east,
-        bbox_west: bbox.west,
-      }).eq('id', communityId);
-      queryClient.invalidateQueries({ queryKey: ['community-by-id', id] });
-      toast({ title: 'Bounding box saved' });
-    } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
-    } finally {
-      setSavingBbox(false);
-    }
-  };
-
   const handleSyncBtcmap = async () => {
-    if (!communityId) return;
+    if (!communityId || !btcmapAreaId.trim()) {
+      toast({ title: 'BTCMap Community ID required', description: 'Paste the last part of your BTCMap community URL.', variant: 'destructive' });
+      return;
+    }
     setSyncingBtcmap(true);
+    setBtcmapSyncResult(null);
     try {
+      const normalizedAreaId = btcmapAreaId.trim().replace(/^https?:\/\/(www\.)?btcmap\.org\/community\//, '').replace(/\/$/, '');
+      await supabase.from('communities').update({ btcmap_area_id: normalizedAreaId } as any).eq('id', communityId);
       const { data, error } = await supabase.functions.invoke('sync-btcmap', {
         body: { community_id: communityId },
       });
       if (error) throw error;
+      setBtcmapAreaId(normalizedAreaId);
+      setBtcmapSyncResult({ type: data?.synced === 0 ? 'empty' : 'success', ...data });
+      queryClient.invalidateQueries({ queryKey: ['community-by-id', id] });
       queryClient.invalidateQueries({ queryKey: ['merchants', communityId] });
+      queryClient.invalidateQueries({ queryKey: ['score', communityId] });
       toast({ title: 'BTCMap sync complete', description: `${data.synced} merchants synced from BTCMap.` });
     } catch (err: any) {
-      toast({ title: 'BTCMap sync failed', description: err.message, variant: 'destructive' });
+      const message = err?.message || 'BTCMap sync failed';
+      setBtcmapSyncResult({ type: 'error', error: message, areaId: btcmapAreaId.trim() });
+      toast({ title: 'BTCMap sync failed', description: message, variant: 'destructive' });
     } finally {
       setSyncingBtcmap(false);
     }
   };
-
-  const hasBbox = community?.bbox_north != null && community?.bbox_south != null &&
-    community?.bbox_east != null && community?.bbox_west != null;
 
   useEffect(() => {
     if (community) {
@@ -205,6 +195,7 @@ const EconomyAdminDashboard = () => {
       setDeclaredPop(String(community.declared_population || ''));
       setFoundingYear(String(community.founding_year || ''));
       setEcoZoneDesc(community.economic_zone_description || '');
+      setBtcmapAreaId((community as any).btcmap_area_id || '');
     }
   }, [community]);
 
