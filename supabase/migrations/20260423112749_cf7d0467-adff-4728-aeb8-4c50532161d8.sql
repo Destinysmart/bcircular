@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Community assets are publicly readable" ON storage.objects;
