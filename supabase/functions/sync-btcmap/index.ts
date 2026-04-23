@@ -132,6 +132,7 @@ Deno.serve(async (req) => {
     const btcmapProfileUrl = `https://btcmap.org/community/${btcmapAreaId}`
 
     await supabase.from('communities').update({
+      btcmap_area_id: btcmapAreaId,
       bbox_north: north,
       bbox_south: south,
       bbox_east: east,
