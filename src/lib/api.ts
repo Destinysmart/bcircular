@@ -263,25 +263,36 @@ export async function fetchAllCommunitiesWithStats() {
 
   const results = await Promise.all(
     (communities || []).map(async (c) => {
-      const [merchantsRes, earnersRes, txRes, scoreRes, proofRes] = await Promise.all([
+      const [merchantsRes, merchantSourcesRes, earnersRes, txRes, scoreRes, proofRes] = await Promise.all([
         supabase.from('merchants').select('id', { count: 'exact', head: true }).eq('community_id', c.id).eq('status', 'approved'),
+        supabase.from('merchants').select('source').eq('community_id', c.id).eq('status', 'approved'),
         supabase.from('earners').select('id', { count: 'exact', head: true }).eq('community_id', c.id).eq('status', 'approved'),
         supabase.from('transactions').select('amount_sats, is_circular').eq('community_id', c.id).eq('status', 'approved'),
         supabase.from('circularity_scores').select('*').eq('community_id', c.id).order('calculated_at', { ascending: false }).limit(1).maybeSingle(),
         (supabase as any).from('proofs').select('id', { count: 'exact', head: true }).eq('community_id', c.id).eq('status', 'approved'),
       ]);
       const circularSats = (txRes.data || []).filter(t => t.is_circular).reduce((s, t) => s + Number(t.amount_sats), 0);
+      const totalSats = (txRes.data || []).reduce((s, t) => s + Number(t.amount_sats), 0);
       const totalApproved = (merchantsRes.count || 0) + (earnersRes.count || 0) + (txRes.data?.length || 0);
+      const sources = (merchantSourcesRes.data || []).map((m: any) => m.source);
+      const hasBtcmap = sources.some(s => s === 'btcmap');
+      const hasSelf = sources.some(s => s !== 'btcmap');
+      const dataSource: 'btcmap' | 'self_reported' | 'combined' | 'none' =
+        hasBtcmap && hasSelf ? 'combined' : hasBtcmap ? 'btcmap' : hasSelf ? 'self_reported' : 'none';
       return {
         ...c,
         merchants: merchantsRes.count || 0,
         earners: earnersRes.count || 0,
         transactions: txRes.data?.length || 0,
         satsCircular: circularSats,
+        satsTotal: totalSats,
+        retentionScore: Number(scoreRes.data?.retention_score || 0),
+        growthScore: Number(scoreRes.data?.growth_score || 0),
         score: scoreRes.data?.score || 0,
         weeklyChange: 0,
         totalApproved,
         proofCount: proofRes.count || 0,
+        dataSource,
       };
     })
   );
