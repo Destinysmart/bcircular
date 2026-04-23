@@ -326,6 +326,10 @@ const EconomyAdminDashboard = () => {
   ];
 
   const zeroPillar = pillars.find(p => Math.round(p.value) === 0);
+  const zeroPillarGuidance = zeroPillar?.label === 'Merchant saturation'
+    ? 'Add merchants via BTCMap sync or manual submission to improve this score.'
+    : 'Add earners to your economy to improve your circularity score.';
+  const zeroPillarAction = zeroPillar?.label === 'Merchant saturation' ? 'Add merchants →' : 'Add earners →';
 
   const allPending = [
     ...(pending?.merchants || []).map(m => ({ id: m.id, type: 'merchant' as const, title: m.name, detail: m.category })),
@@ -344,9 +348,9 @@ const EconomyAdminDashboard = () => {
           <div className="mb-6 flex flex-col gap-3 rounded-lg border border-score-amber/40 bg-score-amber/10 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3 text-sm">
               <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-score-amber" />
-              <span><span className="font-semibold text-score-amber">Your {zeroPillar.label} score is 0.</span> Add earners to your economy to improve your circularity score.</span>
+              <span><span className="font-semibold text-score-amber">Your {zeroPillar.label} score is 0.</span> {zeroPillarGuidance}</span>
             </div>
-            <Button size="sm" className="bg-score-amber text-background hover:bg-score-amber/90" onClick={() => navigate(`/c/${community.slug}/submit`)}>Add earners →</Button>
+            <Button size="sm" className="bg-score-amber text-background hover:bg-score-amber/90" onClick={() => navigate(`/c/${community.slug}/submit`)}>{zeroPillarAction}</Button>
           </div>
         )}
 
