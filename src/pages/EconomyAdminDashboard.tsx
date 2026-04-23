@@ -156,6 +156,21 @@ const EconomyAdminDashboard = () => {
     toast({ title: type === 'logo' ? 'Logo removed' : 'Banner removed' });
   };
 
+  const normalizeBtcmapId = (input: string): string => {
+    const trimmed = input.trim();
+    if (trimmed.includes('btcmap.org/community/')) {
+      return trimmed.split('btcmap.org/community/').pop()?.split('/')[0] || trimmed;
+    }
+    if (trimmed.includes('btcmap.org/map/')) {
+      return trimmed.split('btcmap.org/map/').pop()?.split('/')[0] || trimmed;
+    }
+    return trimmed;
+  };
+
+  const handleBtcmapIdChange = (value: string) => {
+    setBtcmapAreaId(normalizeBtcmapId(value));
+  };
+
   const handleSyncBtcmap = async () => {
     if (!communityId || !btcmapAreaId.trim()) {
       toast({ title: 'BTCMap Community ID required', description: 'Paste the last part of your BTCMap community URL.', variant: 'destructive' });
@@ -164,7 +179,7 @@ const EconomyAdminDashboard = () => {
     setSyncingBtcmap(true);
     setBtcmapSyncResult(null);
     try {
-      const normalizedAreaId = btcmapAreaId.trim().replace(/^https?:\/\/(www\.)?btcmap\.org\/community\//, '').replace(/\/$/, '');
+      const normalizedAreaId = normalizeBtcmapId(btcmapAreaId);
       await supabase.from('communities').update({ btcmap_area_id: normalizedAreaId } as any).eq('id', communityId);
       const { data, error } = await supabase.functions.invoke('sync-btcmap', {
         body: { community_id: communityId },
