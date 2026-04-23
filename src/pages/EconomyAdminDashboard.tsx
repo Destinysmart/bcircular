@@ -502,14 +502,15 @@ const EconomyAdminDashboard = () => {
               <Input
                 id="btcmap-area-id"
                 value={btcmapAreaId}
-                onChange={(event) => setBtcmapAreaId(event.target.value)}
-                placeholder="e.g. bitcoin-beach"
+                onChange={(event) => handleBtcmapIdChange(event.target.value)}
+                placeholder="afribit-kibera or paste the full btcmap.org URL"
                 className="font-mono text-sm"
               />
               <div className="space-y-1 text-xs text-muted-foreground">
                 <p>Find your ID at <a href="https://btcmap.org/communities" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">btcmap.org/communities</a></p>
-                <p>Copy the last part of your community URL</p>
+                <p>You can paste the full URL — we&apos;ll extract the ID automatically</p>
                 <p>e.g. btcmap.org/community/bitcoin-beach → bitcoin-beach</p>
+                {btcmapAreaId.trim() && <p className="font-medium text-foreground">Will sync using ID: <span className="font-mono">{normalizeBtcmapId(btcmapAreaId)}</span></p>}
                 <a href="https://btcmap.org/communities" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
                   Don&apos;t have a BTCMap community page yet? → Create one at btcmap.org/communities
                 </a>
