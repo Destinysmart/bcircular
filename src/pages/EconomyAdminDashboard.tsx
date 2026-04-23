@@ -156,6 +156,21 @@ const EconomyAdminDashboard = () => {
     toast({ title: type === 'logo' ? 'Logo removed' : 'Banner removed' });
   };
 
+  const normalizeBtcmapId = (input: string): string => {
+    const trimmed = input.trim();
+    if (trimmed.includes('btcmap.org/community/')) {
+      return trimmed.split('btcmap.org/community/').pop()?.split('/')[0] || trimmed;
+    }
+    if (trimmed.includes('btcmap.org/map/')) {
+      return trimmed.split('btcmap.org/map/').pop()?.split('/')[0] || trimmed;
+    }
+    return trimmed;
+  };
+
+  const handleBtcmapIdChange = (value: string) => {
+    setBtcmapAreaId(normalizeBtcmapId(value));
+  };
+
   const handleSyncBtcmap = async () => {
     if (!communityId || !btcmapAreaId.trim()) {
       toast({ title: 'BTCMap Community ID required', description: 'Paste the last part of your BTCMap community URL.', variant: 'destructive' });
@@ -164,7 +179,7 @@ const EconomyAdminDashboard = () => {
     setSyncingBtcmap(true);
     setBtcmapSyncResult(null);
     try {
-      const normalizedAreaId = btcmapAreaId.trim().replace(/^https?:\/\/(www\.)?btcmap\.org\/community\//, '').replace(/\/$/, '');
+      const normalizedAreaId = normalizeBtcmapId(btcmapAreaId);
       await supabase.from('communities').update({ btcmap_area_id: normalizedAreaId } as any).eq('id', communityId);
       const { data, error } = await supabase.functions.invoke('sync-btcmap', {
         body: { community_id: communityId },
@@ -487,14 +502,15 @@ const EconomyAdminDashboard = () => {
               <Input
                 id="btcmap-area-id"
                 value={btcmapAreaId}
-                onChange={(event) => setBtcmapAreaId(event.target.value)}
-                placeholder="e.g. bitcoin-beach"
+                onChange={(event) => handleBtcmapIdChange(event.target.value)}
+                placeholder="afribit-kibera or paste the full btcmap.org URL"
                 className="font-mono text-sm"
               />
               <div className="space-y-1 text-xs text-muted-foreground">
                 <p>Find your ID at <a href="https://btcmap.org/communities" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">btcmap.org/communities</a></p>
-                <p>Copy the last part of your community URL</p>
+                <p>You can paste the full URL — we&apos;ll extract the ID automatically</p>
                 <p>e.g. btcmap.org/community/bitcoin-beach → bitcoin-beach</p>
+                {btcmapAreaId.trim() && <p className="font-medium text-foreground">Will sync using ID: <span className="font-mono">{normalizeBtcmapId(btcmapAreaId)}</span></p>}
                 <a href="https://btcmap.org/communities" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
                   Don&apos;t have a BTCMap community page yet? → Create one at btcmap.org/communities
                 </a>
