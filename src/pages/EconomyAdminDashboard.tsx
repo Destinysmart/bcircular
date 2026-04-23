@@ -481,35 +481,68 @@ const EconomyAdminDashboard = () => {
         {/* BTCMap Integration */}
         <section className="rounded-lg border border-border bg-card p-6 mb-6">
           <h2 className="text-lg font-semibold mb-2">BTCMap Integration</h2>
-          <p className="text-sm text-muted-foreground mb-4">
-            Import verified Bitcoin-accepting merchants from <a href="https://btcmap.org" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">BTCMap</a> within your economic zone. BTCMap merchants receive a 1.5× trust weight.
-          </p>
-
-          <BBoxPicker
-            initialBBox={{
-              north: community?.bbox_north ? Number(community.bbox_north) : undefined,
-              south: community?.bbox_south ? Number(community.bbox_south) : undefined,
-              east: community?.bbox_east ? Number(community.bbox_east) : undefined,
-              west: community?.bbox_west ? Number(community.bbox_west) : undefined,
-            }}
-            onSave={handleSaveBbox}
-            saving={savingBbox}
-          />
-
-          {hasBbox && (
-            <div className="mt-4 pt-4 border-t border-border">
-              <div className="flex items-center gap-3">
-                <Button onClick={handleSyncBtcmap} disabled={syncingBtcmap} variant="outline" size="sm" className="gap-1.5">
-                  <RefreshCw className={`h-3.5 w-3.5 ${syncingBtcmap ? 'animate-spin' : ''}`} /> Sync BTCMap data
-                </Button>
-                {community?.btcmap_last_synced && (
-                  <span className="text-xs text-muted-foreground">
-                    Last synced: {new Date(community.btcmap_last_synced).toLocaleString()}
-                  </span>
-                )}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="btcmap-area-id">BTCMap Community ID</Label>
+              <Input
+                id="btcmap-area-id"
+                value={btcmapAreaId}
+                onChange={(event) => setBtcmapAreaId(event.target.value)}
+                placeholder="e.g. bitcoin-beach"
+                className="font-mono text-sm"
+              />
+              <div className="space-y-1 text-xs text-muted-foreground">
+                <p>Find your ID at <a href="https://btcmap.org/communities" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">btcmap.org/communities</a></p>
+                <p>Copy the last part of your community URL</p>
+                <p>e.g. btcmap.org/community/bitcoin-beach → bitcoin-beach</p>
+                <a href="https://btcmap.org/communities" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
+                  Don&apos;t have a BTCMap community page yet? → Create one at btcmap.org/communities
+                </a>
               </div>
             </div>
-          )}
+
+            <div className="flex flex-wrap items-center gap-3">
+              <Button onClick={handleSyncBtcmap} disabled={syncingBtcmap || !btcmapAreaId.trim()} size="sm" className="gap-1.5 bg-amber text-amber-foreground hover:bg-amber/90">
+                <RefreshCw className={`h-3.5 w-3.5 ${syncingBtcmap ? 'animate-spin' : ''}`} /> Sync from BTCMap
+              </Button>
+              <span className="text-xs text-muted-foreground">
+                Last synced: {community?.btcmap_last_synced ? new Date(community.btcmap_last_synced).toLocaleString() : 'Never'}
+              </span>
+              <span className="text-xs text-muted-foreground">Merchants synced: {merchants?.filter((merchant: any) => merchant.source === 'btcmap').length ?? 0}</span>
+            </div>
+
+            {btcmapSyncResult && (
+              <div className="rounded-md border border-border bg-background p-4 text-sm">
+                {btcmapSyncResult.type === 'error' ? (
+                  <div className="space-y-2">
+                    <div className="font-semibold text-destructive">✗ Community not found</div>
+                    <p className="text-muted-foreground">&quot;{btcmapSyncResult.areaId}&quot; doesn&apos;t exist on BTCMap.</p>
+                    <a href="https://btcmap.org/communities" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Check your ID at btcmap.org/communities</a>
+                  </div>
+                ) : btcmapSyncResult.type === 'empty' ? (
+                  <div className="space-y-2">
+                    <div className="font-semibold text-amber">⚠ 0 merchants found</div>
+                    <p className="text-muted-foreground">Your BTCMap community exists but has no Bitcoin-accepting merchants listed yet.</p>
+                    <a href="https://btcmap.org" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">Add merchants at btcmap.org <ExternalLink className="h-3 w-3" /></a>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="font-semibold text-primary">✓ Synced successfully</div>
+                    <div className="grid gap-1 border-y border-border py-3 text-muted-foreground">
+                      <div><span className="text-foreground">Community:</span> {btcmapSyncResult.community_name}</div>
+                      <div><span className="text-foreground">Merchants:</span> {btcmapSyncResult.synced} synced from BTCMap</div>
+                      <div><span className="text-foreground">Profile:</span> <a href={btcmapSyncResult.btcmap_profile_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{btcmapSyncResult.btcmap_profile_url?.replace('https://', '')} →</a></div>
+                      <div><span className="text-foreground">Score:</span> Recalculating...</div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button onClick={handleSyncBtcmap} disabled={syncingBtcmap} variant="outline" size="sm">Sync again</Button>
+                      <Button asChild variant="outline" size="sm"><a href={btcmapSyncResult.btcmap_profile_url} target="_blank" rel="noopener noreferrer">View on BTCMap →</a></Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </section>
 
         {/* Blink Wallet Integration */}
