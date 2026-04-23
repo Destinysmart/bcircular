@@ -502,7 +502,7 @@ const EconomyAdminDashboard = () => {
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              <Button onClick={handleSyncBtcmap} disabled={syncingBtcmap || !btcmapAreaId.trim()} size="sm" className="gap-1.5 bg-amber text-amber-foreground hover:bg-amber/90">
+              <Button onClick={handleSyncBtcmap} disabled={syncingBtcmap || !btcmapAreaId.trim()} size="sm" className="gap-1.5 bg-score-amber text-background hover:bg-score-amber/90">
                 <RefreshCw className={`h-3.5 w-3.5 ${syncingBtcmap ? 'animate-spin' : ''}`} /> Sync from BTCMap
               </Button>
               <span className="text-xs text-muted-foreground">
@@ -521,7 +521,7 @@ const EconomyAdminDashboard = () => {
                   </div>
                 ) : btcmapSyncResult.type === 'empty' ? (
                   <div className="space-y-2">
-                    <div className="font-semibold text-amber">⚠ 0 merchants found</div>
+                    <div className="font-semibold text-score-amber">⚠ 0 merchants found</div>
                     <p className="text-muted-foreground">Your BTCMap community exists but has no Bitcoin-accepting merchants listed yet.</p>
                     <a href="https://btcmap.org" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">Add merchants at btcmap.org <ExternalLink className="h-3 w-3" /></a>
                   </div>
