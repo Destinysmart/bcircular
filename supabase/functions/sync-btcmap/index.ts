@@ -11,6 +11,38 @@ const BodySchema = z.object({
   community_id: z.string().uuid(),
 })
 
+const normalizeBtcmapId = (input: string): string => {
+  const trimmed = input.trim()
+  if (trimmed.includes('btcmap.org/community/')) {
+    return trimmed.split('btcmap.org/community/').pop()?.split('/')[0] || trimmed
+  }
+  if (trimmed.includes('btcmap.org/map/')) {
+    return trimmed.split('btcmap.org/map/').pop()?.split('/')[0] || trimmed
+  }
+  return trimmed
+}
+
+const boundsFromGeoJson = (geoJson: any) => {
+  const coords: number[][] = []
+  const walk = (value: any) => {
+    if (Array.isArray(value) && typeof value[0] === 'number' && typeof value[1] === 'number') {
+      coords.push(value)
+      return
+    }
+    if (Array.isArray(value)) value.forEach(walk)
+  }
+  walk(geoJson?.coordinates)
+  if (!coords.length) return null
+  const lons = coords.map(([lon]) => lon)
+  const lats = coords.map(([, lat]) => lat)
+  return {
+    minlat: Math.min(...lats),
+    maxlat: Math.max(...lats),
+    minlon: Math.min(...lons),
+    maxlon: Math.max(...lons),
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -46,7 +78,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    const btcmapAreaId = community.btcmap_area_id
+    const btcmapAreaId = normalizeBtcmapId(community.btcmap_area_id || '')
     if (!btcmapAreaId) {
       return new Response(JSON.stringify({ error: 'No BTCMap Community ID set.' }), {
         status: 400,
@@ -54,16 +86,37 @@ Deno.serve(async (req) => {
       })
     }
 
-    const areaRes = await fetch(`https://api.btcmap.org/v2/areas/${btcmapAreaId}`)
-    const area = await areaRes.json()
-    if (!areaRes.ok || !area || area.error) {
+    let area: any
+    try {
+      const areaRes = await fetch(`https://api.btcmap.org/v2/areas/${btcmapAreaId}`)
+      if (!areaRes.ok) {
+        return new Response(JSON.stringify({
+          error: `BTCMap community "${btcmapAreaId}" not found. Make sure you're using just the ID, not the full URL.`,
+          hint: `Example: use "bitcoin-beach" not "https://btcmap.org/community/bitcoin-beach"`,
+        }), {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      area = await areaRes.json()
+    } catch (err) {
+      return new Response(JSON.stringify({
+        error: 'Failed to reach BTCMap API. Try again in a moment.',
+        details: (err as Error).message,
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    if (!area || area.error) {
       return new Response(JSON.stringify({ error: `BTCMap community "${btcmapAreaId}" not found. Check your ID.` }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    const bounds = area.osm_json?.bounds
+    const bounds = area.osm_json?.bounds || boundsFromGeoJson(area.tags?.geo_json)
     if (!bounds) {
       return new Response(JSON.stringify({ error: 'This BTCMap community has no geographic bounds set yet.' }), {
         status: 400,
