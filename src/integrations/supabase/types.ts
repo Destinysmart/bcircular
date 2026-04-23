@@ -174,7 +174,9 @@ export type Database = {
           bbox_north: number | null
           bbox_south: number | null
           bbox_west: number | null
+          btcmap_area_id: string | null
           btcmap_last_synced: string | null
+          btcmap_profile_url: string | null
           city: string
           contact_email: string | null
           country: string
@@ -202,7 +204,9 @@ export type Database = {
           bbox_north?: number | null
           bbox_south?: number | null
           bbox_west?: number | null
+          btcmap_area_id?: string | null
           btcmap_last_synced?: string | null
+          btcmap_profile_url?: string | null
           city: string
           contact_email?: string | null
           country: string
@@ -230,7 +234,9 @@ export type Database = {
           bbox_north?: number | null
           bbox_south?: number | null
           bbox_west?: number | null
+          btcmap_area_id?: string | null
           btcmap_last_synced?: string | null
+          btcmap_profile_url?: string | null
           city?: string
           contact_email?: string | null
           country?: string
