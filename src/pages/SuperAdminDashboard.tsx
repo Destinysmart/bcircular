@@ -17,6 +17,7 @@ const SuperAdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [recalcAllLoading, setRecalcAllLoading] = useState(false);
 
   // Check super admin status
   const { data: userProfile, isLoading: profileLoading } = useQuery({
@@ -172,7 +173,6 @@ const SuperAdminDashboard = () => {
     }
   };
 
-  const [recalcAllLoading, setRecalcAllLoading] = useState(false);
   const handleRecalcAll = async () => {
     setRecalcAllLoading(true);
     try {
