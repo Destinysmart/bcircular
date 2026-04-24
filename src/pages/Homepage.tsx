@@ -380,6 +380,16 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
               })}
             </motion.div>
 
+            {!gated && hasMore && (
+              <div className="flex justify-center mt-10">
+                <Link to="/leaderboard">
+                  <Button variant="outline" size="lg" className="rounded-full px-6 gap-2 border-foreground/20 hover:border-score-amber hover:text-score-amber">
+                    View all economies <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            )}
+
             {gated && (
               <div className="absolute inset-0 flex items-center justify-center z-10">
                 <div className="rounded-2xl border border-border bg-background/95 backdrop-blur-md px-8 py-8 text-center max-w-md w-[90%] shadow-2xl">
