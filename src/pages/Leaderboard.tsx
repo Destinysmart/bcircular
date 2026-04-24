@@ -49,7 +49,7 @@ const Leaderboard = () => {
   const [retention, setRetention] = useState<Retention>('all');
   const [confidence, setConfidence] = useState<Confidence>('all');
   const [source, setSource] = useState<Source>('all');
-  const [sortBy, setSortBy] = useState<SortKey>('score');
+  const [sortBy, setSortBy] = useState<SortKey>('transactions');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const { data: communities, isLoading, isError, error } = useQuery({
