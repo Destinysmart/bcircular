@@ -515,4 +515,18 @@ const FilterBlock = ({ label, children }: { label: string; children: React.React
   </div>
 );
 
+const Metric = ({ label, value, valueClass = 'text-foreground' }: { label: string; value: string; valueClass?: string }) => (
+  <div className="flex flex-col items-end">
+    <span className={`font-mono text-base font-bold tabular-nums ${valueClass}`}>{value}</span>
+    <span className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">{label}</span>
+  </div>
+);
+
+const MobileMetric = ({ label, value, valueClass = 'text-foreground' }: { label: string; value: string; valueClass?: string }) => (
+  <div className="rounded-lg border border-border bg-background/50 px-3 py-2 flex flex-col">
+    <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{label}</span>
+    <span className={`font-mono text-base font-bold tabular-nums ${valueClass}`}>{value}</span>
+  </div>
+);
+
 export default Leaderboard;
