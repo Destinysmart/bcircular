@@ -114,8 +114,8 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
       {!hideHero && (
       <section className="relative overflow-hidden">
         <div
-          className="relative h-[520px] w-full bg-cover"
-          style={{ backgroundImage: `url(${HERO_IMAGE})`, backgroundPosition: 'center top' }}
+          className="relative w-full bg-cover"
+          style={{ height: heroHeight, backgroundImage: `url(${HERO_IMAGE})`, backgroundPosition: 'center top' }}
           aria-hidden="false"
         >
           <div
@@ -136,26 +136,30 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
                 <Sparkles className="h-3 w-3" />
                 Bitcoin Circular Economy
               </motion.div>
-              <motion.h1 variants={fadeUp} custom={1} className="text-5xl md:text-6xl font-extrabold tracking-tight leading-[1.05] text-foreground mb-5">
+              <motion.h1 variants={fadeUp} custom={1} className={`${compactHero ? 'text-3xl md:text-4xl mb-3' : 'text-5xl md:text-6xl mb-5'} font-extrabold tracking-tight leading-[1.05] text-foreground`}>
                 See where Bitcoin
                 <br />
                 <span className="text-score-amber">actually circulates.</span>
               </motion.h1>
-              <motion.p variants={fadeUp} custom={2} className="text-lg text-muted-foreground max-w-lg leading-relaxed mb-8">
-                Track, measure and compare Bitcoin circular economies worldwide. Real data from real communities. No funds held. Ever.
-              </motion.p>
-              <motion.div variants={fadeUp} custom={3} className="flex flex-wrap gap-3">
-                <Link to="/leaderboard">
-                  <Button size="lg" className="rounded-full px-6 gap-2 h-12 bg-score-amber text-background hover:bg-score-amber/90">
-                    Explore Economies <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-                <Link to="/leaderboard">
-                  <Button variant="outline" size="lg" className="rounded-full px-6 h-12 border-foreground/20 hover:bg-foreground/5">
-                    View Leaderboard
-                  </Button>
-                </Link>
-              </motion.div>
+              {!compactHero && (
+                <motion.p variants={fadeUp} custom={2} className="text-lg text-muted-foreground max-w-lg leading-relaxed mb-8">
+                  Track, measure and compare Bitcoin circular economies worldwide. Real data from real communities. No funds held. Ever.
+                </motion.p>
+              )}
+              {!compactHero && (
+                <motion.div variants={fadeUp} custom={3} className="flex flex-wrap gap-3">
+                  <Link to="/leaderboard">
+                    <Button size="lg" className="rounded-full px-6 gap-2 h-12 bg-score-amber text-background hover:bg-score-amber/90">
+                      Explore Economies <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <Link to="/leaderboard">
+                    <Button variant="outline" size="lg" className="rounded-full px-6 h-12 border-foreground/20 hover:bg-foreground/5">
+                      View Leaderboard
+                    </Button>
+                  </Link>
+                </motion.div>
+              )}
             </motion.div>
           </div>
 
