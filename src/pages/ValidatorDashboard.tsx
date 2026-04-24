@@ -7,7 +7,36 @@ import { CheckCircle, XCircle, Clock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { toast as sonnerToast } from 'sonner';
 import { fetchValidatorCommunities, fetchPendingSubmissions, fetchVotesForSubmission, castVote, fetchPendingProofs, updateProofStatus } from '@/lib/api';
+
+const ValidatorEmptyState = () => (
+  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 24px', textAlign: 'center' }}>
+    <div style={{ fontSize: 64, marginBottom: 16 }}>🛡️</div>
+    <h3 style={{ color: '#F9FAFB', fontSize: 20, fontWeight: 600, marginBottom: 8 }}>No pending submissions</h3>
+    <p style={{ color: '#9CA3AF', fontSize: 14, lineHeight: 1.7, maxWidth: 360, marginBottom: 24 }}>
+      You'll be notified when community members submit merchants, earners, or transactions for review. Share the submit link to get data flowing.
+    </p>
+    <div style={{ background: '#111827', border: '1px solid #1F2937', borderRadius: 10, padding: '12px 20px', marginBottom: 24, maxWidth: 360, width: '100%' }}>
+      <div style={{ fontSize: 11, color: '#6B7280', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Submit link for your community</div>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <code style={{ fontSize: 12, color: '#F59E0B', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {window.location.origin}/quick-submit
+        </code>
+        <button
+          onClick={() => {
+            navigator.clipboard.writeText(`${window.location.origin}/quick-submit`);
+            sonnerToast.success('Link copied ✓');
+          }}
+          style={{ background: '#F59E0B', color: '#0A0F1E', border: 'none', borderRadius: 6, padding: '4px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}
+        >
+          Copy
+        </button>
+      </div>
+    </div>
+    <p style={{ fontSize: 12, color: '#6B7280' }}>Submissions require 2-of-3 validator approvals to go live</p>
+  </div>
+);
 
 interface PendingItem {
   id: string;
