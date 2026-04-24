@@ -168,6 +168,8 @@ export type Database = {
       }
       communities: {
         Row: {
+          active_days_this_month: number
+          activity_rate: number
           admin_id: string | null
           banner_url: string | null
           bbox_east: number | null
@@ -189,6 +191,8 @@ export type Database = {
           id: string
           logo_url: string | null
           member_count: number
+          metrics_updated_at: string | null
+          monthly_transactions: number
           name: string
           region: string
           slug: string
@@ -198,6 +202,8 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          active_days_this_month?: number
+          activity_rate?: number
           admin_id?: string | null
           banner_url?: string | null
           bbox_east?: number | null
@@ -219,6 +225,8 @@ export type Database = {
           id?: string
           logo_url?: string | null
           member_count?: number
+          metrics_updated_at?: string | null
+          monthly_transactions?: number
           name: string
           region?: string
           slug: string
@@ -228,6 +236,8 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          active_days_this_month?: number
+          activity_rate?: number
           admin_id?: string | null
           banner_url?: string | null
           bbox_east?: number | null
@@ -249,6 +259,8 @@ export type Database = {
           id?: string
           logo_url?: string | null
           member_count?: number
+          metrics_updated_at?: string | null
+          monthly_transactions?: number
           name?: string
           region?: string
           slug?: string

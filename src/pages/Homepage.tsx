@@ -73,6 +73,10 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
   const heroHeight = compactHero ? 320 : 520;
 
   const totalMerchants = list.reduce((s, c) => s + (c.merchants ?? 0), 0);
+  const totalMonthlyTxns = list.reduce((s, c) => s + ((c as any).monthlyTransactions ?? 0), 0);
+  const avgActivity = list.length > 0
+    ? Math.round(list.reduce((s, c) => s + ((c as any).activityRate ?? 0), 0) / list.length)
+    : 0;
   const countries = new Set(list.map(c => c.country).filter(Boolean)).size;
 
   const filtered = useMemo(() => {
@@ -169,8 +173,9 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
             className="absolute left-0 right-0 bottom-6 container flex flex-wrap gap-2 md:gap-3"
           >
             {[
-              { icon: <Zap className="h-3.5 w-3.5" />, label: 'Economies', value: list.length },
               { icon: <Store className="h-3.5 w-3.5" />, label: 'Merchants', value: totalMerchants.toLocaleString() },
+              { icon: <Zap className="h-3.5 w-3.5" />, label: 'Txns this month', value: totalMonthlyTxns.toLocaleString() },
+              { icon: <TrendingUp className="h-3.5 w-3.5" />, label: 'Avg activity', value: `${avgActivity}%` },
               { icon: <Globe className="h-3.5 w-3.5" />, label: 'Countries', value: countries },
             ].map((s, i) => (
               <motion.div
@@ -259,6 +264,11 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
               {(gated ? filtered.slice(0, 2) : filtered).map((e, i) => {
                 const status = getStatus(e);
                 const score = e.score ?? 0;
+                const monthlyTxns = (e as any).monthlyTransactions ?? 0;
+                const activeDays = (e as any).activeDays ?? 0;
+                const daysSoFar = (e as any).daysSoFar ?? 30;
+                const daysInMonth = (e as any).daysInMonth ?? 30;
+                const activityRate = (e as any).activityRate ?? 0;
                 const isBtcmap = e.dataSource === 'btcmap' || e.dataSource === 'combined';
                 return (
                   <motion.div key={e.id} variants={fadeUp} custom={i}>
@@ -278,15 +288,16 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
                         <div className="absolute inset-0 bg-gradient-to-t from-background/85 via-background/10 to-transparent" />
                         <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
                           <span className="text-2xl drop-shadow">{getFlagEmoji(e.country_code || '')}</span>
-                          <span className="inline-flex items-center gap-1 rounded-full border border-score-amber/40 bg-background/80 backdrop-blur px-2.5 py-1 font-mono text-xs font-bold text-score-amber">
-                            {score}
+                          <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${status.text} bg-background/80 backdrop-blur rounded-full border border-border px-2 py-0.5`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
+                            {status.label}
                           </span>
                         </div>
                       </div>
 
                       {/* Body */}
                       <div className="p-5">
-                        <div className="flex items-center gap-3 mb-3">
+                        <div className="flex items-center gap-3 mb-4">
                           {e.logo_url ? (
                             <img src={e.logo_url} alt="" className="h-8 w-8 rounded-full object-cover border border-border" />
                           ) : (
@@ -303,28 +314,49 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3 text-xs mb-4">
+                        {/* PRIMARY METRICS — big numbers */}
+                        <div className="grid grid-cols-2 gap-3 mb-3">
                           <div>
-                            <div className="text-muted-foreground">Merchants</div>
-                            <div className="font-mono font-semibold text-foreground flex items-center gap-1.5">
-                              {(e.merchants ?? 0).toLocaleString()}
-                              {isBtcmap && <CheckCircle2 className="h-3 w-3 text-score-amber" />}
+                            <div className="flex items-baseline gap-1.5">
+                              <Zap className="h-4 w-4 text-score-amber" />
+                              <span className="font-mono text-2xl font-extrabold text-foreground tabular-nums">{monthlyTxns.toLocaleString()}</span>
                             </div>
+                            <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">Txns this month</div>
                           </div>
                           <div>
-                            <div className="text-muted-foreground">Earners</div>
-                            <div className="font-mono font-semibold text-foreground">{(e.earners ?? 0).toLocaleString()}</div>
+                            <div className="flex items-baseline gap-1.5">
+                              <span className="font-mono text-2xl font-extrabold text-foreground tabular-nums">{activeDays}</span>
+                              <span className="text-xs text-muted-foreground">/ {daysInMonth}</span>
+                            </div>
+                            <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">Active days</div>
                           </div>
                         </div>
 
-                        <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-4">
-                          <div className="h-full bg-score-amber transition-all" style={{ width: `${Math.min(100, score)}%` }} />
+                        {/* Activity rate progress */}
+                        <div className="mb-4">
+                          <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">
+                            <span>Activity</span>
+                            <span className="font-mono text-foreground">{activityRate}%</span>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                            <div className="h-full bg-score-amber transition-all" style={{ width: `${Math.min(100, activityRate)}%` }} />
+                          </div>
                         </div>
 
+                        {/* Secondary stats */}
+                        <div className="grid grid-cols-2 gap-3 text-xs mb-4 pb-4 border-b border-border">
+                          <div className="text-muted-foreground">
+                            Merchants <span className="font-mono font-semibold text-foreground inline-flex items-center gap-1">{(e.merchants ?? 0).toLocaleString()}{isBtcmap && <CheckCircle2 className="h-3 w-3 text-score-amber" />}</span>
+                          </div>
+                          <div className="text-muted-foreground">
+                            Earners <span className="font-mono font-semibold text-foreground">{(e.earners ?? 0).toLocaleString()}</span>
+                          </div>
+                        </div>
+
+                        {/* Circularity score — small/secondary */}
                         <div className="flex items-center justify-between">
-                          <span className={`inline-flex items-center gap-1.5 text-xs ${status.text}`}>
-                            <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
-                            {status.label}
+                          <span className="text-[11px] text-muted-foreground">
+                            Circularity <span className="font-mono font-semibold text-score-amber">{score}</span><span className="text-muted-foreground">/100</span>
                           </span>
                           <span className="text-xs text-muted-foreground inline-flex items-center gap-1 group-hover:text-score-amber transition-colors">
                             View <ArrowRight className="h-3 w-3" />

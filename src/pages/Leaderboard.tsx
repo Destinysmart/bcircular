@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-type SortKey = 'score' | 'sats' | 'growth' | 'merchants';
+type SortKey = 'transactions' | 'activity' | 'score' | 'sats' | 'growth' | 'merchants';
 type Activity = 'all' | 'active' | 'growing' | 'dormant';
 type Coverage = 'all' | 'high' | 'medium' | 'low' | 'btcmap';
 type Volume = 'all' | 'low' | 'medium' | 'high';
@@ -49,7 +49,7 @@ const Leaderboard = () => {
   const [retention, setRetention] = useState<Retention>('all');
   const [confidence, setConfidence] = useState<Confidence>('all');
   const [source, setSource] = useState<Source>('all');
-  const [sortBy, setSortBy] = useState<SortKey>('score');
+  const [sortBy, setSortBy] = useState<SortKey>('transactions');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const { data: communities, isLoading, isError, error } = useQuery({
@@ -143,6 +143,8 @@ const Leaderboard = () => {
       .filter(matchesSource)
       .filter(c => !q || c.name?.toLowerCase().includes(q) || c.country?.toLowerCase().includes(q) || c.city?.toLowerCase().includes(q))
       .sort((a, b) => {
+        if (sortBy === 'transactions') return (b.monthlyTransactions ?? 0) - (a.monthlyTransactions ?? 0);
+        if (sortBy === 'activity') return (b.activityRate ?? 0) - (a.activityRate ?? 0);
         if (sortBy === 'sats') return (b.satsTotal ?? 0) - (a.satsTotal ?? 0);
         if (sortBy === 'growth') return (b.growthScore ?? 0) - (a.growthScore ?? 0);
         if (sortBy === 'merchants') return (b.merchants ?? 0) - (a.merchants ?? 0);
@@ -214,6 +216,8 @@ const Leaderboard = () => {
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="transactions">Sort: Transactions</SelectItem>
+              <SelectItem value="activity">Sort: Activity rate</SelectItem>
               <SelectItem value="score">Sort: Circularity Score</SelectItem>
               <SelectItem value="sats">Sort: Sats Volume</SelectItem>
               <SelectItem value="growth">Sort: Growth rate</SelectItem>
@@ -407,18 +411,24 @@ const Leaderboard = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-6">
+                      <div className="hidden md:flex flex-col items-end text-xs">
+                        <div className="font-mono text-base font-bold text-score-amber tabular-nums">⚡ {(c.monthlyTransactions ?? 0).toLocaleString()}</div>
+                        <div className="text-muted-foreground">txns / month</div>
+                      </div>
+                      <div className="hidden lg:flex flex-col items-end text-xs">
+                        <div className="font-mono text-base font-bold text-foreground tabular-nums">{c.activityRate ?? 0}%</div>
+                        <div className="text-muted-foreground">{c.activeDays ?? 0}/{c.daysInMonth ?? 30} days</div>
+                      </div>
                       <div className="hidden sm:flex flex-col items-end text-xs text-muted-foreground">
                         <span>{c.merchants} merchants</span>
                         <span className="font-mono">{formatSats(c.satsTotal ?? 0)} sats</span>
                       </div>
-                      <div className="w-20 hidden md:block">
-                        <div className="h-1.5 rounded-full bg-secondary">
-                          <div className={`h-full rounded-full ${getScoreBgColor(c.score ?? 0)}`} style={{ width: `${c.score ?? 0}%` }} />
-                        </div>
+                      <div className="flex flex-col items-end">
+                        <span className={`font-mono text-base font-bold ${getScoreColor(c.score ?? 0)}`}>
+                          {c.score ?? 0}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider">circularity</span>
                       </div>
-                      <span className={`font-mono text-2xl font-extrabold w-12 text-right ${getScoreColor(c.score ?? 0)}`}>
-                        {c.score ?? 0}
-                      </span>
                       <button onClick={(event) => { event.stopPropagation(); navigate(`/compare?a=${c.slug}`); }} className="text-muted-foreground hover:text-primary" aria-label={`Compare ${c.name}`}>
                         <Scale className="h-4 w-4" />
                       </button>

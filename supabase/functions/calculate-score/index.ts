@@ -40,9 +40,13 @@ Deno.serve(async (req) => {
     const now = new Date()
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
 
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+    const daysSoFar = now.getDate()
+
     for (const communityId of communityIds) {
       // Fetch all data in parallel
-      const [communityRes, merchantsRes, earnersRes, txRes, blinkTxRes, walletsRes, proofRes] = await Promise.all([
+      const [communityRes, merchantsRes, earnersRes, txRes, blinkTxRes, walletsRes, proofRes, monthlyTxRes, monthlyBlinkRes] = await Promise.all([
         supabase.from('communities').select('declared_population').eq('id', communityId).single(),
         supabase.from('merchants').select('id, category, created_at, source').eq('community_id', communityId).eq('status', 'approved'),
         supabase.from('earners').select('id, created_at').eq('community_id', communityId).eq('status', 'approved'),
@@ -50,6 +54,8 @@ Deno.serve(async (req) => {
         supabase.from('blink_transactions').select('id, direction, settlement_amount, is_internal, counterparty_wallet_id, wallet_id, blink_created_at').eq('community_id', communityId),
         supabase.from('wallets').select('id, user_id').eq('community_id', communityId),
         supabase.from('proofs').select('*', { count: 'exact', head: true }).eq('community_id', communityId).eq('status', 'approved'),
+        supabase.from('transactions').select('id, created_at').eq('community_id', communityId).eq('status', 'approved').gte('created_at', startOfMonth.toISOString()),
+        supabase.from('blink_transactions').select('id, blink_created_at').eq('community_id', communityId).gte('blink_created_at', startOfMonth.toISOString()),
       ])
 
       const pop = Math.max(communityRes.data?.declared_population || 100, 1)
@@ -187,6 +193,33 @@ Deno.serve(async (req) => {
         console.error(`Error inserting score for ${communityId}:`, error)
       }
 
+      // ── Monthly transaction metrics ──
+      const monthlyTxns = monthlyTxRes.data || []
+      const monthlyBlink = monthlyBlinkRes.data || []
+      const allMonthly = [
+        ...monthlyTxns.map((t: any) => t.created_at),
+        ...monthlyBlink.map((t: any) => t.blink_created_at),
+      ]
+      const activeDaysSet = new Set(
+        allMonthly.map((d: string) => new Date(d).toDateString())
+      )
+      const activeDays = activeDaysSet.size
+      const activityRate = daysSoFar > 0
+        ? Math.round((activeDays / daysSoFar) * 100)
+        : 0
+      const monthlyTransactions = allMonthly.length
+
+      const { error: updateErr } = await supabase.from('communities').update({
+        monthly_transactions: monthlyTransactions,
+        active_days_this_month: activeDays,
+        activity_rate: activityRate,
+        metrics_updated_at: new Date().toISOString(),
+      }).eq('id', communityId)
+
+      if (updateErr) {
+        console.error(`Error updating community metrics for ${communityId}:`, updateErr)
+      }
+
       results.push({
         communityId,
         score: Math.min(score, 100),
@@ -199,6 +232,11 @@ Deno.serve(async (req) => {
           connectedWallets: wallets.length,
           blinkTransactions: blinkTx.length,
           proofCount,
+          monthlyTransactions,
+          activeDays,
+          daysSoFar,
+          daysInMonth,
+          activityRate,
           confidence: proofCount >= 5 ? 'High' : proofCount >= 1 ? 'Medium' : 'Low',
         },
       })
