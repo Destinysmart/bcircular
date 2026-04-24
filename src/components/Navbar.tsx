@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LogOut, Menu, Shield, Settings, X, Sun, Moon } from 'lucide-react';
+import { LogOut, Menu, Shield, Settings, X, Sun, Moon, Home, Trophy, BarChart2, PlusCircle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,12 +25,15 @@ const Navbar = () => {
   });
 
   const navLinks = [
-    { to: '/', label: 'Home' },
-    { to: '/leaderboard', label: 'Leaderboard' },
-    { to: '/compare', label: 'Compare' },
-    { to: '/register', label: 'Register' },
-    ...(user ? [{ to: '/validate', label: 'Validate' }] : []),
+    { to: '/', label: 'Home', Icon: Home },
+    { to: '/leaderboard', label: 'Leaderboard', Icon: Trophy },
+    { to: '/compare', label: 'Compare', Icon: BarChart2 },
+    { to: '/register', label: 'Register', Icon: PlusCircle },
+    ...(user ? [{ to: '/validate', label: 'Validate', Icon: CheckCircle }] : []),
   ];
+
+  const displayName = profile?.display_name || user?.email?.split('@')[0] || '';
+  const initials = (profile?.display_name || user?.email || '?').slice(0, 2).toUpperCase();
 
   return (
     <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
@@ -100,19 +103,53 @@ const Navbar = () => {
       </div>
 
       {mobileOpen && (
-        <div className="md:hidden border-t border-border bg-background px-4 py-3 space-y-1">
-          {navLinks.map(link => (
-            <Link
-              key={link.to}
-              to={link.to}
-              className="block px-3 py-2 text-sm text-muted-foreground hover:text-foreground rounded-md hover:bg-secondary"
-              onClick={() => setMobileOpen(false)}
-            >
-              {link.label}
-            </Link>
-          ))}
-          {profile?.is_super_admin && (
-            <Link to="/admin" className="block px-3 py-2 text-sm text-muted-foreground hover:text-foreground rounded-md hover:bg-secondary" onClick={() => setMobileOpen(false)}>Admin</Link>
+        <div className="md:hidden border-t border-border bg-background">
+          <div className="px-2 py-2 divide-y divide-border">
+            {navLinks.map(link => {
+              const active = location.pathname === link.to;
+              return (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className={`flex items-center gap-3 px-3 py-4 text-sm rounded-md transition-colors ${
+                    active ? 'text-[#F7931A] font-semibold' : 'text-foreground hover:bg-secondary'
+                  }`}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <link.Icon size={18} className={active ? 'text-[#F7931A]' : 'text-muted-foreground'} />
+                  {link.label}
+                </Link>
+              );
+            })}
+            {profile?.is_super_admin && (
+              <Link
+                to="/admin"
+                className={`flex items-center gap-3 px-3 py-4 text-sm rounded-md transition-colors ${
+                  location.pathname === '/admin' ? 'text-[#F7931A] font-semibold' : 'text-foreground hover:bg-secondary'
+                }`}
+                onClick={() => setMobileOpen(false)}
+              >
+                <Settings size={18} className={location.pathname === '/admin' ? 'text-[#F7931A]' : 'text-muted-foreground'} />
+                Admin
+              </Link>
+            )}
+          </div>
+          {user && (
+            <div className="border-t border-border px-4 py-4 bg-secondary/30">
+              <Link to="/settings" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 mb-3">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={profile?.avatar_url || undefined} alt={displayName} />
+                  <AvatarFallback className="text-xs font-medium bg-primary/10 text-primary">{initials}</AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-medium text-foreground truncate">{displayName}</div>
+                  <div className="text-xs text-muted-foreground truncate">{user.email}</div>
+                </div>
+              </Link>
+              <Button variant="outline" size="sm" className="w-full gap-2" onClick={() => { setMobileOpen(false); signOut(); }}>
+                <LogOut className="h-4 w-4" /> Log out
+              </Button>
+            </div>
           )}
         </div>
       )}

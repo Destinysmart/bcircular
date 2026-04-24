@@ -75,7 +75,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
   const { data, isLoading } = useQuery({ queryKey: ['communities-stats'], queryFn: fetchAllCommunitiesWithStats });
   const list: Economy[] = data || [];
   const heroHeight = compactHero ? 320 : 520;
-  const heroHeightMobile = compactHero ? 260 : 460;
+  const heroHeightMobile = compactHero ? 260 : 380;
 
   const totalMerchants = list.reduce((s, c) => s + (c.merchants ?? 0), 0);
   const totalMonthlyTxns = list.reduce((s, c) => s + ((c as any).monthlyTransactions ?? 0), 0);
@@ -155,7 +155,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
                 <Sparkles className="h-3 w-3" />
                 Bitcoin Circular Economy
               </motion.div>
-              <motion.h1 variants={fadeUp} custom={1} className={`${compactHero ? 'text-2xl sm:text-3xl md:text-4xl mb-3' : 'text-4xl sm:text-5xl md:text-6xl mb-4 md:mb-5'} font-extrabold tracking-tight leading-[1.05] text-foreground`}>
+              <motion.h1 variants={fadeUp} custom={1} className={`${compactHero ? 'text-2xl sm:text-3xl md:text-4xl mb-3' : 'text-3xl sm:text-5xl md:text-6xl mb-4 md:mb-5'} font-extrabold tracking-tight leading-[1.1] text-foreground`}>
                 See where Bitcoin
                 <br />
                 <span className="text-score-amber">actually circulates.</span>
@@ -182,12 +182,12 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
             </motion.div>
           </div>
 
-          {/* Stat pills floating at bottom of hero */}
+          {/* Stat pills floating at bottom of hero (desktop/tablet only) */}
           <motion.div
             variants={stagger}
             initial="hidden"
             animate="visible"
-            className="absolute left-0 right-0 bottom-6 container"
+            className="absolute left-0 right-0 bottom-6 container hidden md:block"
           >
             <div className="flex items-center gap-2 mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
               <span className="relative flex h-1.5 w-1.5">
@@ -208,6 +208,28 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
             </div>
           </motion.div>
         </div>
+
+        {/* Mobile stats: 2x2 grid below hero */}
+        {!compactHero && (
+          <div className="md:hidden bg-background/80 border-b border-border">
+            <div className="container py-4">
+              <div className="flex items-center gap-2 mb-3 text-[10px] uppercase tracking-wider text-muted-foreground">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-score-green opacity-75" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-score-green" />
+                </span>
+                <span className="text-score-green font-semibold">Live</span>
+                <span className="text-muted-foreground">· Updated now</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <MobileHeroStat icon={<Store className="h-4 w-4 text-score-amber" />} label="Merchants" value={totalMerchants} loading={isLoading} />
+                <MobileHeroStat icon={<Zap className="h-4 w-4 text-score-amber" />} label="Txns" value={totalMonthlyTxns} loading={isLoading} />
+                <MobileHeroStat icon={<TrendingUp className="h-4 w-4 text-score-green" />} label="Avg Activity" value={avgActivity} suffix="%" loading={isLoading} />
+                <MobileHeroStat icon={<Globe className="h-4 w-4 text-foreground" />} label="Countries" value={countries} loading={isLoading} />
+              </div>
+            </div>
+          </div>
+        )}
       </section>
       )}
 
@@ -593,6 +615,23 @@ const AnimatedStatPill = ({
       </span>
       <span className="text-muted-foreground">{label}</span>
     </motion.div>
+  );
+};
+
+const MobileHeroStat = ({
+  icon, label, value, suffix = '', loading,
+}: { icon: React.ReactNode; label: string; value: number; suffix?: string; loading?: boolean }) => {
+  const animated = useCountUp(value, 1400, !loading);
+  return (
+    <div className="rounded-lg border border-border bg-background/70 backdrop-blur-md px-3 py-2.5 flex flex-col gap-1">
+      <div className="flex items-center gap-1.5">
+        {icon}
+        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
+      </div>
+      <span className="font-mono text-lg font-bold tabular-nums text-foreground">
+        {loading ? '—' : `${animated.toLocaleString()}${suffix}`}
+      </span>
+    </div>
   );
 };
 
