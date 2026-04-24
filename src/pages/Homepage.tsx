@@ -173,8 +173,9 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
             className="absolute left-0 right-0 bottom-6 container flex flex-wrap gap-2 md:gap-3"
           >
             {[
-              { icon: <Zap className="h-3.5 w-3.5" />, label: 'Economies', value: list.length },
               { icon: <Store className="h-3.5 w-3.5" />, label: 'Merchants', value: totalMerchants.toLocaleString() },
+              { icon: <Zap className="h-3.5 w-3.5" />, label: 'Txns this month', value: totalMonthlyTxns.toLocaleString() },
+              { icon: <TrendingUp className="h-3.5 w-3.5" />, label: 'Avg activity', value: `${avgActivity}%` },
               { icon: <Globe className="h-3.5 w-3.5" />, label: 'Countries', value: countries },
             ].map((s, i) => (
               <motion.div
