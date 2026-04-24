@@ -273,7 +273,12 @@ const CommunityDashboard = () => {
                   <span>{community.city}, {community.country}</span>
                   <ConfidenceBadge totalApproved={displayMerchants + displayEarners} proofCount={proofCount} />
                 </div>
-                <h1 className="text-[28px] font-bold">{community.name}</h1>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="text-[28px] font-bold">{community.name}</h1>
+                  {(community as any).fbce_tier && (
+                    <TierBadge tier={(community as any).fbce_tier} verified={(community as any).fbce_tier_verified} showSelfReported={false} />
+                  )}
+                </div>
               </div>
             </div>
             {community.description && (
