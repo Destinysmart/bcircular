@@ -157,14 +157,37 @@ const ValidatorDashboard = () => {
         <h1 className="text-2xl font-bold mb-1">Validator Dashboard</h1>
         <p className="text-sm text-muted-foreground mb-6">{items.length + proofs.length} items pending review</p>
 
-        <div className="mb-6 flex border-b border-border">
-          <button onClick={() => setTab('submissions')} className={`px-4 py-2 text-sm border-b-2 ${tab === 'submissions' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground'}`}>Submissions</button>
-          <button onClick={() => setTab('proofs')} className={`px-4 py-2 text-sm border-b-2 ${tab === 'proofs' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground'}`}>Proofs</button>
-        </div>
+        {(() => {
+          const counts = {
+            merchant: items.filter(i => i.type === 'merchant').length,
+            earner: items.filter(i => i.type === 'earner').length,
+            transaction: items.filter(i => i.type === 'transaction').length,
+            proofs: proofs.length,
+          };
+          const tabs: { key: typeof tab; label: string }[] = [
+            { key: 'merchant', label: 'Merchants' },
+            { key: 'earner', label: 'Earners' },
+            { key: 'transaction', label: 'Transactions' },
+            { key: 'proofs', label: 'Proofs' },
+          ];
+          return (
+            <div className="mb-6 flex border-b border-border">
+              {tabs.map(t => (
+                <button
+                  key={t.key}
+                  onClick={() => setTab(t.key)}
+                  className={`px-4 py-2 text-sm border-b-2 ${tab === t.key ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground'}`}
+                >
+                  {t.label} ({counts[t.key]})
+                </button>
+              ))}
+            </div>
+          );
+        })()}
 
         {tab === 'proofs' ? (
           proofs.length === 0 ? (
-            <div className="text-center py-16 text-muted-foreground">No pending proofs to review.</div>
+            <ValidatorEmptyState />
           ) : (
             <div className="space-y-4">
               {proofs.map(proof => (
@@ -184,41 +207,40 @@ const ValidatorDashboard = () => {
               ))}
             </div>
           )
-        ) : items.length === 0 ? (
-          <div className="text-center py-16 text-muted-foreground">
-            <p>No pending submissions to review.</p>
-            <p className="text-xs mt-1">You'll see items here when you're appointed as a validator for an economy.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {items.map(item => (
-              <div key={item.id} className="rounded-lg border border-border bg-card p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge variant="outline" className="text-xs capitalize">{item.type}</Badge>
-                      <span className="font-medium">{item.title}</span>
+        ) : (() => {
+          const filtered = items.filter(i => i.type === tab);
+          if (filtered.length === 0) return <ValidatorEmptyState />;
+          return (
+            <div className="space-y-4">
+              {filtered.map(item => (
+                <div key={item.id} className="rounded-lg border border-border bg-card p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant="outline" className="text-xs capitalize">{item.type}</Badge>
+                        <span className="font-medium">{item.title}</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{item.detail}</p>
                     </div>
-                    <p className="text-sm text-muted-foreground">{item.detail}</p>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Clock className="h-3.5 w-3.5" />
+                      <span className="font-mono">{item.votes.approve}/2 approvals</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock className="h-3.5 w-3.5" />
-                    <span className="font-mono">{item.votes.approve}/2 approvals</span>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" className="gap-1.5" disabled={voting === item.id} onClick={() => handleVote(item, 'approve')}>
+                      <CheckCircle className="h-3.5 w-3.5" /> Approve
+                    </Button>
+                    <Button size="sm" variant="outline" className="gap-1.5 text-destructive hover:text-destructive" disabled={voting === item.id} onClick={() => handleVote(item, 'reject')}>
+                      <XCircle className="h-3.5 w-3.5" /> Reject
+                    </Button>
+                    <Input placeholder="Optional note..." className="h-8 text-xs flex-1 ml-2" value={notes[item.id] || ''} onChange={e => setNotes(prev => ({ ...prev, [item.id]: e.target.value }))} />
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button size="sm" className="gap-1.5" disabled={voting === item.id} onClick={() => handleVote(item, 'approve')}>
-                    <CheckCircle className="h-3.5 w-3.5" /> Approve
-                  </Button>
-                  <Button size="sm" variant="outline" className="gap-1.5 text-destructive hover:text-destructive" disabled={voting === item.id} onClick={() => handleVote(item, 'reject')}>
-                    <XCircle className="h-3.5 w-3.5" /> Reject
-                  </Button>
-                  <Input placeholder="Optional note..." className="h-8 text-xs flex-1 ml-2" value={notes[item.id] || ''} onChange={e => setNotes(prev => ({ ...prev, [item.id]: e.target.value }))} />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
