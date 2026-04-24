@@ -172,6 +172,22 @@ const SuperAdminDashboard = () => {
     }
   };
 
+  const [recalcAllLoading, setRecalcAllLoading] = useState(false);
+  const handleRecalcAll = async () => {
+    setRecalcAllLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('calculate-score', { body: { recalculate_all: true } });
+      if (error) throw error;
+      const n = data?.results?.length ?? 0;
+      toast({ title: `Recalculated scores for ${n} economies ✓` });
+      queryClient.invalidateQueries();
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setRecalcAllLoading(false);
+    }
+  };
+
   const handleToggleSuperAdmin = async (userId: string, current: boolean) => {
     await supabase.from('profiles').update({ is_super_admin: !current }).eq('user_id', userId);
     queryClient.invalidateQueries({ queryKey: ['admin-users'] });
