@@ -40,9 +40,13 @@ Deno.serve(async (req) => {
     const now = new Date()
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
 
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+    const daysSoFar = now.getDate()
+
     for (const communityId of communityIds) {
       // Fetch all data in parallel
-      const [communityRes, merchantsRes, earnersRes, txRes, blinkTxRes, walletsRes, proofRes] = await Promise.all([
+      const [communityRes, merchantsRes, earnersRes, txRes, blinkTxRes, walletsRes, proofRes, monthlyTxRes, monthlyBlinkRes] = await Promise.all([
         supabase.from('communities').select('declared_population').eq('id', communityId).single(),
         supabase.from('merchants').select('id, category, created_at, source').eq('community_id', communityId).eq('status', 'approved'),
         supabase.from('earners').select('id, created_at').eq('community_id', communityId).eq('status', 'approved'),
