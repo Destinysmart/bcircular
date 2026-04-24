@@ -480,6 +480,23 @@ const CommunityDashboard = () => {
             )}
           </div>
 
+          <div className="rounded-xl border border-border bg-card p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-semibold text-foreground">Support This Economy</h3>
+              <p className="text-sm text-muted-foreground mt-1">Buy merch. Pay in sats. Support real Bitcoin adoption.</p>
+              <span className="inline-block mt-2 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full border border-border text-muted-foreground">Powered by Blink</span>
+            </div>
+            <a
+              href="https://blinkstuff.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90 transition-opacity whitespace-nowrap"
+              style={{ backgroundColor: '#F7931A' }}
+            >
+              Shop Community Merch ⚡
+            </a>
+          </div>
+
           <div className="rounded-xl border border-border bg-card overflow-hidden">
             <div className="p-4 border-b border-border text-xs uppercase tracking-wider text-muted-foreground">Merchant Map</div>
             <MerchantMap
