@@ -16,15 +16,19 @@ Deno.serve(async (req) => {
     )
 
     let communityIds: string[] = []
+    let recalculateAll = false
 
     if (req.method === 'POST') {
       const body = await req.json().catch(() => ({}))
       if (body.community_id) {
         communityIds = [body.community_id]
       }
+      if (body.recalculate_all) {
+        recalculateAll = true
+      }
     }
 
-    if (communityIds.length === 0) {
+    if (recalculateAll || communityIds.length === 0) {
       const { data: communities } = await supabase
         .from('communities')
         .select('id')
@@ -58,14 +62,17 @@ Deno.serve(async (req) => {
 
       const hasBlinkData = blinkTx.length > 0
 
-      // ── Pillar 1: Merchant Saturation (25%) ──
+      // ── Pillar 1: Merchant Saturation (25%) — logarithmic scale ──
       // BTCMap merchants count 1.5× because they're independently verified
       const btcmapCount = m.filter((x: any) => x.source === 'btcmap').length
       const selfReportedCount = m.filter((x: any) => x.source !== 'btcmap').length
       const weightedMerchantCount = (btcmapCount * 1.5) + selfReportedCount
       const uniqueCategories = new Set(m.map((x: any) => x.category)).size
       const diversityBonus = Math.min(uniqueCategories * 2, 10)
-      const saturation = Math.min((weightedMerchantCount / pop) * 1000 + diversityBonus, 100)
+      const merchantsPerThousand = (weightedMerchantCount / Math.max(pop, 100)) * 1000
+      const rawSaturation = Math.min(Math.log10(merchantsPerThousand + 1) * 50 + diversityBonus, 100)
+      // Floor: communities with 50+ BTCMap merchants never score below 40
+      const saturation = btcmapCount >= 50 ? Math.max(rawSaturation, 40) : rawSaturation
 
       // ── Pillar 2: Retention Rate (25%) ──
       // Use Blink data if available (more accurate), else fall back to self-reported

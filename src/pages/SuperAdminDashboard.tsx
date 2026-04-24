@@ -17,6 +17,7 @@ const SuperAdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [recalcAllLoading, setRecalcAllLoading] = useState(false);
 
   // Check super admin status
   const { data: userProfile, isLoading: profileLoading } = useQuery({
@@ -169,6 +170,21 @@ const SuperAdminDashboard = () => {
       toast({ title: 'Score recalculated' });
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const handleRecalcAll = async () => {
+    setRecalcAllLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('calculate-score', { body: { recalculate_all: true } });
+      if (error) throw error;
+      const n = data?.results?.length ?? 0;
+      toast({ title: `Recalculated scores for ${n} economies ✓` });
+      queryClient.invalidateQueries();
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setRecalcAllLoading(false);
     }
   };
 
@@ -339,12 +355,20 @@ const SuperAdminDashboard = () => {
                 <div className="text-xs text-muted-foreground">Approved Transactions</div>
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div className="rounded-lg border border-border bg-card p-4">
                 <h3 className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Active Economies: {activeCommunities.length}</h3>
                 <p className="text-sm text-muted-foreground">Pending: {pendingCommunities.length} · Users: {users?.length || 0}</p>
               </div>
             </div>
+            <Button
+              onClick={handleRecalcAll}
+              disabled={recalcAllLoading}
+              className="w-full bg-score-amber text-background hover:bg-score-amber/90 gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${recalcAllLoading ? 'animate-spin' : ''}`} />
+              {recalcAllLoading ? 'Recalculating...' : 'Recalculate all scores'}
+            </Button>
           </TabsContent>
         </Tabs>
       </div>
