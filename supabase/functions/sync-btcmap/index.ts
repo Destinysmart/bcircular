@@ -49,6 +49,27 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // ── Auth: require valid JWT ──
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    const userClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } }
+    )
+    const token = authHeader.replace('Bearer ', '')
+    const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(token)
+    if (claimsErr || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    const callerId = claimsData.claims.sub as string
+
     const parsed = BodySchema.safeParse(await req.json())
     if (!parsed.success) {
       return new Response(JSON.stringify({ error: parsed.error.flatten().fieldErrors }), {
@@ -63,6 +84,18 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
+
+    // Authorize: caller must be community admin (admin_id), community_admins member, or super admin
+    const [{ data: c }, { data: ca }, { data: roleRow }] = await Promise.all([
+      supabase.from('communities').select('admin_id').eq('id', community_id).maybeSingle(),
+      supabase.from('community_admins').select('id').eq('community_id', community_id).eq('user_id', callerId).maybeSingle(),
+      supabase.from('user_roles').select('role').eq('user_id', callerId).eq('role', 'admin').maybeSingle(),
+    ])
+    if (c?.admin_id !== callerId && !ca && !roleRow) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), {
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
 
     // Get community BTCMap area ID
     const { data: community, error: communityError } = await supabase

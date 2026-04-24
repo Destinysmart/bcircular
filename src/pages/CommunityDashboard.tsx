@@ -79,7 +79,8 @@ const CommunityDashboard = () => {
   const { data: adminProfile } = useQuery({
     queryKey: ['admin-profile', community?.admin_id],
     queryFn: async () => {
-      const { data } = await supabase.from('profiles').select('display_name').eq('user_id', community!.admin_id!).single();
+      // Use public_profiles view to avoid exposing emails / is_super_admin
+      const { data } = await (supabase as any).from('public_profiles').select('display_name').eq('user_id', community!.admin_id!).single();
       return data;
     },
     enabled: !!community?.admin_id,
