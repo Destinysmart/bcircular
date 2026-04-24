@@ -132,13 +132,15 @@ const GlobalEconomiesMap = ({ economies }: Props) => {
       requestAnimationFrame(triggerResize);
       map.once('load', triggerResize);
     } else {
-      // Desktop: wait until map fully loaded, force resize, then plot + fit
-      map.on('load', () => {
+      // Desktop: wait for map to be fully idle (style + tiles loaded, container sized)
+      // before plotting pins. Guard with a flag so we only run once.
+      let pinsAlreadyAdded = false;
+      map.on('idle', () => {
+        if (pinsAlreadyAdded) return;
+        pinsAlreadyAdded = true;
         map.resize();
-        window.setTimeout(() => {
-          addAllEconomyPins();
-          fitMapToPins();
-        }, 500);
+        addAllEconomyPins();
+        fitMapToPins();
       });
     }
 
