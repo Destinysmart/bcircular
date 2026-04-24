@@ -125,6 +125,15 @@ html.light .leaflet-container { background-color: #e5e7eb; }
 }
 
 @layer utilities {
+  .hero-responsive {
+    height: var(--hero-h-mobile, 460px);
+  }
+  @media (min-width: 768px) {
+    .hero-responsive {
+      height: var(--hero-h, 520px);
+    }
+  }
+
   .hero-dot-grid {
     background-image: radial-gradient(circle, hsl(var(--score-amber) / 0.18) 1px, transparent 1px);
     background-size: 24px 24px;
