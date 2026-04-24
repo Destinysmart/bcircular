@@ -30,35 +30,37 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<RootRedirect />} />
-            <Route path="/leaderboard" element={<Leaderboard />} />
-            <Route path="/c/:slug" element={<CommunityDashboard />} />
-            <Route path="/c/:slug/submit" element={<SubmitPage />} />
-            <Route path="/c/:slug/report" element={<ProofOfCircularity />} />
-            <Route path="/c/:slug/proofs" element={<Proofs />} />
-            <Route path="/widget/:slug" element={<Widget />} />
-            <Route path="/quick-submit" element={<QuickSubmit />} />
-            <Route path="/compare" element={<Compare />} />
-            <Route path="/register" element={<RegisterCommunity />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Login />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/validate" element={<ValidatorDashboard />} />
-            <Route path="/methodology" element={<Methodology />} />
-            <Route path="/dashboard/economy/:id" element={<EconomyAdminDashboard />} />
-            <Route path="/admin" element={<SuperAdminDashboard />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<RootRedirect />} />
+              <Route path="/leaderboard" element={<Leaderboard />} />
+              <Route path="/c/:slug" element={<CommunityDashboard />} />
+              <Route path="/c/:slug/submit" element={<SubmitPage />} />
+              <Route path="/c/:slug/report" element={<ProofOfCircularity />} />
+              <Route path="/c/:slug/proofs" element={<Proofs />} />
+              <Route path="/widget/:slug" element={<Widget />} />
+              <Route path="/quick-submit" element={<QuickSubmit />} />
+              <Route path="/compare" element={<Compare />} />
+              <Route path="/register" element={<RegisterCommunity />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Login />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/validate" element={<ValidatorDashboard />} />
+              <Route path="/methodology" element={<Methodology />} />
+              <Route path="/dashboard/economy/:id" element={<EconomyAdminDashboard />} />
+              <Route path="/admin" element={<SuperAdminDashboard />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
