@@ -1,9 +1,9 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import L from 'leaflet';
 import { Scale, Zap } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
-import { MapContainer, Marker, TileLayer } from 'react-leaflet';
 import Navbar from '@/components/Navbar';
 import ScoreRing from '@/components/ScoreRing';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -24,16 +24,56 @@ const bar = (value: number, highlight: boolean) => (
 );
 
 const MiniMap = ({ merchants }: { merchants: any[] }) => {
-  const points = merchants.filter(m => m.lat && m.lng);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const points = useMemo(() => merchants.filter(m => m.lat && m.lng), [merchants]);
+
+  useEffect(() => {
+    if (!containerRef.current || !points.length) return;
+
+    if (mapRef.current) {
+      mapRef.current.remove();
+      mapRef.current = null;
+    }
+
+    const map = L.map(containerRef.current, {
+      zoomControl: false,
+      scrollWheelZoom: false,
+      attributionControl: false,
+    });
+
+    mapRef.current = map;
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap',
+    }).addTo(map);
+
+    points.forEach(point => {
+      L.circleMarker([point.lat, point.lng], {
+        radius: 5,
+        weight: 2,
+        color: '#F7931A',
+        fillColor: '#F7931A',
+        fillOpacity: 0.85,
+      }).addTo(map);
+    });
+
+    if (points.length === 1) {
+      map.setView([points[0].lat, points[0].lng], 13);
+    } else {
+      const bounds = L.latLngBounds(points.map(point => [point.lat, point.lng] as [number, number]));
+      map.fitBounds(bounds, { padding: [24, 24] });
+    }
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
+  }, [points]);
+
   if (!points.length) return <div className="flex h-56 items-center justify-center rounded-lg bg-secondary/40 text-sm text-muted-foreground">No mapped merchants</div>;
-  return (
-    <MapContainer center={[points[0].lat, points[0].lng]} zoom={12} className="h-56 rounded-lg" scrollWheelZoom={false}>
-      {[
-        <TileLayer key="tiles" attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />,
-        ...points.map(m => <Marker key={m.id} position={[m.lat, m.lng]} />),
-      ]}
-    </MapContainer>
-  );
+
+  return <div ref={containerRef} className="h-56 rounded-lg" aria-label="Merchant map" />;
 };
 
 const confidence = (proofCount: number) => proofCount >= 5 ? 'High ✓' : proofCount >= 1 ? 'Medium' : 'Low';
