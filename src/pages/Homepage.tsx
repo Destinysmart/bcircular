@@ -182,12 +182,12 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
             </motion.div>
           </div>
 
-          {/* Stat pills floating at bottom of hero */}
+          {/* Stat pills floating at bottom of hero (desktop/tablet only) */}
           <motion.div
             variants={stagger}
             initial="hidden"
             animate="visible"
-            className="absolute left-0 right-0 bottom-6 container"
+            className="absolute left-0 right-0 bottom-6 container hidden md:block"
           >
             <div className="flex items-center gap-2 mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
               <span className="relative flex h-1.5 w-1.5">
@@ -208,6 +208,28 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
             </div>
           </motion.div>
         </div>
+
+        {/* Mobile stats: 2x2 grid below hero */}
+        {!compactHero && (
+          <div className="md:hidden bg-background/80 border-b border-border">
+            <div className="container py-4">
+              <div className="flex items-center gap-2 mb-3 text-[10px] uppercase tracking-wider text-muted-foreground">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-score-green opacity-75" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-score-green" />
+                </span>
+                <span className="text-score-green font-semibold">Live</span>
+                <span className="text-muted-foreground">· Updated now</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <MobileHeroStat icon={<Store className="h-4 w-4 text-score-amber" />} label="Merchants" value={totalMerchants} loading={isLoading} />
+                <MobileHeroStat icon={<Zap className="h-4 w-4 text-score-amber" />} label="Txns" value={totalMonthlyTxns} loading={isLoading} />
+                <MobileHeroStat icon={<TrendingUp className="h-4 w-4 text-score-green" />} label="Avg Activity" value={avgActivity} suffix="%" loading={isLoading} />
+                <MobileHeroStat icon={<Globe className="h-4 w-4 text-foreground" />} label="Countries" value={countries} loading={isLoading} />
+              </div>
+            </div>
+          </div>
+        )}
       </section>
       )}
 
