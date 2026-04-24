@@ -446,7 +446,17 @@ const CommunityDashboard = () => {
 
           <div className="rounded-xl border border-border bg-card overflow-hidden">
             <div className="p-4 border-b border-border text-xs uppercase tracking-wider text-muted-foreground">Merchant Map</div>
-            <MerchantMap merchants={merchants || []} />
+            <MerchantMap
+              merchants={merchants || []}
+              fallbackCenter={
+                community.bbox_north && community.bbox_south && community.bbox_east && community.bbox_west
+                  ? {
+                      lat: (Number(community.bbox_north) + Number(community.bbox_south)) / 2,
+                      lng: (Number(community.bbox_east) + Number(community.bbox_west)) / 2,
+                    }
+                  : null
+              }
+            />
           </div>
         </div>
 
