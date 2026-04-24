@@ -137,8 +137,8 @@ const Compare = () => {
                 padding: '20px 24px',
               }}
             >
-              <h3 style={{ color: '#F9FAFB', fontSize: 16, fontWeight: 600, marginBottom: 16 }}>
-                ⚡ Strengths & Gaps
+              <h3 style={{ color: '#F9FAFB', fontSize: 16, fontWeight: 600, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Zap className="w-4 h-4" style={{ color: '#F7931A' }} /> Strengths & Gaps
               </h3>
               {insights.map((insight, i) => (
                 <div
