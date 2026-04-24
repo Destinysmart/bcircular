@@ -133,7 +133,7 @@ const Methodology = () => (
             style={{ borderTopWidth: '3px', borderTopColor: c.color }}
           >
             <div className="flex items-center justify-between mb-3">
-              <span className="text-2xl" aria-hidden>{c.icon}</span>
+              <c.Icon className="w-6 h-6" style={{ color: c.color }} aria-hidden />
               <span
                 className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full border"
                 style={{ color: c.color, borderColor: `${c.color}55`, backgroundColor: `${c.color}14` }}
