@@ -152,6 +152,7 @@ const Leaderboard = () => {
       .filter(matchesRetention)
       .filter(matchesConfidence)
       .filter(matchesSource)
+      .filter(matchesTier)
       .filter(c => !q || c.name?.toLowerCase().includes(q) || c.country?.toLowerCase().includes(q) || c.city?.toLowerCase().includes(q))
       .sort((a, b) => {
         if (sortBy === 'transactions') return (b.monthlyTransactions ?? 0) - (a.monthlyTransactions ?? 0);
@@ -161,7 +162,7 @@ const Leaderboard = () => {
         if (sortBy === 'merchants') return (b.merchants ?? 0) - (a.merchants ?? 0);
         return (b.score ?? 0) - (a.score ?? 0);
       });
-  }, [list, search, region, country, city, scoreRange, activity, coverage, volume, retention, confidence, source, sortBy]);
+  }, [list, search, region, country, city, scoreRange, activity, coverage, volume, retention, confidence, source, tierFilter, sortBy]);
 
   const activeFilters: { key: string; label: string; clear: () => void }[] = [];
   if (region !== 'All') activeFilters.push({ key: 'region', label: `Region: ${region}`, clear: () => { setRegion('All'); setCountry('All'); setCity('All'); } });
@@ -174,6 +175,7 @@ const Leaderboard = () => {
   if (retention !== 'all') activeFilters.push({ key: 'retention', label: `Retention: ${retention}`, clear: () => setRetention('all') });
   if (confidence !== 'all') activeFilters.push({ key: 'confidence', label: `Confidence: ${confidence}`, clear: () => setConfidence('all') });
   if (source !== 'all') activeFilters.push({ key: 'source', label: `Source: ${source.replace('_', ' ')}`, clear: () => setSource('all') });
+  if (tierFilter !== 'all') activeFilters.push({ key: 'tier', label: `Tier: ${tierFilter}`, clear: () => setTierFilter('all') });
   if (search) activeFilters.push({ key: 'search', label: `“${search}”`, clear: () => setSearch('') });
 
   const clearAll = () => {
