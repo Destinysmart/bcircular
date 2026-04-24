@@ -10,10 +10,40 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // ── Auth: require valid JWT ──
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    const userClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } }
+    )
+    const token = authHeader.replace('Bearer ', '')
+    const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(token)
+    if (claimsErr || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    const callerId = claimsData.claims.sub as string
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
+
+    // Check if caller has the admin role (used for recalculate_all)
+    const { data: roleRow } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', callerId)
+      .eq('role', 'admin')
+      .maybeSingle()
+    const isAdmin = !!roleRow
 
     let communityIds: string[] = []
     let recalculateAll = false
@@ -24,7 +54,32 @@ Deno.serve(async (req) => {
         communityIds = [body.community_id]
       }
       if (body.recalculate_all) {
+        if (!isAdmin) {
+          return new Response(JSON.stringify({ error: 'Admin role required for recalculate_all' }), {
+            status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        }
         recalculateAll = true
+      }
+    }
+
+    // For single-community recalc, require community admin or super admin
+    if (communityIds.length === 1 && !isAdmin) {
+      const { data: ca } = await supabase
+        .from('community_admins')
+        .select('id')
+        .eq('community_id', communityIds[0])
+        .eq('user_id', callerId)
+        .maybeSingle()
+      const { data: c } = await supabase
+        .from('communities')
+        .select('admin_id')
+        .eq('id', communityIds[0])
+        .maybeSingle()
+      if (!ca && c?.admin_id !== callerId) {
+        return new Response(JSON.stringify({ error: 'Forbidden' }), {
+          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
       }
     }
 
