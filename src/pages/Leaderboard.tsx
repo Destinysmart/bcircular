@@ -181,7 +181,7 @@ const Leaderboard = () => {
   const clearAll = () => {
     setSearch(''); setRegion('All'); setCountry('All'); setCity('All');
     setScoreRange([0, 100]); setActivity('all'); setCoverage('all');
-    setVolume('all'); setRetention('all'); setConfidence('all'); setSource('all');
+    setVolume('all'); setRetention('all'); setConfidence('all'); setSource('all'); setTierFilter('all');
   };
 
   const formatSats = (n: number) => {
