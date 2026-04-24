@@ -183,6 +183,7 @@ const Homepage = ({ topSlot, hideHero = false }: { topSlot?: React.ReactNode; hi
           </motion.div>
         </div>
       </section>
+      )}
 
       {/* FILTER PILLS */}
       <section className="border-b border-border">
