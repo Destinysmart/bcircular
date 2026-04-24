@@ -73,6 +73,10 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
   const heroHeight = compactHero ? 320 : 520;
 
   const totalMerchants = list.reduce((s, c) => s + (c.merchants ?? 0), 0);
+  const totalMonthlyTxns = list.reduce((s, c) => s + ((c as any).monthlyTransactions ?? 0), 0);
+  const avgActivity = list.length > 0
+    ? Math.round(list.reduce((s, c) => s + ((c as any).activityRate ?? 0), 0) / list.length)
+    : 0;
   const countries = new Set(list.map(c => c.country).filter(Boolean)).size;
 
   const filtered = useMemo(() => {
