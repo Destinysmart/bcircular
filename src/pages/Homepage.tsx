@@ -618,6 +618,23 @@ const AnimatedStatPill = ({
   );
 };
 
+const MobileHeroStat = ({
+  icon, label, value, suffix = '', loading,
+}: { icon: React.ReactNode; label: string; value: number; suffix?: string; loading?: boolean }) => {
+  const animated = useCountUp(value, 1400, !loading);
+  return (
+    <div className="rounded-lg border border-border bg-background/70 backdrop-blur-md px-3 py-2.5 flex flex-col gap-1">
+      <div className="flex items-center gap-1.5">
+        {icon}
+        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
+      </div>
+      <span className="font-mono text-lg font-bold tabular-nums text-foreground">
+        {loading ? '—' : `${animated.toLocaleString()}${suffix}`}
+      </span>
+    </div>
+  );
+};
+
 const FooterCol = ({ title, links }: { title: string; links: [string, string][] }) => (
   <div>
     <div className="text-xs font-semibold uppercase tracking-wider text-foreground mb-3">{title}</div>
