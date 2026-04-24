@@ -106,21 +106,13 @@ const Compare = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="container py-10">
-        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div><h1 className="text-2xl font-bold mb-1">Economy Comparison</h1><p className="text-sm text-muted-foreground">Compare scores, pillars, and merchant networks side by side.</p></div>
+      <main className="container py-8 md:py-10">
+        <div className="mb-6 md:mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div><h1 className="text-xl md:text-2xl font-bold mb-1">Economy Comparison</h1><p className="text-sm text-muted-foreground">Compare scores, pillars, and merchant networks side by side.</p></div>
           {a && b && (
             <button
               onClick={share}
-              style={{
-                background: 'transparent',
-                border: '1px solid #374151',
-                color: '#9CA3AF',
-                padding: '6px 16px',
-                borderRadius: 8,
-                fontSize: 13,
-                cursor: 'pointer',
-              }}
+              className="self-start rounded-lg border border-border bg-transparent px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors"
             >
               Share comparison ↗
             </button>
