@@ -247,7 +247,6 @@ const CommunityDashboard = () => {
                   <div className="text-sm text-muted-foreground">{getFlagEmoji(community.country_code)} {community.city}, {community.country}</div>
                 </div>
               </div>
-              <div className="absolute right-6 top-6 font-mono text-5xl font-extrabold text-score-amber">{displayScore}</div>
             </>
           ) : (
             <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between">
@@ -259,7 +258,6 @@ const CommunityDashboard = () => {
                   {!logoUrl && canAdminEconomy && <Link to={`/dashboard/economy/${community.id}`} className="mt-2 inline-block text-sm text-score-amber hover:underline">Upload logo →</Link>}
                 </div>
               </div>
-              <div className="font-mono text-5xl font-extrabold text-score-amber">{displayScore}</div>
             </div>
           )}
         </div>
