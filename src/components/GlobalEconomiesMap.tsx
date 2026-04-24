@@ -48,6 +48,15 @@ const GlobalEconomiesMap = ({ economies }: Props) => {
       .map(e => ({ eco: e, coords: getCenter(e) }))
       .filter((x): x is { eco: EconomyPin; coords: [number, number] } => x.coords !== null);
 
+    const isMobile = window.innerWidth < 768;
+
+    // Desktop only: force explicit pixel dimensions on the container before init
+    // so Mapbox doesn't read a 0px height during section reorder/animation.
+    if (!isMobile && containerRef.current) {
+      containerRef.current.style.width = '100%';
+      containerRef.current.style.height = '450px';
+    }
+
     mapRef.current = new mapboxgl.Map({
       container: containerRef.current,
       style: 'mapbox://styles/mapbox/dark-v11',
@@ -59,70 +68,92 @@ const GlobalEconomiesMap = ({ economies }: Props) => {
 
     const maxTxns = Math.max(1, ...pinned.map(p => p.eco.monthlyTransactions ?? 0));
 
-    pinned.forEach(({ eco, coords }) => {
-      const txns = eco.monthlyTransactions ?? 0;
-      // Size between 12 and 26 px based on txns
-      const size = 12 + Math.round((Math.min(txns, maxTxns) / maxTxns) * 14);
+    const addAllEconomyPins = () => {
+      if (!mapRef.current) return;
+      pinned.forEach(({ eco, coords }) => {
+        const txns = eco.monthlyTransactions ?? 0;
+        const size = 12 + Math.round((Math.min(txns, maxTxns) / maxTxns) * 14);
 
-      const el = document.createElement('div');
-      el.style.width = `${size}px`;
-      el.style.height = `${size}px`;
-      el.style.borderRadius = '50%';
-      el.style.backgroundColor = '#F7931A';
-      el.style.border = '2px solid #0A0F1E';
-      el.style.boxShadow = '0 0 0 2px rgba(247, 147, 26, 0.25), 0 4px 12px rgba(247, 147, 26, 0.4)';
-      el.style.cursor = 'pointer';
-      el.style.transition = 'transform 0.15s ease';
-      el.addEventListener('mouseenter', () => { el.style.transform = 'scale(1.2)'; });
-      el.addEventListener('mouseleave', () => { el.style.transform = 'scale(1)'; });
+        const el = document.createElement('div');
+        el.style.width = `${size}px`;
+        el.style.height = `${size}px`;
+        el.style.borderRadius = '50%';
+        el.style.backgroundColor = '#F7931A';
+        el.style.border = '2px solid #0A0F1E';
+        el.style.boxShadow = '0 0 0 2px rgba(247, 147, 26, 0.25), 0 4px 12px rgba(247, 147, 26, 0.4)';
+        el.style.cursor = 'pointer';
+        el.style.transition = 'transform 0.15s ease';
+        el.addEventListener('mouseenter', () => { el.style.transform = 'scale(1.2)'; });
+        el.addEventListener('mouseleave', () => { el.style.transform = 'scale(1)'; });
 
-      const popup = new mapboxgl.Popup({ offset: size / 2 + 8, closeButton: true, maxWidth: '260px' }).setHTML(`
-        <div style="color:#0A0F1E;font-family:'Plus Jakarta Sans',sans-serif;padding:4px 2px;min-width:200px">
-          <div style="font-weight:700;font-size:14px;margin-bottom:2px">${eco.name}</div>
-          <div style="font-size:11px;color:#6B7280;margin-bottom:8px">${eco.city || ''}${eco.city && eco.country ? ', ' : ''}${eco.country || ''}</div>
-          <div style="display:flex;gap:12px;margin-bottom:10px">
-            <div>
-              <div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:14px;color:#F7931A">${txns.toLocaleString()}</div>
-              <div style="font-size:10px;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em">Txns/mo</div>
+        const popup = new mapboxgl.Popup({ offset: size / 2 + 8, closeButton: true, maxWidth: '260px' }).setHTML(`
+          <div style="color:#0A0F1E;font-family:'Plus Jakarta Sans',sans-serif;padding:4px 2px;min-width:200px">
+            <div style="font-weight:700;font-size:14px;margin-bottom:2px">${eco.name}</div>
+            <div style="font-size:11px;color:#6B7280;margin-bottom:8px">${eco.city || ''}${eco.city && eco.country ? ', ' : ''}${eco.country || ''}</div>
+            <div style="display:flex;gap:12px;margin-bottom:10px">
+              <div>
+                <div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:14px;color:#F7931A">${txns.toLocaleString()}</div>
+                <div style="font-size:10px;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em">Txns/mo</div>
+              </div>
+              <div>
+                <div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:14px;color:#111827">${(eco.merchants ?? 0).toLocaleString()}</div>
+                <div style="font-size:10px;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em">Merchants</div>
+              </div>
             </div>
-            <div>
-              <div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:14px;color:#111827">${(eco.merchants ?? 0).toLocaleString()}</div>
-              <div style="font-size:10px;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em">Merchants</div>
-            </div>
+            <a href="/c/${eco.slug}" style="display:inline-block;background:#F7931A;color:#0A0F1E;font-weight:600;font-size:12px;padding:6px 12px;border-radius:8px;text-decoration:none">View Economy →</a>
           </div>
-          <a href="/c/${eco.slug}" style="display:inline-block;background:#F7931A;color:#0A0F1E;font-weight:600;font-size:12px;padding:6px 12px;border-radius:8px;text-decoration:none">View Economy →</a>
-        </div>
-      `);
+        `);
 
-      new mapboxgl.Marker(el).setLngLat(coords).setPopup(popup).addTo(mapRef.current!);
-    });
+        new mapboxgl.Marker(el).setLngLat(coords).setPopup(popup).addTo(mapRef.current!);
+      });
+    };
 
-    if (pinned.length >= 2) {
-      const bounds = new mapboxgl.LngLatBounds();
-      pinned.forEach(p => bounds.extend(p.coords));
-      mapRef.current.fitBounds(bounds, { padding: 60, maxZoom: 6, duration: 0 });
-      initialBoundsRef.current = bounds;
-    } else if (pinned.length === 1) {
-      mapRef.current.setCenter(pinned[0].coords);
-      mapRef.current.setZoom(8);
-    }
+    const fitMapToPins = () => {
+      if (!mapRef.current) return;
+      if (pinned.length >= 2) {
+        const bounds = new mapboxgl.LngLatBounds();
+        pinned.forEach(p => bounds.extend(p.coords));
+        mapRef.current.fitBounds(bounds, { padding: 60, maxZoom: 6, duration: 0 });
+        initialBoundsRef.current = bounds;
+      } else if (pinned.length === 1) {
+        mapRef.current.setCenter(pinned[0].coords);
+        mapRef.current.setZoom(8);
+      }
+    };
 
-    // Ensure the map sizes correctly even if its container started hidden / 0-height
-    // (common when section enters via whileInView or after a reorder).
     const map = mapRef.current;
     const container = containerRef.current;
-    const triggerResize = () => map?.resize();
+    const triggerResize = () => mapRef.current?.resize();
 
-    // Resize after first paint and once load completes
-    requestAnimationFrame(triggerResize);
-    map.once('load', triggerResize);
+    if (isMobile) {
+      // Keep existing working mobile behavior: add pins immediately + resize nudges
+      addAllEconomyPins();
+      fitMapToPins();
+      requestAnimationFrame(triggerResize);
+      map.once('load', triggerResize);
+    } else {
+      // Desktop: wait until map fully loaded, force resize, then plot + fit
+      map.on('load', () => {
+        map.resize();
+        window.setTimeout(() => {
+          addAllEconomyPins();
+          fitMapToPins();
+        }, 500);
+      });
+    }
+
     const t1 = window.setTimeout(triggerResize, 250);
     const t2 = window.setTimeout(triggerResize, 800);
 
     // Observe container size changes (e.g., when it becomes visible)
     let ro: ResizeObserver | null = null;
     if (container && typeof ResizeObserver !== 'undefined') {
-      ro = new ResizeObserver(() => triggerResize());
+      ro = new ResizeObserver(() => {
+        triggerResize();
+        if (!isMobile) {
+          window.setTimeout(fitMapToPins, 200);
+        }
+      });
       ro.observe(container);
     }
 
