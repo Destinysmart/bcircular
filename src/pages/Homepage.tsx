@@ -509,6 +509,38 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
         </div>
       </section>
 
+      {/* TRUST / SOCIAL PROOF BAR */}
+      <section className="border-t border-border bg-card/30">
+        <div className="container py-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-border">
+            <a
+              href="https://btcmap.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2.5 px-4 py-3 text-xs text-muted-foreground hover:text-foreground transition-colors group"
+            >
+              <MapPin className="h-4 w-4 text-score-amber" />
+              <span>
+                Verified merchant data from <span className="font-semibold text-foreground group-hover:text-score-amber transition-colors">BTCMap</span>
+              </span>
+            </a>
+            <div className="flex items-center justify-center gap-2.5 px-4 py-3 text-xs text-muted-foreground">
+              <Bitcoin className="h-4 w-4 text-score-amber" />
+              <span>Built on Bitcoin. <span className="text-foreground font-medium">No custodial risk.</span> Ever.</span>
+            </div>
+            <Link
+              to="/methodology"
+              className="flex items-center justify-center gap-2.5 px-4 py-3 text-xs text-muted-foreground hover:text-foreground transition-colors group"
+            >
+              <ShieldCheck className="h-4 w-4 text-score-amber" />
+              <span>
+                <span className="font-semibold text-foreground group-hover:text-score-amber transition-colors">Open data.</span> Transparent methodology.
+              </span>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* FOOTER */}
       <footer className="border-t border-border bg-background">
         <div className="container py-12">
@@ -530,6 +562,25 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
         </div>
       </footer>
     </div>
+  );
+};
+
+const AnimatedStatPill = ({
+  icon, label, value, suffix = '', loading, delay = 0,
+}: { icon: React.ReactNode; label: string; value: number; suffix?: string; loading?: boolean; delay?: number }) => {
+  const animated = useCountUp(value, 1400, !loading);
+  return (
+    <motion.div
+      variants={fadeUp}
+      custom={delay}
+      className="flex items-center gap-2 rounded-full border border-border/60 bg-background/80 backdrop-blur-md px-3.5 py-1.5 text-xs"
+    >
+      <span className="text-score-amber">{icon}</span>
+      <span className="font-mono font-semibold text-foreground tabular-nums">
+        {loading ? '—' : `${animated.toLocaleString()}${suffix}`}
+      </span>
+      <span className="text-muted-foreground">{label}</span>
+    </motion.div>
   );
 };
 
