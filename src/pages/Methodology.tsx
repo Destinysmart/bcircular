@@ -69,9 +69,17 @@ const dataSources = [
   },
 ];
 
-const pillarCards = [
+const pillarCards: Array<{
+  Icon: LucideIcon;
+  title: string;
+  source: string;
+  badge: string;
+  color: string;
+  description: string;
+  tracks: string[];
+}> = [
   {
-    icon: '⚡',
+    Icon: Zap,
     title: 'Real Sats Flow',
     source: 'Blink Wallet API',
     badge: 'Live Integration',
@@ -81,7 +89,7 @@ const pillarCards = [
     tracks: ['Transaction count', 'Flow between participants', 'Activity frequency', 'Sats velocity'],
   },
   {
-    icon: '📍',
+    Icon: MapPin,
     title: 'Verified Merchants',
     source: 'BTCMap',
     badge: 'Open Source Data',
@@ -91,7 +99,7 @@ const pillarCards = [
     tracks: ['Merchant locations', 'Merchant categories', 'Payment methods accepted', 'Coverage vs active ratio'],
   },
   {
-    icon: '🏆',
+    Icon: Trophy,
     title: 'Development Standard',
     source: 'FBCE 5-Tier Framework',
     badge: 'International Standard',
