@@ -148,7 +148,12 @@ const GlobalEconomiesMap = ({ economies }: Props) => {
     // Observe container size changes (e.g., when it becomes visible)
     let ro: ResizeObserver | null = null;
     if (container && typeof ResizeObserver !== 'undefined') {
-      ro = new ResizeObserver(() => triggerResize());
+      ro = new ResizeObserver(() => {
+        triggerResize();
+        if (!isMobile) {
+          window.setTimeout(fitMapToPins, 200);
+        }
+      });
       ro.observe(container);
     }
 
