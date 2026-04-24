@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface ActivityItem {
@@ -89,10 +91,12 @@ const fetchActivity = async (): Promise<ActivityItem[]> => {
 };
 
 const RecentActivityFeed = () => {
+  const [open, setOpen] = useState(false);
   const { data, isLoading } = useQuery({
     queryKey: ['homepage-recent-activity'],
     queryFn: fetchActivity,
     refetchInterval: 60000,
+    enabled: open,
   });
 
   return (
@@ -103,39 +107,60 @@ const RecentActivityFeed = () => {
       transition={{ duration: 0.5 }}
       className="container py-6"
     >
-      <div className="flex items-center gap-3 mb-4">
-        <h2 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">Recent Activity</h2>
-        <span className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground">
-          <span className="relative flex h-1.5 w-1.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-score-green opacity-75" />
-            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-score-green" />
-          </span>
-          Live
-        </span>
-      </div>
-
       <div className="rounded-2xl border border-border bg-card overflow-hidden">
-        {isLoading ? (
-          <div className="p-6 text-sm text-muted-foreground">Loading activity…</div>
-        ) : !data || data.length === 0 ? (
-          <div className="p-6 text-sm text-muted-foreground text-center">No recent activity yet</div>
-        ) : (
-          <ul className="divide-y divide-border">
-            {data.map((item, i) => (
-              <motion.li
-                key={item.id}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: i * 0.04 }}
-                className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors"
-              >
-                <span className="text-lg leading-none w-6 text-center" aria-hidden>{ICONS[item.kind]}</span>
-                <span className="flex-1 text-sm text-foreground truncate">{item.text}</span>
-                <span className="text-xs text-muted-foreground whitespace-nowrap">{timeAgo(item.at)}</span>
-              </motion.li>
-            ))}
-          </ul>
-        )}
+        <button
+          type="button"
+          onClick={() => setOpen(o => !o)}
+          aria-expanded={open}
+          className="w-full flex items-center gap-3 px-5 py-4 hover:bg-muted/30 transition-colors text-left"
+        >
+          <h2 className="text-base md:text-lg font-bold tracking-tight text-foreground">Recent Activity</h2>
+          <span className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-score-green opacity-75" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-score-green" />
+            </span>
+            Live
+          </span>
+          <ChevronDown
+            className={`ml-auto h-4 w-4 text-muted-foreground transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
+          />
+        </button>
+
+        <AnimatePresence initial={false}>
+          {open && (
+            <motion.div
+              key="content"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: [0.25, 0.4, 0, 1] }}
+              className="overflow-hidden border-t border-border"
+            >
+              {isLoading ? (
+                <div className="p-6 text-sm text-muted-foreground">Loading activity…</div>
+              ) : !data || data.length === 0 ? (
+                <div className="p-6 text-sm text-muted-foreground text-center">No recent activity yet</div>
+              ) : (
+                <ul className="divide-y divide-border">
+                  {data.map((item, i) => (
+                    <motion.li
+                      key={item.id}
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: i * 0.04 }}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors"
+                    >
+                      <span className="text-lg leading-none w-6 text-center" aria-hidden>{ICONS[item.kind]}</span>
+                      <span className="flex-1 text-sm text-foreground truncate">{item.text}</span>
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">{timeAgo(item.at)}</span>
+                    </motion.li>
+                  ))}
+                </ul>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.section>
   );
