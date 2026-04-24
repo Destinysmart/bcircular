@@ -440,7 +440,7 @@ const Leaderboard = () => {
                         >
                           {rank}
                         </span>
-                        <EconomyLogo economy={c as any} size="sm" />
+                        <EconomyLogo economy={c as any} size="sm" className="!h-12 !w-12" />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="text-lg">{getFlagEmoji(c.countryCode || '')}</span>
