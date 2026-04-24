@@ -1,10 +1,13 @@
 import { Link } from 'react-router-dom';
 import { useMemo, useState } from 'react';
-import { ArrowRight, Store, Zap, Globe, Sparkles, TrendingUp, Star, Repeat, BarChart3, MapPin, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Store, Zap, Globe, Sparkles, TrendingUp, Star, Repeat, BarChart3, MapPin, CheckCircle2, ShieldCheck, Bitcoin } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
+import GlobalEconomiesMap from '@/components/GlobalEconomiesMap';
+import RecentActivityFeed from '@/components/RecentActivityFeed';
+import { useCountUp } from '@/hooks/useCountUp';
 import { fetchAllCommunitiesWithStats } from '@/lib/api';
 import { getFlagEmoji } from '@/lib/mock-data';
 import circularLogo from '@/assets/circular-logo.png';
@@ -182,31 +185,36 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
             variants={stagger}
             initial="hidden"
             animate="visible"
-            className="absolute left-0 right-0 bottom-6 container flex flex-wrap gap-2 md:gap-3"
+            className="absolute left-0 right-0 bottom-6 container"
           >
-            {[
-              { icon: <Store className="h-3.5 w-3.5" />, label: 'Merchants', value: totalMerchants.toLocaleString() },
-              { icon: <Zap className="h-3.5 w-3.5" />, label: 'Txns this month', value: totalMonthlyTxns.toLocaleString() },
-              { icon: <TrendingUp className="h-3.5 w-3.5" />, label: 'Avg activity', value: `${avgActivity}%` },
-              { icon: <Globe className="h-3.5 w-3.5" />, label: 'Countries', value: countries },
-            ].map((s, i) => (
-              <motion.div
-                key={s.label}
-                variants={fadeUp}
-                custom={i + 4}
-                className="flex items-center gap-2 rounded-full border border-border/60 bg-background/80 backdrop-blur-md px-3.5 py-1.5 text-xs"
-              >
-                <span className="text-score-amber">{s.icon}</span>
-                <span className="font-mono font-semibold text-foreground">{isLoading ? '—' : s.value}</span>
-                <span className="text-muted-foreground">{s.label}</span>
-              </motion.div>
-            ))}
+            <div className="flex items-center gap-2 mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-score-green opacity-75" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-score-green" />
+              </span>
+              <span className="text-score-green font-semibold">Live</span>
+              <span className="text-muted-foreground">· Last updated just now</span>
+            </div>
+            <div className="flex flex-wrap gap-2 md:gap-3">
+              <AnimatedStatPill icon={<Store className="h-3.5 w-3.5" />} label="Merchants" value={totalMerchants} loading={isLoading} delay={4} />
+              <AnimatedStatPill icon={<Zap className="h-3.5 w-3.5" />} label="Txns this month" value={totalMonthlyTxns} loading={isLoading} delay={5} />
+              <AnimatedStatPill icon={<TrendingUp className="h-3.5 w-3.5" />} label="Avg activity" value={avgActivity} suffix="%" loading={isLoading} delay={6} />
+              <AnimatedStatPill icon={<Globe className="h-3.5 w-3.5" />} label="Countries" value={countries} loading={isLoading} delay={7} />
+            </div>
           </motion.div>
         </div>
       </section>
       )}
 
       {topSlot}
+
+      {/* GLOBAL MAP + RECENT ACTIVITY */}
+      {!gated && list.length > 0 && (
+        <>
+          <GlobalEconomiesMap economies={list as any} />
+          <RecentActivityFeed />
+        </>
+      )}
 
       {/* FILTER PILLS */}
       {!gated && (
@@ -424,6 +432,53 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
         )}
       </section>
 
+      {/* REGISTER YOUR ECONOMY CTA */}
+      {!gated && (
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.5 }}
+          className="container py-10"
+        >
+          <div className="relative overflow-hidden rounded-2xl border border-score-amber/30 bg-gradient-to-br from-score-amber/15 via-background to-background p-8 md:p-12">
+            {/* Decorative pattern */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 opacity-30"
+              style={{
+                backgroundImage: 'radial-gradient(circle at 20% 30%, hsl(var(--score-amber) / 0.25) 1px, transparent 1px), radial-gradient(circle at 80% 70%, hsl(var(--score-amber) / 0.18) 1px, transparent 1px)',
+                backgroundSize: '36px 36px, 28px 28px',
+              }}
+            />
+            <div className="relative max-w-2xl">
+              <div className="inline-flex items-center gap-2 rounded-full border border-score-amber/40 bg-score-amber/10 px-3 py-1 text-[11px] font-mono uppercase tracking-wider text-score-amber mb-4">
+                <Bitcoin className="h-3 w-3" />
+                Add your community
+              </div>
+              <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight text-foreground mb-3">
+                Is your Bitcoin community missing?
+              </h2>
+              <p className="text-sm md:text-base text-muted-foreground mb-6 leading-relaxed">
+                Join the global network of circular economies. Track your sats flow and prove real adoption.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link to="/register" className="w-full sm:w-auto">
+                  <Button size="lg" className="w-full sm:w-auto rounded-full px-6 gap-2 h-12 bg-score-amber text-background hover:bg-score-amber/90 font-semibold">
+                    Register Your Economy <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link to="/methodology" className="w-full sm:w-auto">
+                  <Button variant="outline" size="lg" className="w-full sm:w-auto rounded-full px-6 h-12 border-foreground/20 hover:border-score-amber hover:text-score-amber">
+                    Learn how it works <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </motion.section>
+      )}
+
       {/* WHAT IS CIRCULARITY */}
       <section className="border-t border-border bg-card/40">
         <div className="container py-16">
@@ -454,6 +509,38 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
         </div>
       </section>
 
+      {/* TRUST / SOCIAL PROOF BAR */}
+      <section className="border-t border-border bg-card/30">
+        <div className="container py-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-border">
+            <a
+              href="https://btcmap.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2.5 px-4 py-3 text-xs text-muted-foreground hover:text-foreground transition-colors group"
+            >
+              <MapPin className="h-4 w-4 text-score-amber" />
+              <span>
+                Verified merchant data from <span className="font-semibold text-foreground group-hover:text-score-amber transition-colors">BTCMap</span>
+              </span>
+            </a>
+            <div className="flex items-center justify-center gap-2.5 px-4 py-3 text-xs text-muted-foreground">
+              <Bitcoin className="h-4 w-4 text-score-amber" />
+              <span>Built on Bitcoin. <span className="text-foreground font-medium">No custodial risk.</span> Ever.</span>
+            </div>
+            <Link
+              to="/methodology"
+              className="flex items-center justify-center gap-2.5 px-4 py-3 text-xs text-muted-foreground hover:text-foreground transition-colors group"
+            >
+              <ShieldCheck className="h-4 w-4 text-score-amber" />
+              <span>
+                <span className="font-semibold text-foreground group-hover:text-score-amber transition-colors">Open data.</span> Transparent methodology.
+              </span>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* FOOTER */}
       <footer className="border-t border-border bg-background">
         <div className="container py-12">
@@ -475,6 +562,25 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
         </div>
       </footer>
     </div>
+  );
+};
+
+const AnimatedStatPill = ({
+  icon, label, value, suffix = '', loading, delay = 0,
+}: { icon: React.ReactNode; label: string; value: number; suffix?: string; loading?: boolean; delay?: number }) => {
+  const animated = useCountUp(value, 1400, !loading);
+  return (
+    <motion.div
+      variants={fadeUp}
+      custom={delay}
+      className="flex items-center gap-2 rounded-full border border-border/60 bg-background/80 backdrop-blur-md px-3.5 py-1.5 text-xs"
+    >
+      <span className="text-score-amber">{icon}</span>
+      <span className="font-mono font-semibold text-foreground tabular-nums">
+        {loading ? '—' : `${animated.toLocaleString()}${suffix}`}
+      </span>
+      <span className="text-muted-foreground">{label}</span>
+    </motion.div>
   );
 };
 
