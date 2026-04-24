@@ -56,14 +56,14 @@ const getStatus = (e: Economy) => {
 };
 
 const FILTERS = [
-  { id: 'featured', label: 'Featured', icon: '⭐' },
-  { id: 'africa', label: 'Africa', icon: '🌍' },
-  { id: 'latam', label: 'Latin America', icon: '🌎' },
-  { id: 'europe', label: 'Europe', icon: '🇪🇺' },
-  { id: 'asia', label: 'Asia', icon: '🌏' },
-  { id: 'high', label: 'High Score', icon: '📈' },
-  { id: 'growing', label: 'Fast Growing', icon: '🚀' },
-  { id: 'new', label: 'New', icon: '🆕' },
+  { id: 'featured', label: 'Featured', Icon: Star },
+  { id: 'africa', label: 'Africa', Icon: Globe },
+  { id: 'latam', label: 'Latin America', Icon: Globe },
+  { id: 'europe', label: 'Europe', Icon: Globe },
+  { id: 'asia', label: 'Asia', Icon: Globe },
+  { id: 'high', label: 'High Score', Icon: TrendingUp },
+  { id: 'growing', label: 'Fast Growing', Icon: Sparkles },
+  { id: 'new', label: 'New', Icon: Sparkles },
 ] as const;
 
 type FilterId = typeof FILTERS[number]['id'];
