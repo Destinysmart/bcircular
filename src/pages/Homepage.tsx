@@ -64,7 +64,7 @@ const FILTERS = [
 
 type FilterId = typeof FILTERS[number]['id'];
 
-const HERO_IMAGE = 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=1920&q=80';
+const HERO_IMAGE = heroImage;
 
 const Homepage = ({ topSlot, hideHero = false }: { topSlot?: React.ReactNode; hideHero?: boolean } = {}) => {
   const [filter, setFilter] = useState<FilterId>('featured');
