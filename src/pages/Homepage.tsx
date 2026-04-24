@@ -1,10 +1,13 @@
 import { Link } from 'react-router-dom';
 import { useMemo, useState } from 'react';
-import { ArrowRight, Store, Zap, Globe, Sparkles, TrendingUp, Star, Repeat, BarChart3, MapPin, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Store, Zap, Globe, Sparkles, TrendingUp, Star, Repeat, BarChart3, MapPin, CheckCircle2, ShieldCheck, Bitcoin } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
+import GlobalEconomiesMap from '@/components/GlobalEconomiesMap';
+import RecentActivityFeed from '@/components/RecentActivityFeed';
+import { useCountUp } from '@/hooks/useCountUp';
 import { fetchAllCommunitiesWithStats } from '@/lib/api';
 import { getFlagEmoji } from '@/lib/mock-data';
 import circularLogo from '@/assets/circular-logo.png';
