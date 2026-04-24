@@ -185,31 +185,36 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
             variants={stagger}
             initial="hidden"
             animate="visible"
-            className="absolute left-0 right-0 bottom-6 container flex flex-wrap gap-2 md:gap-3"
+            className="absolute left-0 right-0 bottom-6 container"
           >
-            {[
-              { icon: <Store className="h-3.5 w-3.5" />, label: 'Merchants', value: totalMerchants.toLocaleString() },
-              { icon: <Zap className="h-3.5 w-3.5" />, label: 'Txns this month', value: totalMonthlyTxns.toLocaleString() },
-              { icon: <TrendingUp className="h-3.5 w-3.5" />, label: 'Avg activity', value: `${avgActivity}%` },
-              { icon: <Globe className="h-3.5 w-3.5" />, label: 'Countries', value: countries },
-            ].map((s, i) => (
-              <motion.div
-                key={s.label}
-                variants={fadeUp}
-                custom={i + 4}
-                className="flex items-center gap-2 rounded-full border border-border/60 bg-background/80 backdrop-blur-md px-3.5 py-1.5 text-xs"
-              >
-                <span className="text-score-amber">{s.icon}</span>
-                <span className="font-mono font-semibold text-foreground">{isLoading ? '—' : s.value}</span>
-                <span className="text-muted-foreground">{s.label}</span>
-              </motion.div>
-            ))}
+            <div className="flex items-center gap-2 mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-score-green opacity-75" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-score-green" />
+              </span>
+              <span className="text-score-green font-semibold">Live</span>
+              <span className="text-muted-foreground">· Last updated just now</span>
+            </div>
+            <div className="flex flex-wrap gap-2 md:gap-3">
+              <AnimatedStatPill icon={<Store className="h-3.5 w-3.5" />} label="Merchants" value={totalMerchants} loading={isLoading} delay={4} />
+              <AnimatedStatPill icon={<Zap className="h-3.5 w-3.5" />} label="Txns this month" value={totalMonthlyTxns} loading={isLoading} delay={5} />
+              <AnimatedStatPill icon={<TrendingUp className="h-3.5 w-3.5" />} label="Avg activity" value={avgActivity} suffix="%" loading={isLoading} delay={6} />
+              <AnimatedStatPill icon={<Globe className="h-3.5 w-3.5" />} label="Countries" value={countries} loading={isLoading} delay={7} />
+            </div>
           </motion.div>
         </div>
       </section>
       )}
 
       {topSlot}
+
+      {/* GLOBAL MAP + RECENT ACTIVITY */}
+      {!gated && list.length > 0 && (
+        <>
+          <GlobalEconomiesMap economies={list as any} />
+          <RecentActivityFeed />
+        </>
+      )}
 
       {/* FILTER PILLS */}
       {!gated && (
