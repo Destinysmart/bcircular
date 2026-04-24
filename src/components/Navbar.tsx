@@ -23,6 +23,8 @@ const Navbar = () => {
   });
 
   const navLinks = [
+    { to: '/', label: 'Home' },
+    { to: '/leaderboard', label: 'Explore' },
     { to: '/leaderboard', label: 'Leaderboard' },
     { to: '/compare', label: 'Compare' },
     { to: '/register', label: 'Register' },
