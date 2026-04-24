@@ -10,6 +10,7 @@ import RecentActivityFeed from '@/components/RecentActivityFeed';
 import { useCountUp } from '@/hooks/useCountUp';
 import { fetchAllCommunitiesWithStats } from '@/lib/api';
 import { getFlagEmoji } from '@/lib/mock-data';
+import { TierBadge } from '@/components/TierBadge';
 import circularLogo from '@/assets/circular-logo.png';
 import heroImage from '@/assets/hero-image.jpg';
 
@@ -331,6 +332,11 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
                               <MapPin className="h-3 w-3 shrink-0" />
                               <span className="truncate">{e.city}, {e.country}</span>
                             </div>
+                            {(e as any).fbce_tier && (
+                              <div className="mt-1.5">
+                                <TierBadge tier={(e as any).fbce_tier} verified={(e as any).fbce_tier_verified} showSelfReported={false} />
+                              </div>
+                            )}
                           </div>
                         </div>
 
