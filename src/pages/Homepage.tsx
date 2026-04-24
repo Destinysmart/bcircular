@@ -248,93 +248,119 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
             <button onClick={() => setFilter('featured')} className="text-score-amber text-sm hover:underline">Show featured →</button>
           </div>
         ) : (
-          <motion.div
-            variants={stagger}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-40px' }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-          >
-            {filtered.map((e, i) => {
-              const status = getStatus(e);
-              const score = e.score ?? 0;
-              const isBtcmap = e.dataSource === 'btcmap' || e.dataSource === 'combined';
-              return (
-                <motion.div key={e.id} variants={fadeUp} custom={i}>
-                  <Link
-                    to={`/c/${e.slug}`}
-                    className="group block rounded-2xl border border-border bg-card overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:border-score-amber/50 hover:shadow-[0_8px_32px_-12px_hsl(var(--score-amber)/0.25)]"
-                  >
-                    {/* Banner */}
-                    <div className="relative aspect-[16/9] overflow-hidden bg-muted">
-                      <img
-                        src={getEconomyImage(e)}
-                        alt={`${e.name} banner`}
-                        loading="lazy"
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                        onError={(ev) => { (ev.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-background/85 via-background/10 to-transparent" />
-                      <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
-                        <span className="text-2xl drop-shadow">{getFlagEmoji(e.country_code || '')}</span>
-                        <span className="inline-flex items-center gap-1 rounded-full border border-score-amber/40 bg-background/80 backdrop-blur px-2.5 py-1 font-mono text-xs font-bold text-score-amber">
-                          {score}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Body */}
-                    <div className="p-5">
-                      <div className="flex items-center gap-3 mb-3">
-                        {e.logo_url ? (
-                          <img src={e.logo_url} alt="" className="h-8 w-8 rounded-full object-cover border border-border" />
-                        ) : (
-                          <div className="h-8 w-8 rounded-full bg-score-amber/15 border border-score-amber/30 flex items-center justify-center text-[10px] font-mono text-score-amber">
-                            {(e.name || '?').slice(0, 2).toUpperCase()}
-                          </div>
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <div className="font-semibold text-sm truncate">{e.name}</div>
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground truncate">
-                            <MapPin className="h-3 w-3 shrink-0" />
-                            <span className="truncate">{e.city}, {e.country}</span>
-                          </div>
+          <div className="relative">
+            <motion.div
+              variants={stagger}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: '-40px' }}
+              className={`grid grid-cols-1 sm:grid-cols-2 ${gated ? '' : 'lg:grid-cols-3'} gap-6 ${gated ? 'pointer-events-none select-none opacity-60 blur-[6px]' : ''}`}
+            >
+              {(gated ? filtered.slice(0, 2) : filtered).map((e, i) => {
+                const status = getStatus(e);
+                const score = e.score ?? 0;
+                const isBtcmap = e.dataSource === 'btcmap' || e.dataSource === 'combined';
+                return (
+                  <motion.div key={e.id} variants={fadeUp} custom={i}>
+                    <Link
+                      to={gated ? '#' : `/c/${e.slug}`}
+                      className="group block rounded-2xl border border-border bg-card overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:border-score-amber/50 hover:shadow-[0_8px_32px_-12px_hsl(var(--score-amber)/0.25)]"
+                    >
+                      {/* Banner */}
+                      <div className="relative aspect-[16/9] overflow-hidden bg-muted">
+                        <img
+                          src={getEconomyImage(e)}
+                          alt={`${e.name} banner`}
+                          loading="lazy"
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                          onError={(ev) => { (ev.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-background/85 via-background/10 to-transparent" />
+                        <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
+                          <span className="text-2xl drop-shadow">{getFlagEmoji(e.country_code || '')}</span>
+                          <span className="inline-flex items-center gap-1 rounded-full border border-score-amber/40 bg-background/80 backdrop-blur px-2.5 py-1 font-mono text-xs font-bold text-score-amber">
+                            {score}
+                          </span>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-3 text-xs mb-4">
-                        <div>
-                          <div className="text-muted-foreground">Merchants</div>
-                          <div className="font-mono font-semibold text-foreground flex items-center gap-1.5">
-                            {(e.merchants ?? 0).toLocaleString()}
-                            {isBtcmap && <CheckCircle2 className="h-3 w-3 text-score-amber" />}
+                      {/* Body */}
+                      <div className="p-5">
+                        <div className="flex items-center gap-3 mb-3">
+                          {e.logo_url ? (
+                            <img src={e.logo_url} alt="" className="h-8 w-8 rounded-full object-cover border border-border" />
+                          ) : (
+                            <div className="h-8 w-8 rounded-full bg-score-amber/15 border border-score-amber/30 flex items-center justify-center text-[10px] font-mono text-score-amber">
+                              {(e.name || '?').slice(0, 2).toUpperCase()}
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <div className="font-semibold text-sm truncate">{e.name}</div>
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground truncate">
+                              <MapPin className="h-3 w-3 shrink-0" />
+                              <span className="truncate">{e.city}, {e.country}</span>
+                            </div>
                           </div>
                         </div>
-                        <div>
-                          <div className="text-muted-foreground">Earners</div>
-                          <div className="font-mono font-semibold text-foreground">{(e.earners ?? 0).toLocaleString()}</div>
+
+                        <div className="grid grid-cols-2 gap-3 text-xs mb-4">
+                          <div>
+                            <div className="text-muted-foreground">Merchants</div>
+                            <div className="font-mono font-semibold text-foreground flex items-center gap-1.5">
+                              {(e.merchants ?? 0).toLocaleString()}
+                              {isBtcmap && <CheckCircle2 className="h-3 w-3 text-score-amber" />}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-muted-foreground">Earners</div>
+                            <div className="font-mono font-semibold text-foreground">{(e.earners ?? 0).toLocaleString()}</div>
+                          </div>
+                        </div>
+
+                        <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-4">
+                          <div className="h-full bg-score-amber transition-all" style={{ width: `${Math.min(100, score)}%` }} />
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <span className={`inline-flex items-center gap-1.5 text-xs ${status.text}`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
+                            {status.label}
+                          </span>
+                          <span className="text-xs text-muted-foreground inline-flex items-center gap-1 group-hover:text-score-amber transition-colors">
+                            View <ArrowRight className="h-3 w-3" />
+                          </span>
                         </div>
                       </div>
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
 
-                      <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-4">
-                        <div className="h-full bg-score-amber transition-all" style={{ width: `${Math.min(100, score)}%` }} />
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className={`inline-flex items-center gap-1.5 text-xs ${status.text}`}>
-                          <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
-                          {status.label}
-                        </span>
-                        <span className="text-xs text-muted-foreground inline-flex items-center gap-1 group-hover:text-score-amber transition-colors">
-                          View <ArrowRight className="h-3 w-3" />
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                </motion.div>
-              );
-            })}
-          </motion.div>
+            {gated && (
+              <div className="absolute inset-0 flex items-center justify-center z-10">
+                <div className="rounded-2xl border border-border bg-background/95 backdrop-blur-md px-8 py-8 text-center max-w-md w-[90%] shadow-2xl">
+                  <div className="text-3xl mb-3">🔒</div>
+                  <h3 className="text-xl font-bold text-foreground mb-2">Join to explore all circular economies</h3>
+                  <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+                    Track Bitcoin adoption worldwide.<br />Free to join. No funds held. Ever.
+                  </p>
+                  <div className="flex gap-3 justify-center flex-wrap">
+                    <Link to="/login?signup=1">
+                      <Button className="rounded-lg px-6 bg-score-amber text-background hover:bg-score-amber/90 font-semibold">
+                        Create free account
+                      </Button>
+                    </Link>
+                    <Link to="/login">
+                      <Button variant="outline" className="rounded-lg px-6 border-foreground/20">
+                        Log in
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </section>
 
