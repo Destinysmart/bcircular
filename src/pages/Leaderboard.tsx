@@ -143,6 +143,8 @@ const Leaderboard = () => {
       .filter(matchesSource)
       .filter(c => !q || c.name?.toLowerCase().includes(q) || c.country?.toLowerCase().includes(q) || c.city?.toLowerCase().includes(q))
       .sort((a, b) => {
+        if (sortBy === 'transactions') return (b.monthlyTransactions ?? 0) - (a.monthlyTransactions ?? 0);
+        if (sortBy === 'activity') return (b.activityRate ?? 0) - (a.activityRate ?? 0);
         if (sortBy === 'sats') return (b.satsTotal ?? 0) - (a.satsTotal ?? 0);
         if (sortBy === 'growth') return (b.growthScore ?? 0) - (a.growthScore ?? 0);
         if (sortBy === 'merchants') return (b.merchants ?? 0) - (a.merchants ?? 0);
