@@ -53,7 +53,7 @@ const ValidatorDashboard = () => {
   const { toast } = useToast();
   const [items, setItems] = useState<PendingItem[]>([]);
   const [proofs, setProofs] = useState<any[]>([]);
-  const [tab, setTab] = useState<'submissions' | 'proofs'>('submissions');
+  const [tab, setTab] = useState<'merchant' | 'earner' | 'transaction' | 'proofs'>('merchant');
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [voting, setVoting] = useState<string | null>(null);
