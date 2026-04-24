@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, ArrowUpRight, Settings2, ChevronDown } from 'lucide-react';
+import { Plus, ArrowUpRight, Settings2, ChevronDown, Zap } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { getFlagEmoji } from '@/lib/mock-data';
