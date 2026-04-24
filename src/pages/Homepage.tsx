@@ -426,6 +426,12 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
         )}
       </section>
 
+      {/* RECENT ACTIVITY (collapsible) */}
+      {!gated && list.length > 0 && <RecentActivityFeed />}
+
+      {/* GLOBAL ECONOMIES MAP */}
+      {!gated && list.length > 0 && <GlobalEconomiesMap economies={list as any} />}
+
       {/* REGISTER YOUR ECONOMY CTA */}
       {!gated && (
         <motion.section
