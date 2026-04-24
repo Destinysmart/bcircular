@@ -71,6 +71,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
   const { data, isLoading } = useQuery({ queryKey: ['communities-stats'], queryFn: fetchAllCommunitiesWithStats });
   const list: Economy[] = data || [];
   const heroHeight = compactHero ? 320 : 520;
+  const heroHeightMobile = compactHero ? 260 : 460;
 
   const totalMerchants = list.reduce((s, c) => s + (c.merchants ?? 0), 0);
   const totalMonthlyTxns = list.reduce((s, c) => s + ((c as any).monthlyTransactions ?? 0), 0);
@@ -127,8 +128,8 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
       {!hideHero && (
       <section className="relative overflow-hidden">
         <div
-          className="relative w-full bg-cover"
-          style={{ height: heroHeight, backgroundImage: `url(${HERO_IMAGE})`, backgroundPosition: 'center top' }}
+          className="relative w-full bg-cover hero-responsive"
+          style={{ ['--hero-h' as any]: `${heroHeight}px`, ['--hero-h-mobile' as any]: `${heroHeightMobile}px`, backgroundImage: `url(${HERO_IMAGE})`, backgroundPosition: 'center top' }}
           aria-hidden="false"
         >
           <div
@@ -138,7 +139,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
                 'linear-gradient(to right, hsl(var(--background) / 0.95) 0%, hsl(var(--background) / 0.7) 50%, hsl(var(--background) / 0.25) 100%)',
             }}
           />
-          <div className="container relative h-full flex items-center">
+          <div className="container relative h-full flex items-center pt-8 pb-24 md:py-0">
             <motion.div
               variants={stagger}
               initial="hidden"
@@ -149,25 +150,25 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
                 <Sparkles className="h-3 w-3" />
                 Bitcoin Circular Economy
               </motion.div>
-              <motion.h1 variants={fadeUp} custom={1} className={`${compactHero ? 'text-3xl md:text-4xl mb-3' : 'text-5xl md:text-6xl mb-5'} font-extrabold tracking-tight leading-[1.05] text-foreground`}>
+              <motion.h1 variants={fadeUp} custom={1} className={`${compactHero ? 'text-2xl sm:text-3xl md:text-4xl mb-3' : 'text-4xl sm:text-5xl md:text-6xl mb-4 md:mb-5'} font-extrabold tracking-tight leading-[1.05] text-foreground`}>
                 See where Bitcoin
                 <br />
                 <span className="text-score-amber">actually circulates.</span>
               </motion.h1>
               {!compactHero && (
-                <motion.p variants={fadeUp} custom={2} className="text-lg text-muted-foreground max-w-lg leading-relaxed mb-8">
+                <motion.p variants={fadeUp} custom={2} className="text-base md:text-lg text-muted-foreground max-w-lg leading-relaxed mb-6 md:mb-8">
                   Track, measure and compare Bitcoin circular economies worldwide. Real data from real communities. No funds held. Ever.
                 </motion.p>
               )}
               {!compactHero && (
-                <motion.div variants={fadeUp} custom={3} className="flex flex-wrap gap-3">
-                  <Link to="/leaderboard">
-                    <Button size="lg" className="rounded-full px-6 gap-2 h-12 bg-score-amber text-background hover:bg-score-amber/90">
+                <motion.div variants={fadeUp} custom={3} className="flex flex-col sm:flex-row gap-3">
+                  <Link to="/leaderboard" className="w-full sm:w-auto">
+                    <Button size="lg" className="w-full sm:w-auto rounded-full px-6 gap-2 h-12 bg-score-amber text-background hover:bg-score-amber/90">
                       Explore Economies <ArrowRight className="h-4 w-4" />
                     </Button>
                   </Link>
-                  <Link to="/leaderboard">
-                    <Button variant="outline" size="lg" className="rounded-full px-6 h-12 border-foreground/20 hover:bg-foreground/5">
+                  <Link to="/leaderboard" className="w-full sm:w-auto">
+                    <Button variant="outline" size="lg" className="w-full sm:w-auto rounded-full px-6 h-12 border-foreground/20 hover:bg-foreground/5">
                       View Leaderboard
                     </Button>
                   </Link>
