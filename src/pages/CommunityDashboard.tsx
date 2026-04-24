@@ -333,7 +333,7 @@ const CommunityDashboard = () => {
 
           <div className="rounded-2xl border border-border bg-card p-6">
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-base">📅</span>
+              <Calendar className="w-4 h-4 text-muted-foreground" />
               <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Activity rate</span>
             </div>
             <div className="font-mono text-4xl font-extrabold text-foreground tabular-nums">
