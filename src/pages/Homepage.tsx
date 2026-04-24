@@ -113,8 +113,8 @@ const Homepage = ({ topSlot, hideHero = false }: { topSlot?: React.ReactNode; hi
       {!hideHero && (
       <section className="relative overflow-hidden">
         <div
-          className="relative h-[520px] w-full bg-cover bg-center"
-          style={{ backgroundImage: `url(${HERO_IMAGE})` }}
+          className="relative h-[520px] w-full bg-cover"
+          style={{ backgroundImage: `url(${HERO_IMAGE})`, backgroundPosition: 'center top' }}
           aria-hidden="false"
         >
           <div
