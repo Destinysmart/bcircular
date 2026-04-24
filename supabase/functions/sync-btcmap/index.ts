@@ -140,35 +140,32 @@ Deno.serve(async (req) => {
       btcmap_profile_url: btcmapProfileUrl,
     }).eq('id', community_id)
 
-    const elementsRes = await fetch(`${BTCMAP_API}?north=${north}&south=${south}&east=${east}&west=${west}`)
+    const elementsRes = await fetch(BTCMAP_API)
     if (!elementsRes.ok) {
       throw new Error(`BTCMap API error [${elementsRes.status}]: ${await elementsRes.text()}`)
     }
     const elements = await elementsRes.json()
-    const btcMerchants = elements.filter((el: any) => {
-      if (el.deleted_at && el.deleted_at !== '') return false
-      const tags = el.osm_json?.tags || {}
-      return tags['payment:bitcoin'] === 'yes' ||
+
+    // Filter by bbox + bitcoin payment + not deleted, in a single pass
+    const rows: any[] = []
+    for (const el of elements) {
+      if (el.deleted_at && el.deleted_at !== '') continue
+      const osm = el.osm_json
+      if (!osm) continue
+      const lat = osm.lat ?? osm.center?.lat
+      const lng = osm.lon ?? osm.center?.lon
+      if (lat == null || lng == null) continue
+      if (lat < south || lat > north || lng < west || lng > east) continue
+
+      const tags = osm.tags || {}
+      const isBtc =
+        tags['payment:bitcoin'] === 'yes' ||
         tags['currency:XBT'] === 'yes' ||
         tags['payment:lightning'] === 'yes' ||
         tags['payment:lightning_contactless'] === 'yes' ||
         tags['payment:bitcoin_lightning'] === 'yes' ||
         tags['payment:onchain'] === 'yes'
-    })
-
-    console.log(`Found ${btcMerchants.length} Bitcoin merchants within BTCMap area ${btcmapAreaId}`)
-
-    // Upsert into merchants table
-    let synced = 0
-    let errors = 0
-
-    for (const merchant of btcMerchants) {
-      const tags = merchant.osm_json?.tags || {}
-      const name = tags.name || tags['name:en'] || 'Unnamed merchant'
-      const category = tags.amenity || tags.shop || tags.tourism || tags.craft || tags.leisure || tags.office || 'other'
-      const lat = merchant.osm_json?.lat ?? merchant.osm_json?.center?.lat
-      const lng = merchant.osm_json?.lon ?? merchant.osm_json?.center?.lon
-      if (!lat || !lng) continue
+      if (!isBtc) continue
 
       const paymentMethods: string[] = []
       if (tags['payment:lightning'] === 'yes' || tags['payment:bitcoin_lightning'] === 'yes' || tags['payment:lightning_contactless'] === 'yes') {
@@ -179,27 +176,37 @@ Deno.serve(async (req) => {
       }
       if (paymentMethods.length === 0) paymentMethods.push('bitcoin')
 
-      const { error: upsertError } = await supabase.from('merchants').upsert({
+      rows.push({
         community_id,
-        name,
-        category,
+        name: tags.name || tags['name:en'] || 'Unnamed merchant',
+        category: tags.amenity || tags.shop || tags.tourism || tags.craft || tags.leisure || tags.office || 'other',
         lat,
         lng,
         payment_methods: paymentMethods,
         source: 'btcmap',
-        btcmap_id: String(merchant.id),
+        btcmap_id: String(el.id),
         status: 'approved',
         address: [tags['addr:street'], tags['addr:housenumber'], tags['addr:city']].filter(Boolean).join(', ') || null,
         website: tags.website || tags['contact:website'] || null,
-      }, {
-        onConflict: 'btcmap_id',
       })
+    }
 
+    console.log(`Found ${rows.length} Bitcoin merchants within BTCMap area ${btcmapAreaId}`)
+
+    // Batch upsert in chunks of 500
+    let synced = 0
+    let errors = 0
+    const CHUNK = 500
+    for (let i = 0; i < rows.length; i += CHUNK) {
+      const chunk = rows.slice(i, i + CHUNK)
+      const { error: upsertError } = await supabase
+        .from('merchants')
+        .upsert(chunk, { onConflict: 'btcmap_id' })
       if (upsertError) {
-        console.error('Upsert error:', upsertError.message, 'for btcmap_id:', merchant.id)
-        errors++
+        console.error('Batch upsert error:', upsertError.message)
+        errors += chunk.length
       } else {
-        synced++
+        synced += chunk.length
       }
     }
 
