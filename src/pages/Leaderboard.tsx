@@ -471,18 +471,19 @@ const Leaderboard = () => {
 
                       {/* MOBILE card layout */}
                       <div className="md:hidden p-3 space-y-3">
-                        <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-3">
                           <span
-                            className={`font-mono text-sm shrink-0 ${accentBorder ? rankClass : 'text-muted-foreground'}`}
+                            className={`font-mono text-sm shrink-0 w-7 ${accentBorder ? rankClass : 'text-muted-foreground'}`}
                             style={accentBorder ? { color: accentBorder } : undefined}
                           >
                             #{rank}
                           </span>
-                          <span className="font-medium text-sm text-center truncate flex-1">{c.name}</span>
+                          <EconomyLogo economy={c as any} size="sm" className="!h-10 !w-10 shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <div className="font-medium text-sm truncate">{c.name}</div>
+                            <div className="text-xs text-muted-foreground truncate">{c.city}, {c.country}</div>
+                          </div>
                           <span className="text-lg shrink-0">{getFlagEmoji(c.countryCode || '')}</span>
-                        </div>
-                        <div className="text-xs text-muted-foreground text-center">
-                          {c.city}, {c.country}
                         </div>
                         {(c.fbce_tier || c.dataSource === 'btcmap' || c.dataSource === 'combined' || c.proofCount >= 0) && (
                           <div className="flex items-center justify-center gap-1.5 flex-wrap">
