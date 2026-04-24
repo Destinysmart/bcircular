@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CheckCircle, LocateFixed, Plus, Zap } from 'lucide-react';
+import { CheckCircle, LocateFixed, Plus, Zap, Store, User, Utensils, ShoppingBag, Scissors, Bus, BookOpen, Home as HomeIcon, type LucideIcon } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,9 +14,9 @@ import circularLogo from '@/assets/circular-logo.png';
 
 type SubmitKind = 'merchant' | 'earner' | 'transaction';
 
-const categories = [
-  ['🍔', 'Food', 'food'], ['🛍️', 'Retail', 'retail'], ['💈', 'Services', 'services'],
-  ['🚌', 'Transport', 'transport'], ['📚', 'Education', 'education'], ['🏠', 'Other', 'other'],
+const categories: Array<[LucideIcon, string, string]> = [
+  [Utensils, 'Food', 'food'], [ShoppingBag, 'Retail', 'retail'], [Scissors, 'Services', 'services'],
+  [Bus, 'Transport', 'transport'], [BookOpen, 'Education', 'education'], [HomeIcon, 'Other', 'other'],
 ];
 
 const QuickSubmit = () => {
@@ -94,12 +94,12 @@ const QuickSubmit = () => {
         {!kind ? (
           <section className="space-y-3">
             <h2 className="text-xl font-bold">What are you submitting?</h2>
-            {[['merchant', '🏪 A merchant that accepts Bitcoin'], ['earner', '👤 Someone who earns in Bitcoin'], ['transaction', '⚡ A Bitcoin transaction I made']].map(([value, label]) => <button key={value} onClick={() => setKind(value as SubmitKind)} className="min-h-14 w-full rounded-lg border border-border bg-card px-4 text-left text-base font-medium">{label}</button>)}
+            {([['merchant', Store, 'A merchant that accepts Bitcoin'], ['earner', User, 'Someone who earns in Bitcoin'], ['transaction', Zap, 'A Bitcoin transaction I made']] as Array<[SubmitKind, LucideIcon, string]>).map(([value, Icon, label]) => <button key={value} onClick={() => setKind(value)} className="min-h-14 w-full rounded-lg border border-border bg-card px-4 text-left text-base font-medium inline-flex items-center gap-2"><Icon className="w-4 h-4 shrink-0" /> {label}</button>)}
           </section>
         ) : (
           <section className="space-y-5">
             <div><Label>{kind === 'transaction' ? 'Amount in sats' : kind === 'merchant' ? 'Business name' : 'Description'}</Label><Input className="min-h-12 text-base" type={kind === 'transaction' ? 'number' : 'text'} value={name} onChange={e => setName(e.target.value)} /></div>
-            <div><Label>Category</Label><div className="mt-2 grid grid-cols-2 gap-2">{categories.map(([emoji, label, value]) => <button key={value} onClick={() => setCategory(value)} className={`min-h-11 rounded-lg border px-2 text-sm ${category === value ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-card'}`}>{emoji} {label}</button>)}</div></div>
+            <div><Label>Category</Label><div className="mt-2 grid grid-cols-2 gap-2">{categories.map(([Icon, label, value]) => <button key={value} onClick={() => setCategory(value)} className={`min-h-11 rounded-lg border px-2 text-sm inline-flex items-center justify-center gap-1.5 ${category === value ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-card'}`}><Icon className="w-4 h-4" /> {label}</button>)}</div></div>
             <div><Label>Payment method</Label><div className="mt-2 grid grid-cols-3 gap-2">{['lightning', 'onchain', 'both'].map(value => <button key={value} onClick={() => setPayment(value)} className={`min-h-11 rounded-lg border text-sm capitalize ${payment === value ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-card'}`}>{value === 'onchain' ? 'On-chain' : value}</button>)}</div></div>
             {kind === 'merchant' && <div><Button type="button" variant="ghost" className="min-h-11 w-full justify-start gap-1.5" onClick={() => setShowMore(!showMore)}><Plus className="h-4 w-4" /> Add more details</Button>{showMore && <div className="mt-3 space-y-3"><Input placeholder="Address" value={address} onChange={e => setAddress(e.target.value)} /><Input placeholder="Website" value={website} onChange={e => setWebsite(e.target.value)} /></div>}</div>}
             <div className="space-y-2"><Button type="button" variant="outline" className="min-h-11 w-full gap-1.5" onClick={useLocation}><LocateFixed className="h-4 w-4" /> Use my current location</Button><Input className="min-h-11" placeholder="Or enter location manually" value={location} onChange={e => setLocation(e.target.value)} /></div>

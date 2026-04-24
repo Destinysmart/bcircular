@@ -129,7 +129,7 @@ const Proofs = () => {
                 <div className="p-4">
                   <div className="mb-2 flex flex-wrap items-center gap-2">
                     {proof.is_circular && <Badge className="rounded-full">Circular transaction ✓</Badge>}
-                    {proof.amount_sats ? <span className="font-mono text-xs text-score-amber">⚡ {Number(proof.amount_sats).toLocaleString()} sats</span> : null}
+                    {proof.amount_sats ? <span className="font-mono text-xs text-score-amber inline-flex items-center gap-1"><Zap className="w-3 h-3" style={{ color: '#F7931A' }} />{Number(proof.amount_sats).toLocaleString()} sats</span> : null}
                   </div>
                   <h2 className="font-semibold mb-1">{proof.title}</h2>
                   {proof.description && <p className="text-sm text-muted-foreground mb-3 line-clamp-3">{proof.description}</p>}

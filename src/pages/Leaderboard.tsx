@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowUpRight, Scale, Search, SlidersHorizontal, X } from 'lucide-react';
+import { ArrowUpRight, Globe, Scale, Search, SlidersHorizontal, X, Zap } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import ConfidenceBadge from '@/components/ConfidenceBadge';
 import EconomyLogo from '@/components/EconomyLogo';
@@ -194,8 +194,8 @@ const Leaderboard = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="container py-10">
-        <div className="mb-6 rounded-xl border border-score-amber/30 bg-foreground px-5 py-4 font-mono text-sm font-semibold text-score-amber shadow-[0_0_24px_hsl(var(--score-amber)/0.10)]">
-          🌍 {list.length} Bitcoin circular economies tracked globally
+        <div className="mb-6 rounded-xl border border-score-amber/30 bg-foreground px-5 py-4 font-mono text-sm font-semibold text-score-amber shadow-[0_0_24px_hsl(var(--score-amber)/0.10)] flex items-center gap-2">
+          <Globe className="w-4 h-4" /> {list.length} Bitcoin circular economies tracked globally
         </div>
 
         <div className="flex items-end justify-between mb-6 gap-4 flex-wrap">
@@ -420,9 +420,10 @@ const Leaderboard = () => {
               <div className="space-y-2 md:space-y-1">
                 {filtered.map((c, i) => {
                   const rank = i + 1;
-                  const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : null;
                   const accentBorder =
                     rank === 1 ? '#F7931A' : rank === 2 ? '#9CA3AF' : rank === 3 ? '#92400E' : null;
+                  const rankClass =
+                    rank === 1 ? 'font-bold' : rank === 2 ? 'font-bold' : rank === 3 ? 'font-bold' : '';
 
                   return (
                     <div
@@ -433,8 +434,11 @@ const Leaderboard = () => {
                     >
                       {/* DESKTOP layout */}
                       <div className="hidden md:flex items-center gap-4 py-4 px-4">
-                        <span className="font-mono text-sm text-muted-foreground w-8 text-right">
-                          {medal ?? rank}
+                        <span
+                          className={`font-mono text-sm w-8 text-right ${accentBorder ? '' : 'text-muted-foreground'} ${rankClass}`}
+                          style={accentBorder ? { color: accentBorder } : undefined}
+                        >
+                          {rank}
                         </span>
                         <EconomyLogo economy={c as any} size="sm" />
                         <div className="flex-1 min-w-0">
@@ -452,7 +456,7 @@ const Leaderboard = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-6">
-                          <Metric label="TXNS" value={`⚡ ${(c.monthlyTransactions ?? 0).toLocaleString()}`} valueClass="text-score-amber" />
+                          <Metric label="TXNS" value={(c.monthlyTransactions ?? 0).toLocaleString()} valueClass="text-score-amber" leadingIcon={<Zap className="w-3.5 h-3.5" style={{ color: '#F7931A' }} />} />
                           <div className="hidden lg:block">
                             <Metric label="ACTIVITY" value={`${c.activityRate ?? 0}%`} />
                           </div>
@@ -468,8 +472,11 @@ const Leaderboard = () => {
                       {/* MOBILE card layout */}
                       <div className="md:hidden p-3 space-y-3">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="font-mono text-sm text-muted-foreground shrink-0">
-                            {medal ?? `#${rank}`}
+                          <span
+                            className={`font-mono text-sm shrink-0 ${accentBorder ? rankClass : 'text-muted-foreground'}`}
+                            style={accentBorder ? { color: accentBorder } : undefined}
+                          >
+                            #{rank}
                           </span>
                           <span className="font-medium text-sm text-center truncate flex-1">{c.name}</span>
                           <span className="text-lg shrink-0">{getFlagEmoji(c.countryCode || '')}</span>
@@ -487,7 +494,7 @@ const Leaderboard = () => {
                           </div>
                         )}
                         <div className="grid grid-cols-2 gap-2">
-                          <MobileMetric label="TXNS" value={(c.monthlyTransactions ?? 0).toLocaleString()} valueClass="text-score-amber" />
+                          <MobileMetric label="TXNS" value={(c.monthlyTransactions ?? 0).toLocaleString()} valueClass="text-score-amber" leadingIcon={<Zap className="w-3.5 h-3.5" style={{ color: '#F7931A' }} />} />
                           <MobileMetric label="ACTIVITY" value={`${c.activityRate ?? 0}%`} />
                           <MobileMetric label="MERCHANTS" value={String(c.merchants ?? 0)} />
                           <MobileMetric label="CIRCULARITY" value={String(c.score ?? 0)} valueClass={getScoreColor(c.score ?? 0)} />
@@ -515,17 +522,23 @@ const FilterBlock = ({ label, children }: { label: string; children: React.React
   </div>
 );
 
-const Metric = ({ label, value, valueClass = 'text-foreground' }: { label: string; value: string; valueClass?: string }) => (
+const Metric = ({ label, value, valueClass = 'text-foreground', leadingIcon }: { label: string; value: string; valueClass?: string; leadingIcon?: React.ReactNode }) => (
   <div className="flex flex-col items-end">
-    <span className={`font-mono text-base font-bold tabular-nums ${valueClass}`}>{value}</span>
+    <span className={`font-mono text-base font-bold tabular-nums inline-flex items-center gap-1 ${valueClass}`}>
+      {leadingIcon}
+      {value}
+    </span>
     <span className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">{label}</span>
   </div>
 );
 
-const MobileMetric = ({ label, value, valueClass = 'text-foreground' }: { label: string; value: string; valueClass?: string }) => (
+const MobileMetric = ({ label, value, valueClass = 'text-foreground', leadingIcon }: { label: string; value: string; valueClass?: string; leadingIcon?: React.ReactNode }) => (
   <div className="rounded-lg border border-border bg-background/50 px-3 py-2 flex flex-col">
     <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{label}</span>
-    <span className={`font-mono text-base font-bold tabular-nums ${valueClass}`}>{value}</span>
+    <span className={`font-mono text-base font-bold tabular-nums inline-flex items-center gap-1 ${valueClass}`}>
+      {leadingIcon}
+      {value}
+    </span>
   </div>
 );
 

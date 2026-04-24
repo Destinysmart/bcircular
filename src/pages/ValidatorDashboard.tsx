@@ -3,7 +3,7 @@ import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { CheckCircle, XCircle, Clock } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -12,7 +12,7 @@ import { fetchValidatorCommunities, fetchPendingSubmissions, fetchVotesForSubmis
 
 const ValidatorEmptyState = () => (
   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 24px', textAlign: 'center' }}>
-    <div style={{ fontSize: 64, marginBottom: 16 }}>🛡️</div>
+    <Shield style={{ width: 64, height: 64, marginBottom: 16, color: '#9CA3AF' }} />
     <h3 style={{ color: '#F9FAFB', fontSize: 20, fontWeight: 600, marginBottom: 8 }}>No pending submissions</h3>
     <p style={{ color: '#9CA3AF', fontSize: 14, lineHeight: 1.7, maxWidth: 360, marginBottom: 24 }}>
       You'll be notified when community members submit merchants, earners, or transactions for review. Share the submit link to get data flowing.

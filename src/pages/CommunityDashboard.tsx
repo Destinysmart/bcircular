@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Share2, Store, Users, Zap, ChevronDown, Info, ExternalLink, Shield, Wallet, Scale, PlusCircle } from 'lucide-react';
+import { Share2, Store, Users, Zap, ChevronDown, Info, ExternalLink, Shield, Wallet, Scale, PlusCircle, Calendar } from 'lucide-react';
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
@@ -333,7 +333,7 @@ const CommunityDashboard = () => {
 
           <div className="rounded-2xl border border-border bg-card p-6">
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-base">📅</span>
+              <Calendar className="w-4 h-4 text-muted-foreground" />
               <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Activity rate</span>
             </div>
             <div className="font-mono text-4xl font-extrabold text-foreground tabular-nums">
@@ -468,7 +468,7 @@ const CommunityDashboard = () => {
               className="inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90 transition-opacity whitespace-nowrap"
               style={{ backgroundColor: '#F7931A' }}
             >
-              Shop Community Merch ⚡
+              <Zap className="w-4 h-4" /> Shop Community Merch
             </a>
           </div>
         </div>

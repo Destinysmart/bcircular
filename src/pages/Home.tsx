@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, ArrowUpRight, Settings2, ChevronDown } from 'lucide-react';
+import { Plus, ArrowUpRight, Settings2, ChevronDown, Zap } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { getFlagEmoji } from '@/lib/mock-data';
@@ -61,8 +61,10 @@ const Home = () => {
 
   const personalSection = (
     <section className="container pt-8 pb-2">
-      <h1 className="text-[22px] font-semibold text-foreground mb-1">
-        Welcome back, <span className="text-score-amber">{displayName}</span> ⚡
+      <h1 className="text-[22px] font-semibold text-foreground mb-1 inline-flex items-center gap-2">
+        <span>Welcome back,</span>
+        <span className="text-score-amber">{displayName}</span>
+        <Zap className="w-5 h-5" style={{ color: '#F7931A' }} />
       </h1>
       <p className="text-sm text-score-amber/80 mb-5">Your economies at a glance</p>
 

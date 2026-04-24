@@ -1,5 +1,5 @@
 import Navbar from '@/components/Navbar';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Zap, MapPin, Trophy, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import circularLogo from '@/assets/circular-logo.png';
 
@@ -69,9 +69,17 @@ const dataSources = [
   },
 ];
 
-const pillarCards = [
+const pillarCards: Array<{
+  Icon: LucideIcon;
+  title: string;
+  source: string;
+  badge: string;
+  color: string;
+  description: string;
+  tracks: string[];
+}> = [
   {
-    icon: '⚡',
+    Icon: Zap,
     title: 'Real Sats Flow',
     source: 'Blink Wallet API',
     badge: 'Live Integration',
@@ -81,7 +89,7 @@ const pillarCards = [
     tracks: ['Transaction count', 'Flow between participants', 'Activity frequency', 'Sats velocity'],
   },
   {
-    icon: '📍',
+    Icon: MapPin,
     title: 'Verified Merchants',
     source: 'BTCMap',
     badge: 'Open Source Data',
@@ -91,7 +99,7 @@ const pillarCards = [
     tracks: ['Merchant locations', 'Merchant categories', 'Payment methods accepted', 'Coverage vs active ratio'],
   },
   {
-    icon: '🏆',
+    Icon: Trophy,
     title: 'Development Standard',
     source: 'FBCE 5-Tier Framework',
     badge: 'International Standard',
@@ -125,7 +133,7 @@ const Methodology = () => (
             style={{ borderTopWidth: '3px', borderTopColor: c.color }}
           >
             <div className="flex items-center justify-between mb-3">
-              <span className="text-2xl" aria-hidden>{c.icon}</span>
+              <c.Icon className="w-6 h-6" style={{ color: c.color }} aria-hidden />
               <span
                 className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full border"
                 style={{ color: c.color, borderColor: `${c.color}55`, backgroundColor: `${c.color}14` }}

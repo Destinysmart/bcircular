@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Scale } from 'lucide-react';
+import { Scale, Zap } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import { MapContainer, Marker, TileLayer } from 'react-leaflet';
 import Navbar from '@/components/Navbar';
@@ -137,8 +137,8 @@ const Compare = () => {
                 padding: '20px 24px',
               }}
             >
-              <h3 style={{ color: '#F9FAFB', fontSize: 16, fontWeight: 600, marginBottom: 16 }}>
-                ⚡ Strengths & Gaps
+              <h3 style={{ color: '#F9FAFB', fontSize: 16, fontWeight: 600, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Zap className="w-4 h-4" style={{ color: '#F7931A' }} /> Strengths & Gaps
               </h3>
               {insights.map((insight, i) => (
                 <div

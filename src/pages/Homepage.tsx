@@ -56,14 +56,14 @@ const getStatus = (e: Economy) => {
 };
 
 const FILTERS = [
-  { id: 'featured', label: 'Featured', icon: '⭐' },
-  { id: 'africa', label: 'Africa', icon: '🌍' },
-  { id: 'latam', label: 'Latin America', icon: '🌎' },
-  { id: 'europe', label: 'Europe', icon: '🇪🇺' },
-  { id: 'asia', label: 'Asia', icon: '🌏' },
-  { id: 'high', label: 'High Score', icon: '📈' },
-  { id: 'growing', label: 'Fast Growing', icon: '🚀' },
-  { id: 'new', label: 'New', icon: '🆕' },
+  { id: 'featured', label: 'Featured', Icon: Star },
+  { id: 'africa', label: 'Africa', Icon: Globe },
+  { id: 'latam', label: 'Latin America', Icon: Globe },
+  { id: 'europe', label: 'Europe', Icon: Globe },
+  { id: 'asia', label: 'Asia', Icon: Globe },
+  { id: 'high', label: 'High Score', Icon: TrendingUp },
+  { id: 'growing', label: 'Fast Growing', Icon: Sparkles },
+  { id: 'new', label: 'New', Icon: Sparkles },
 ] as const;
 
 type FilterId = typeof FILTERS[number]['id'];
@@ -232,7 +232,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
                       : 'border-border bg-card text-muted-foreground hover:text-foreground hover:border-foreground/30'
                   }`}
                 >
-                  <span aria-hidden>{f.icon}</span>
+                  <f.Icon className="w-3.5 h-3.5" aria-hidden />
                   {f.label}
                 </button>
               );
@@ -565,7 +565,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
           </div>
 
           <div className="border-t border-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
-            <span>Built with ⚡ by the Bitcoin community · Open source</span>
+            <span className="inline-flex items-center gap-1">Built with <Zap className="w-3.5 h-3.5" style={{ color: '#F7931A' }} /> by the Bitcoin community · Open source</span>
             <span>No funds held. Ever.</span>
           </div>
           <div className="text-center mt-4 text-xs text-muted-foreground">

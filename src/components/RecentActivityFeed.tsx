@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Globe, Store, Zap, MapPin, type LucideIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface ActivityItem {
@@ -22,11 +22,11 @@ const timeAgo = (ms: number) => {
   return `${days} day${days === 1 ? '' : 's'} ago`;
 };
 
-const ICONS: Record<ActivityItem['kind'], string> = {
-  economy: '🌍',
-  merchant: '🏪',
-  transaction: '⚡',
-  btcmap: '📍',
+const ICONS: Record<ActivityItem['kind'], { Icon: LucideIcon; color?: string }> = {
+  economy: { Icon: Globe },
+  merchant: { Icon: Store },
+  transaction: { Icon: Zap, color: '#F7931A' },
+  btcmap: { Icon: MapPin },
 };
 
 const fetchActivity = async (): Promise<ActivityItem[]> => {
@@ -151,7 +151,7 @@ const RecentActivityFeed = () => {
                       transition={{ duration: 0.3, delay: i * 0.04 }}
                       className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors"
                     >
-                      <span className="text-lg leading-none w-6 text-center" aria-hidden>{ICONS[item.kind]}</span>
+                      {(() => { const { Icon, color } = ICONS[item.kind]; return <Icon className="w-4 h-4 shrink-0" style={color ? { color } : undefined} aria-hidden />; })()}
                       <span className="flex-1 text-sm text-foreground truncate">{item.text}</span>
                       <span className="text-xs text-muted-foreground whitespace-nowrap">{timeAgo(item.at)}</span>
                     </motion.li>
