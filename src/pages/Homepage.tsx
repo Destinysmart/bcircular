@@ -563,6 +563,9 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
             <span>Built with ⚡ by the Bitcoin community · Open source</span>
             <span>No funds held. Ever.</span>
           </div>
+          <div className="text-center mt-4 text-xs text-muted-foreground">
+            © 2025 Circularity. All rights reserved.
+          </div>
         </div>
       </footer>
     </div>
