@@ -7,7 +7,36 @@ import { CheckCircle, XCircle, Clock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { toast as sonnerToast } from 'sonner';
 import { fetchValidatorCommunities, fetchPendingSubmissions, fetchVotesForSubmission, castVote, fetchPendingProofs, updateProofStatus } from '@/lib/api';
+
+const ValidatorEmptyState = () => (
+  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 24px', textAlign: 'center' }}>
+    <div style={{ fontSize: 64, marginBottom: 16 }}>🛡️</div>
+    <h3 style={{ color: '#F9FAFB', fontSize: 20, fontWeight: 600, marginBottom: 8 }}>No pending submissions</h3>
+    <p style={{ color: '#9CA3AF', fontSize: 14, lineHeight: 1.7, maxWidth: 360, marginBottom: 24 }}>
+      You'll be notified when community members submit merchants, earners, or transactions for review. Share the submit link to get data flowing.
+    </p>
+    <div style={{ background: '#111827', border: '1px solid #1F2937', borderRadius: 10, padding: '12px 20px', marginBottom: 24, maxWidth: 360, width: '100%' }}>
+      <div style={{ fontSize: 11, color: '#6B7280', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Submit link for your community</div>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <code style={{ fontSize: 12, color: '#F59E0B', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {window.location.origin}/quick-submit
+        </code>
+        <button
+          onClick={() => {
+            navigator.clipboard.writeText(`${window.location.origin}/quick-submit`);
+            sonnerToast.success('Link copied ✓');
+          }}
+          style={{ background: '#F59E0B', color: '#0A0F1E', border: 'none', borderRadius: 6, padding: '4px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}
+        >
+          Copy
+        </button>
+      </div>
+    </div>
+    <p style={{ fontSize: 12, color: '#6B7280' }}>Submissions require 2-of-3 validator approvals to go live</p>
+  </div>
+);
 
 interface PendingItem {
   id: string;
@@ -24,7 +53,7 @@ const ValidatorDashboard = () => {
   const { toast } = useToast();
   const [items, setItems] = useState<PendingItem[]>([]);
   const [proofs, setProofs] = useState<any[]>([]);
-  const [tab, setTab] = useState<'submissions' | 'proofs'>('submissions');
+  const [tab, setTab] = useState<'merchant' | 'earner' | 'transaction' | 'proofs'>('merchant');
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [voting, setVoting] = useState<string | null>(null);
@@ -128,14 +157,37 @@ const ValidatorDashboard = () => {
         <h1 className="text-2xl font-bold mb-1">Validator Dashboard</h1>
         <p className="text-sm text-muted-foreground mb-6">{items.length + proofs.length} items pending review</p>
 
-        <div className="mb-6 flex border-b border-border">
-          <button onClick={() => setTab('submissions')} className={`px-4 py-2 text-sm border-b-2 ${tab === 'submissions' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground'}`}>Submissions</button>
-          <button onClick={() => setTab('proofs')} className={`px-4 py-2 text-sm border-b-2 ${tab === 'proofs' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground'}`}>Proofs</button>
-        </div>
+        {(() => {
+          const counts = {
+            merchant: items.filter(i => i.type === 'merchant').length,
+            earner: items.filter(i => i.type === 'earner').length,
+            transaction: items.filter(i => i.type === 'transaction').length,
+            proofs: proofs.length,
+          };
+          const tabs: { key: typeof tab; label: string }[] = [
+            { key: 'merchant', label: 'Merchants' },
+            { key: 'earner', label: 'Earners' },
+            { key: 'transaction', label: 'Transactions' },
+            { key: 'proofs', label: 'Proofs' },
+          ];
+          return (
+            <div className="mb-6 flex border-b border-border">
+              {tabs.map(t => (
+                <button
+                  key={t.key}
+                  onClick={() => setTab(t.key)}
+                  className={`px-4 py-2 text-sm border-b-2 ${tab === t.key ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground'}`}
+                >
+                  {t.label} ({counts[t.key]})
+                </button>
+              ))}
+            </div>
+          );
+        })()}
 
         {tab === 'proofs' ? (
           proofs.length === 0 ? (
-            <div className="text-center py-16 text-muted-foreground">No pending proofs to review.</div>
+            <ValidatorEmptyState />
           ) : (
             <div className="space-y-4">
               {proofs.map(proof => (
@@ -155,41 +207,40 @@ const ValidatorDashboard = () => {
               ))}
             </div>
           )
-        ) : items.length === 0 ? (
-          <div className="text-center py-16 text-muted-foreground">
-            <p>No pending submissions to review.</p>
-            <p className="text-xs mt-1">You'll see items here when you're appointed as a validator for an economy.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {items.map(item => (
-              <div key={item.id} className="rounded-lg border border-border bg-card p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge variant="outline" className="text-xs capitalize">{item.type}</Badge>
-                      <span className="font-medium">{item.title}</span>
+        ) : (() => {
+          const filtered = items.filter(i => i.type === tab);
+          if (filtered.length === 0) return <ValidatorEmptyState />;
+          return (
+            <div className="space-y-4">
+              {filtered.map(item => (
+                <div key={item.id} className="rounded-lg border border-border bg-card p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant="outline" className="text-xs capitalize">{item.type}</Badge>
+                        <span className="font-medium">{item.title}</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{item.detail}</p>
                     </div>
-                    <p className="text-sm text-muted-foreground">{item.detail}</p>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Clock className="h-3.5 w-3.5" />
+                      <span className="font-mono">{item.votes.approve}/2 approvals</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock className="h-3.5 w-3.5" />
-                    <span className="font-mono">{item.votes.approve}/2 approvals</span>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" className="gap-1.5" disabled={voting === item.id} onClick={() => handleVote(item, 'approve')}>
+                      <CheckCircle className="h-3.5 w-3.5" /> Approve
+                    </Button>
+                    <Button size="sm" variant="outline" className="gap-1.5 text-destructive hover:text-destructive" disabled={voting === item.id} onClick={() => handleVote(item, 'reject')}>
+                      <XCircle className="h-3.5 w-3.5" /> Reject
+                    </Button>
+                    <Input placeholder="Optional note..." className="h-8 text-xs flex-1 ml-2" value={notes[item.id] || ''} onChange={e => setNotes(prev => ({ ...prev, [item.id]: e.target.value }))} />
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button size="sm" className="gap-1.5" disabled={voting === item.id} onClick={() => handleVote(item, 'approve')}>
-                    <CheckCircle className="h-3.5 w-3.5" /> Approve
-                  </Button>
-                  <Button size="sm" variant="outline" className="gap-1.5 text-destructive hover:text-destructive" disabled={voting === item.id} onClick={() => handleVote(item, 'reject')}>
-                    <XCircle className="h-3.5 w-3.5" /> Reject
-                  </Button>
-                  <Input placeholder="Optional note..." className="h-8 text-xs flex-1 ml-2" value={notes[item.id] || ''} onChange={e => setNotes(prev => ({ ...prev, [item.id]: e.target.value }))} />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
