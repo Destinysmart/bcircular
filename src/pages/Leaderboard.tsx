@@ -472,8 +472,11 @@ const Leaderboard = () => {
                       {/* MOBILE card layout */}
                       <div className="md:hidden p-3 space-y-3">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="font-mono text-sm text-muted-foreground shrink-0">
-                            {medal ?? `#${rank}`}
+                          <span
+                            className={`font-mono text-sm shrink-0 ${accentBorder ? rankClass : 'text-muted-foreground'}`}
+                            style={accentBorder ? { color: accentBorder } : undefined}
+                          >
+                            #{rank}
                           </span>
                           <span className="font-medium text-sm text-center truncate flex-1">{c.name}</span>
                           <span className="text-lg shrink-0">{getFlagEmoji(c.countryCode || '')}</span>
