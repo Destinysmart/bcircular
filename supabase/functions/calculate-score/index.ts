@@ -193,6 +193,33 @@ Deno.serve(async (req) => {
         console.error(`Error inserting score for ${communityId}:`, error)
       }
 
+      // ── Monthly transaction metrics ──
+      const monthlyTxns = monthlyTxRes.data || []
+      const monthlyBlink = monthlyBlinkRes.data || []
+      const allMonthly = [
+        ...monthlyTxns.map((t: any) => t.created_at),
+        ...monthlyBlink.map((t: any) => t.blink_created_at),
+      ]
+      const activeDaysSet = new Set(
+        allMonthly.map((d: string) => new Date(d).toDateString())
+      )
+      const activeDays = activeDaysSet.size
+      const activityRate = daysSoFar > 0
+        ? Math.round((activeDays / daysSoFar) * 100)
+        : 0
+      const monthlyTransactions = allMonthly.length
+
+      const { error: updateErr } = await supabase.from('communities').update({
+        monthly_transactions: monthlyTransactions,
+        active_days_this_month: activeDays,
+        activity_rate: activityRate,
+        metrics_updated_at: new Date().toISOString(),
+      }).eq('id', communityId)
+
+      if (updateErr) {
+        console.error(`Error updating community metrics for ${communityId}:`, updateErr)
+      }
+
       results.push({
         communityId,
         score: Math.min(score, 100),
