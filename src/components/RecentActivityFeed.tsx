@@ -22,11 +22,11 @@ const timeAgo = (ms: number) => {
   return `${days} day${days === 1 ? '' : 's'} ago`;
 };
 
-const ICONS: Record<ActivityItem['kind'], string> = {
-  economy: '🌍',
-  merchant: '🏪',
-  transaction: '⚡',
-  btcmap: '📍',
+const ICONS: Record<ActivityItem['kind'], { Icon: LucideIcon; color?: string }> = {
+  economy: { Icon: Globe },
+  merchant: { Icon: Store },
+  transaction: { Icon: Zap, color: '#F7931A' },
+  btcmap: { Icon: MapPin },
 };
 
 const fetchActivity = async (): Promise<ActivityItem[]> => {
