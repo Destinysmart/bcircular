@@ -552,11 +552,6 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
                 </span>
               </Link>
             </div>
-            <div className="text-center mt-4">
-              <Link to="/methodology" className="inline-flex items-center gap-1 text-xs text-score-amber hover:underline">
-                Read the full methodology <ArrowRight className="h-3 w-3" />
-              </Link>
-            </div>
           </div>
 
           <div className="border-t border-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
