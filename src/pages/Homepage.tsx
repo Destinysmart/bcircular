@@ -79,11 +79,19 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
     : 0;
   const countries = new Set(list.map(c => c.country).filter(Boolean)).size;
 
+  const DISPLAY_CAP = 9;
+
   const filtered = useMemo(() => {
     let res = [...list];
     switch (filter) {
       case 'featured':
-        res = res.sort((a, b) => (b.score ?? 0) - (a.score ?? 0)).slice(0, 6);
+        // Sort by monthly transactions (primary metric), tiebreak on score
+        res = res.sort((a, b) => {
+          const at = (a as any).monthlyTransactions ?? 0;
+          const bt = (b as any).monthlyTransactions ?? 0;
+          if (bt !== at) return bt - at;
+          return (b.score ?? 0) - (a.score ?? 0);
+        });
         break;
       case 'africa':
       case 'latam':
@@ -97,7 +105,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
         res = res.filter(c => (c.score ?? 0) >= 60).sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
         break;
       case 'growing':
-        res = res.sort((a, b) => (b.growthScore ?? 0) - (a.growthScore ?? 0)).slice(0, 9);
+        res = res.sort((a, b) => (b.growthScore ?? 0) - (a.growthScore ?? 0));
         break;
       case 'new': {
         const cutoff = Date.now() - 30 * 86400_000;
@@ -107,6 +115,9 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
     }
     return res;
   }, [list, filter]);
+
+  const displayed = useMemo(() => filtered.slice(0, DISPLAY_CAP), [filtered]);
+  const hasMore = filtered.length > displayed.length;
 
   return (
     <div className="min-h-screen bg-background">
