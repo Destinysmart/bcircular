@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CheckCircle, LocateFixed, Plus, Zap } from 'lucide-react';
+import { CheckCircle, LocateFixed, Plus, Zap, Store, User, Utensils, ShoppingBag, Scissors, Bus, BookOpen, Home as HomeIcon, type LucideIcon } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
