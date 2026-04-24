@@ -11,6 +11,7 @@ import circularLogo from '@/assets/circular-logo.png';
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
