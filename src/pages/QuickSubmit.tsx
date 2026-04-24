@@ -14,9 +14,9 @@ import circularLogo from '@/assets/circular-logo.png';
 
 type SubmitKind = 'merchant' | 'earner' | 'transaction';
 
-const categories = [
-  ['🍔', 'Food', 'food'], ['🛍️', 'Retail', 'retail'], ['💈', 'Services', 'services'],
-  ['🚌', 'Transport', 'transport'], ['📚', 'Education', 'education'], ['🏠', 'Other', 'other'],
+const categories: Array<[LucideIcon, string, string]> = [
+  [Utensils, 'Food', 'food'], [ShoppingBag, 'Retail', 'retail'], [Scissors, 'Services', 'services'],
+  [Bus, 'Transport', 'transport'], [BookOpen, 'Education', 'education'], [HomeIcon, 'Other', 'other'],
 ];
 
 const QuickSubmit = () => {
