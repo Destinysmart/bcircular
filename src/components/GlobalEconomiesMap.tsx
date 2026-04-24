@@ -147,14 +147,12 @@ const GlobalEconomiesMap = ({ economies }: Props) => {
     const t1 = window.setTimeout(triggerResize, 250);
     const t2 = window.setTimeout(triggerResize, 800);
 
-    // Observe container size changes (e.g., when it becomes visible)
+    // Observe container size changes (e.g., when it becomes visible).
+    // Only resize — desktop pin placement is handled by the 'idle' event.
     let ro: ResizeObserver | null = null;
     if (container && typeof ResizeObserver !== 'undefined') {
       ro = new ResizeObserver(() => {
         triggerResize();
-        if (!isMobile) {
-          window.setTimeout(fitMapToPins, 200);
-        }
       });
       ro.observe(container);
     }
