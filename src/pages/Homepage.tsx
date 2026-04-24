@@ -192,6 +192,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
       )}
 
       {/* FILTER PILLS */}
+      {!gated && (
       <section className="border-b border-border">
         <div className="container py-6">
           <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
@@ -215,6 +216,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
           </div>
         </div>
       </section>
+      )}
 
       {/* ECONOMY GRID */}
       <section className="container py-14">
