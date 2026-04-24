@@ -151,7 +151,7 @@ const RecentActivityFeed = () => {
                       transition={{ duration: 0.3, delay: i * 0.04 }}
                       className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors"
                     >
-                      <span className="text-lg leading-none w-6 text-center" aria-hidden>{ICONS[item.kind]}</span>
+                      {(() => { const { Icon, color } = ICONS[item.kind]; return <Icon className="w-4 h-4 shrink-0" style={color ? { color } : undefined} aria-hidden />; })()}
                       <span className="flex-1 text-sm text-foreground truncate">{item.text}</span>
                       <span className="text-xs text-muted-foreground whitespace-nowrap">{timeAgo(item.at)}</span>
                     </motion.li>
