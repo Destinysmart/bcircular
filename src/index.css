@@ -1,5 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
+html { background-color: #0A0F1E !important; }
+body { background-color: #0A0F1E !important; color: #F9FAFB !important; }
+#root { background-color: #0A0F1E !important; min-height: 100vh; }
+
+.dark { color-scheme: dark; }
+
+.leaflet-container { background-color: #1a1a2e !important; }
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
