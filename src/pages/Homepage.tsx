@@ -272,7 +272,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
               viewport={{ once: true, margin: '-40px' }}
               className={`grid grid-cols-1 sm:grid-cols-2 ${gated ? '' : 'lg:grid-cols-3'} gap-6 ${gated ? 'pointer-events-none select-none opacity-60 blur-[6px]' : ''}`}
             >
-              {(gated ? filtered.slice(0, 2) : filtered).map((e, i) => {
+              {(gated ? displayed.slice(0, 2) : displayed).map((e, i) => {
                 const status = getStatus(e);
                 const score = e.score ?? 0;
                 const monthlyTxns = (e as any).monthlyTransactions ?? 0;
