@@ -12,11 +12,12 @@ interface MerchantMapProps {
     payment_methods: string[] | null;
     source?: string;
   }>;
+  fallbackCenter?: { lat: number | null; lng: number | null } | null;
 }
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
-const MerchantMap = ({ merchants }: MerchantMapProps) => {
+const MerchantMap = ({ merchants, fallbackCenter }: MerchantMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
 
@@ -26,15 +27,23 @@ const MerchantMap = ({ merchants }: MerchantMapProps) => {
     mapboxgl.accessToken = MAPBOX_TOKEN;
 
     const validMerchants = merchants.filter(m => m.lat && m.lng);
-    const center: [number, number] = validMerchants.length > 0
-      ? [validMerchants[0].lng!, validMerchants[0].lat!]
-      : [0, 20];
+
+    let center: [number, number] = [20, 2];
+    let zoom = 3;
+
+    if (validMerchants.length === 1) {
+      center = [validMerchants[0].lng!, validMerchants[0].lat!];
+      zoom = 14;
+    } else if (validMerchants.length === 0 && fallbackCenter?.lat && fallbackCenter?.lng) {
+      center = [fallbackCenter.lng, fallbackCenter.lat];
+      zoom = 11;
+    }
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/dark-v11',
       center,
-      zoom: validMerchants.length > 0 ? 13 : 2,
+      zoom,
     });
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
@@ -63,8 +72,14 @@ const MerchantMap = ({ merchants }: MerchantMapProps) => {
         .addTo(map.current!);
     });
 
+    if (validMerchants.length >= 2) {
+      const bounds = new mapboxgl.LngLatBounds();
+      validMerchants.forEach(m => bounds.extend([m.lng!, m.lat!]));
+      map.current.fitBounds(bounds, { padding: 60, maxZoom: 15, duration: 0 });
+    }
+
     return () => { map.current?.remove(); };
-  }, [merchants]);
+  }, [merchants, fallbackCenter]);
 
   if (!MAPBOX_TOKEN) {
     return (
