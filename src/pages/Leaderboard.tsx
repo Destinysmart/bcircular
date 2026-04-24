@@ -435,6 +435,7 @@ const Leaderboard = () => {
                         {c.dataSource === 'btcmap' || c.dataSource === 'combined' ? (
                           <Badge variant="outline" className="font-mono text-[10px] rounded-full">BTCMap</Badge>
                         ) : null}
+                        {c.fbce_tier && <TierBadge tier={c.fbce_tier} verified={c.fbce_tier_verified} showSelfReported={false} />}
                       </div>
                     </div>
                     <div className="flex items-center gap-6">
