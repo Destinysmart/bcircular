@@ -260,8 +260,14 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-16 border border-dashed border-border rounded-2xl">
-            <p className="text-muted-foreground mb-2">No economies match this filter yet.</p>
-            <button onClick={() => setFilter('featured')} className="text-score-amber text-sm hover:underline">Show featured →</button>
+            {list.length === 0 ? (
+              <p className="text-muted-foreground">No economies yet. Be the first to <Link to="/register" className="text-score-amber hover:underline">create one</Link>.</p>
+            ) : (
+              <>
+                <p className="text-muted-foreground mb-2">No economies match this filter yet.</p>
+                <button onClick={() => setFilter('featured')} className="text-score-amber text-sm hover:underline">Show featured →</button>
+              </>
+            )}
           </div>
         ) : (
           <div className="relative">
