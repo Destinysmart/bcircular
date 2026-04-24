@@ -5,6 +5,7 @@ import { ArrowUpRight, Scale, Search, SlidersHorizontal, X } from 'lucide-react'
 import Navbar from '@/components/Navbar';
 import ConfidenceBadge from '@/components/ConfidenceBadge';
 import EconomyLogo from '@/components/EconomyLogo';
+import { TierBadge } from '@/components/TierBadge';
 import { fetchAllCommunitiesWithStats } from '@/lib/api';
 import { getFlagEmoji, getScoreColor, getScoreBgColor } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,7 @@ type Volume = 'all' | 'low' | 'medium' | 'high';
 type Retention = 'all' | 'high' | 'low';
 type Confidence = 'all' | 'high' | 'medium' | 'low';
 type Source = 'all' | 'btcmap' | 'self_reported' | 'combined';
+type TierFilter = 'all' | 'emerging' | 'advanced';
 
 const regions = ['All', 'Africa', 'Latin America', 'Europe', 'Asia'];
 
@@ -49,6 +51,7 @@ const Leaderboard = () => {
   const [retention, setRetention] = useState<Retention>('all');
   const [confidence, setConfidence] = useState<Confidence>('all');
   const [source, setSource] = useState<Source>('all');
+  const [tierFilter, setTierFilter] = useState<TierFilter>('all');
   const [sortBy, setSortBy] = useState<SortKey>('transactions');
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth >= 1024 : true);
 
@@ -128,6 +131,14 @@ const Leaderboard = () => {
 
   const matchesSource = (c: any) => source === 'all' || c.dataSource === source;
 
+  const matchesTier = (c: any) => {
+    if (tierFilter === 'all') return true;
+    const t = c.fbce_tier ?? 0;
+    if (tierFilter === 'emerging') return t === 1 || t === 2;
+    if (tierFilter === 'advanced') return t >= 3 && t <= 5;
+    return true;
+  };
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return list
@@ -141,6 +152,7 @@ const Leaderboard = () => {
       .filter(matchesRetention)
       .filter(matchesConfidence)
       .filter(matchesSource)
+      .filter(matchesTier)
       .filter(c => !q || c.name?.toLowerCase().includes(q) || c.country?.toLowerCase().includes(q) || c.city?.toLowerCase().includes(q))
       .sort((a, b) => {
         if (sortBy === 'transactions') return (b.monthlyTransactions ?? 0) - (a.monthlyTransactions ?? 0);
@@ -150,7 +162,7 @@ const Leaderboard = () => {
         if (sortBy === 'merchants') return (b.merchants ?? 0) - (a.merchants ?? 0);
         return (b.score ?? 0) - (a.score ?? 0);
       });
-  }, [list, search, region, country, city, scoreRange, activity, coverage, volume, retention, confidence, source, sortBy]);
+  }, [list, search, region, country, city, scoreRange, activity, coverage, volume, retention, confidence, source, tierFilter, sortBy]);
 
   const activeFilters: { key: string; label: string; clear: () => void }[] = [];
   if (region !== 'All') activeFilters.push({ key: 'region', label: `Region: ${region}`, clear: () => { setRegion('All'); setCountry('All'); setCity('All'); } });
@@ -163,12 +175,13 @@ const Leaderboard = () => {
   if (retention !== 'all') activeFilters.push({ key: 'retention', label: `Retention: ${retention}`, clear: () => setRetention('all') });
   if (confidence !== 'all') activeFilters.push({ key: 'confidence', label: `Confidence: ${confidence}`, clear: () => setConfidence('all') });
   if (source !== 'all') activeFilters.push({ key: 'source', label: `Source: ${source.replace('_', ' ')}`, clear: () => setSource('all') });
+  if (tierFilter !== 'all') activeFilters.push({ key: 'tier', label: `Tier: ${tierFilter}`, clear: () => setTierFilter('all') });
   if (search) activeFilters.push({ key: 'search', label: `“${search}”`, clear: () => setSearch('') });
 
   const clearAll = () => {
     setSearch(''); setRegion('All'); setCountry('All'); setCity('All');
     setScoreRange([0, 100]); setActivity('all'); setCoverage('all');
-    setVolume('all'); setRetention('all'); setConfidence('all'); setSource('all');
+    setVolume('all'); setRetention('all'); setConfidence('all'); setSource('all'); setTierFilter('all');
   };
 
   const formatSats = (n: number) => {
@@ -226,7 +239,21 @@ const Leaderboard = () => {
           </Select>
         </div>
 
-        {/* Active filter tags */}
+        {/* FBCE Tier filter chips */}
+        <div className="flex items-center gap-2 flex-wrap mb-4">
+          <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-mono mr-1">FBCE Tier:</span>
+          {([['all', 'All Tiers'], ['emerging', 'Emerging (1-2)'], ['advanced', 'Advanced (3-5)']] as [TierFilter, string][]).map(([val, label]) => (
+            <Button
+              key={val}
+              variant={tierFilter === val ? 'default' : 'outline'}
+              size="sm"
+              className="rounded-full h-7 px-3 text-xs"
+              onClick={() => setTierFilter(val)}
+            >
+              {label}
+            </Button>
+          ))}
+        </div>
         {activeFilters.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap mb-5">
             {activeFilters.map(f => (
@@ -408,6 +435,7 @@ const Leaderboard = () => {
                         {c.dataSource === 'btcmap' || c.dataSource === 'combined' ? (
                           <Badge variant="outline" className="font-mono text-[10px] rounded-full">BTCMap</Badge>
                         ) : null}
+                        {c.fbce_tier && <TierBadge tier={c.fbce_tier} verified={c.fbce_tier_verified} showSelfReported={false} />}
                       </div>
                     </div>
                     <div className="flex items-center gap-6">

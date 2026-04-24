@@ -10,6 +10,7 @@ import RecentActivityFeed from '@/components/RecentActivityFeed';
 import { useCountUp } from '@/hooks/useCountUp';
 import { fetchAllCommunitiesWithStats } from '@/lib/api';
 import { getFlagEmoji } from '@/lib/mock-data';
+import { TierBadge } from '@/components/TierBadge';
 import circularLogo from '@/assets/circular-logo.png';
 import heroImage from '@/assets/hero-image.jpg';
 
@@ -82,6 +83,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
     ? Math.round(list.reduce((s, c) => s + ((c as any).activityRate ?? 0), 0) / list.length)
     : 0;
   const countries = new Set(list.map(c => c.country).filter(Boolean)).size;
+  const advancedEconomies = list.filter(c => ((c as any).fbce_tier ?? 0) >= 3).length;
 
   const DISPLAY_CAP = 9;
 
@@ -200,6 +202,9 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
               <AnimatedStatPill icon={<Zap className="h-3.5 w-3.5" />} label="Txns this month" value={totalMonthlyTxns} loading={isLoading} delay={5} />
               <AnimatedStatPill icon={<TrendingUp className="h-3.5 w-3.5" />} label="Avg activity" value={avgActivity} suffix="%" loading={isLoading} delay={6} />
               <AnimatedStatPill icon={<Globe className="h-3.5 w-3.5" />} label="Countries" value={countries} loading={isLoading} delay={7} />
+              {advancedEconomies > 0 && (
+                <AnimatedStatPill icon={<Star className="h-3.5 w-3.5" />} label="Advanced Economies" value={advancedEconomies} loading={isLoading} delay={8} />
+              )}
             </div>
           </motion.div>
         </div>
@@ -331,6 +336,11 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
                               <MapPin className="h-3 w-3 shrink-0" />
                               <span className="truncate">{e.city}, {e.country}</span>
                             </div>
+                            {(e as any).fbce_tier && (
+                              <div className="mt-1.5">
+                                <TierBadge tier={(e as any).fbce_tier} verified={(e as any).fbce_tier_verified} showSelfReported={false} />
+                              </div>
+                            )}
                           </div>
                         </div>
 

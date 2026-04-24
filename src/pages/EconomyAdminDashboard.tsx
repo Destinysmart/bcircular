@@ -17,6 +17,8 @@ import BlinkWalletSettings from '@/components/BlinkWalletSettings';
 import EconomyLogo from '@/components/EconomyLogo';
 import UploadZone from '@/components/UploadZone';
 import { QRCodeCanvas } from 'qrcode.react';
+import { TierBadge, TIER_CHECKLIST, getTierMeta, type FbceTier } from '@/components/TierBadge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const EconomyAdminDashboard = () => {
   const { id } = useParams();
@@ -106,6 +108,7 @@ const EconomyAdminDashboard = () => {
   const [foundingYear, setFoundingYear] = useState('');
   const [ecoZoneDesc, setEcoZoneDesc] = useState('');
   const [validatorEmail, setValidatorEmail] = useState('');
+  const [fbceTier, setFbceTier] = useState<string>('');
   const [saving, setSaving] = useState(false);
   const [recalculating, setRecalculating] = useState(false);
   const [syncingBtcmap, setSyncingBtcmap] = useState(false);
@@ -211,6 +214,7 @@ const EconomyAdminDashboard = () => {
       setFoundingYear(String(community.founding_year || ''));
       setEcoZoneDesc(community.economic_zone_description || '');
       setBtcmapAreaId((community as any).btcmap_area_id || '');
+      setFbceTier((community as any).fbce_tier ? String((community as any).fbce_tier) : '');
     }
   }, [community]);
 
@@ -224,7 +228,8 @@ const EconomyAdminDashboard = () => {
         declared_population: parseInt(declaredPop) || 100,
         founding_year: parseInt(foundingYear) || null,
         economic_zone_description: ecoZoneDesc,
-      }).eq('id', communityId);
+        fbce_tier: fbceTier ? parseInt(fbceTier) : null,
+      } as any).eq('id', communityId);
 
       // Upsert community_profiles
       const { data: existing } = await supabase.from('community_profiles').select('id').eq('community_id', communityId).maybeSingle();
@@ -418,6 +423,47 @@ const EconomyAdminDashboard = () => {
           </div>
           <div className="mb-4"><Label>Description</Label><Textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} /></div>
           <div className="mb-4"><Label>Economic zone description</Label><Textarea value={ecoZoneDesc} onChange={e => setEcoZoneDesc(e.target.value)} rows={2} placeholder="Describe the geographic area this economy covers" /></div>
+          <div className="mb-4"><Label>Economic zone description</Label><Textarea value={ecoZoneDesc} onChange={e => setEcoZoneDesc(e.target.value)} rows={2} placeholder="Describe the geographic area this economy covers" /></div>
+
+          {/* FBCE Classification (Optional) */}
+          <div className="mt-6 mb-4 rounded-lg border border-border bg-background/40 p-4">
+            <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+              <div>
+                <h3 className="text-sm font-semibold">FBCE Classification (Optional)</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Self-classify your economy on the FBCE 5-tier framework.</p>
+              </div>
+              {fbceTier && <TierBadge tier={parseInt(fbceTier)} verified={(community as any)?.fbce_tier_verified} showSelfReported={false} />}
+            </div>
+            <Label className="text-xs">Select your tier (1-5)</Label>
+            <Select value={fbceTier || 'none'} onValueChange={(v) => setFbceTier(v === 'none' ? '' : v)}>
+              <SelectTrigger className="mt-1.5"><SelectValue placeholder="Not classified" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Not classified</SelectItem>
+                <SelectItem value="1">1 — Emerging (getting started)</SelectItem>
+                <SelectItem value="2">2 — Emerging (growing presence)</SelectItem>
+                <SelectItem value="3">3 — Advanced (organization established)</SelectItem>
+                <SelectItem value="4">4 — Advanced (staff + BTC unit of account)</SelectItem>
+                <SelectItem value="5">5 — Advanced (fully realized economy)</SelectItem>
+              </SelectContent>
+            </Select>
+            {fbceTier && getTierMeta(parseInt(fbceTier)) && (
+              <div className="mt-3 text-xs text-muted-foreground">
+                <div className="text-foreground mb-1">{getTierMeta(parseInt(fbceTier))!.description}</div>
+                <ul className="space-y-1 mt-2">
+                  {TIER_CHECKLIST[parseInt(fbceTier) as FbceTier].map((item) => (
+                    <li key={item} className="flex items-start gap-2">
+                      <span className="mt-0.5 inline-block h-3 w-3 rounded-sm border border-border" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <div className="mt-3 text-[11px] text-muted-foreground">
+              Tier framework by FBCE · <a href="https://fbce.io" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">fbce.io</a>
+            </div>
+          </div>
+
           <Button onClick={handleSaveProfile} disabled={saving}>{saving ? 'Saving...' : 'Save changes'}</Button>
         </section>
 

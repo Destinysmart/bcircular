@@ -187,6 +187,8 @@ export type Database = {
           declared_population: number
           description: string | null
           economic_zone_description: string | null
+          fbce_tier: number | null
+          fbce_tier_verified: boolean | null
           founding_year: number | null
           id: string
           logo_url: string | null
@@ -221,6 +223,8 @@ export type Database = {
           declared_population?: number
           description?: string | null
           economic_zone_description?: string | null
+          fbce_tier?: number | null
+          fbce_tier_verified?: boolean | null
           founding_year?: number | null
           id?: string
           logo_url?: string | null
@@ -255,6 +259,8 @@ export type Database = {
           declared_population?: number
           description?: string | null
           economic_zone_description?: string | null
+          fbce_tier?: number | null
+          fbce_tier_verified?: boolean | null
           founding_year?: number | null
           id?: string
           logo_url?: string | null
