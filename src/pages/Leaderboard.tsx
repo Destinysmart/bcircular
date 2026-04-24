@@ -50,7 +50,7 @@ const Leaderboard = () => {
   const [confidence, setConfidence] = useState<Confidence>('all');
   const [source, setSource] = useState<Source>('all');
   const [sortBy, setSortBy] = useState<SortKey>('transactions');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth >= 1024 : true);
 
   const { data: communities, isLoading, isError, error } = useQuery({
     queryKey: ['communities-stats'],
@@ -212,7 +212,7 @@ const Leaderboard = () => {
             />
           </div>
           <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortKey)}>
-            <SelectTrigger className="w-[200px] rounded-full">
+            <SelectTrigger className="w-full sm:w-[200px] rounded-full">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
