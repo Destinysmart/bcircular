@@ -208,13 +208,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
 
       {topSlot}
 
-      {/* GLOBAL MAP + RECENT ACTIVITY */}
-      {!gated && list.length > 0 && (
-        <>
-          <GlobalEconomiesMap economies={list as any} />
-          <RecentActivityFeed />
-        </>
-      )}
+      {/* (Map + Activity moved below the Discover grid) */}
 
       {/* FILTER PILLS */}
       {!gated && (
