@@ -53,9 +53,19 @@ const dataSources = [
       'Each economy appoints trusted validators who review submissions using a 2-of-3 consensus model. Only approved data counts toward the circularity score.',
   },
   {
-    name: 'Aggregate statistics',
+    name: 'Blink Wallet API (Live)',
     description:
-      'Future integration with payment providers like Blink will allow economies to supplement self-reported data with aggregate transaction volumes. No individual transaction data will ever be exposed.',
+      'Read-only API integration with Blink wallet. BCEs connect their wallet to enable automatic transaction tracking. No custody. No private keys. Aggregate data only.',
+  },
+  {
+    name: 'BTCMap (Open Source)',
+    description:
+      'Merchant data sourced from BTCMap, the open-source global Bitcoin merchant directory. Auto-synced weekly. Attribution displayed on all merchant data.',
+  },
+  {
+    name: 'FBCE Tier Framework',
+    description:
+      'Development classification using the internationally recognized FBCE 5-tier standard. Self-classified by economy admins with validator review.',
   },
 ];
 
