@@ -12,6 +12,7 @@ interface MerchantMapProps {
     payment_methods: string[] | null;
     source?: string;
   }>;
+  fallbackCenter?: { lat: number | null; lng: number | null } | null;
 }
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
