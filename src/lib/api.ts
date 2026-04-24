@@ -261,15 +261,22 @@ export async function fetchAllCommunitiesWithStats() {
     .eq('status', 'active');
   if (error) throw error;
 
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const daysSoFar = now.getDate();
+
   const results = await Promise.all(
     (communities || []).map(async (c) => {
-      const [merchantsRes, merchantSourcesRes, earnersRes, txRes, scoreRes, proofRes] = await Promise.all([
+      const [merchantsRes, merchantSourcesRes, earnersRes, txRes, scoreRes, proofRes, monthlyTxRes, monthlyBlinkRes] = await Promise.all([
         supabase.from('merchants').select('id', { count: 'exact', head: true }).eq('community_id', c.id).eq('status', 'approved'),
         supabase.from('merchants').select('source').eq('community_id', c.id).eq('status', 'approved'),
         supabase.from('earners').select('id', { count: 'exact', head: true }).eq('community_id', c.id).eq('status', 'approved'),
         supabase.from('transactions').select('amount_sats, is_circular').eq('community_id', c.id).eq('status', 'approved'),
         supabase.from('circularity_scores').select('*').eq('community_id', c.id).order('calculated_at', { ascending: false }).limit(1).maybeSingle(),
         (supabase as any).from('proofs').select('id', { count: 'exact', head: true }).eq('community_id', c.id).eq('status', 'approved'),
+        supabase.from('transactions').select('created_at').eq('community_id', c.id).eq('status', 'approved').gte('created_at', startOfMonth.toISOString()),
+        supabase.from('blink_transactions').select('blink_created_at').eq('community_id', c.id).gte('blink_created_at', startOfMonth.toISOString()),
       ]);
       const circularSats = (txRes.data || []).filter(t => t.is_circular).reduce((s, t) => s + Number(t.amount_sats), 0);
       const totalSats = (txRes.data || []).reduce((s, t) => s + Number(t.amount_sats), 0);
@@ -279,6 +286,17 @@ export async function fetchAllCommunitiesWithStats() {
       const hasSelf = sources.some(s => s !== 'btcmap');
       const dataSource: 'btcmap' | 'self_reported' | 'combined' | 'none' =
         hasBtcmap && hasSelf ? 'combined' : hasBtcmap ? 'btcmap' : hasSelf ? 'self_reported' : 'none';
+
+      // Live monthly metrics (preferred over stored, always fresh)
+      const monthlyDates = [
+        ...((monthlyTxRes.data as any[]) || []).map((t: any) => t.created_at),
+        ...((monthlyBlinkRes.data as any[]) || []).map((t: any) => t.blink_created_at),
+      ];
+      const activeDaysSet = new Set(monthlyDates.map(d => new Date(d).toDateString()));
+      const activeDays = activeDaysSet.size;
+      const monthlyTransactions = monthlyDates.length;
+      const activityRate = daysSoFar > 0 ? Math.round((activeDays / daysSoFar) * 100) : 0;
+
       return {
         ...c,
         merchants: merchantsRes.count || 0,
@@ -293,6 +311,11 @@ export async function fetchAllCommunitiesWithStats() {
         totalApproved,
         proofCount: proofRes.count || 0,
         dataSource,
+        monthlyTransactions,
+        activeDays,
+        daysSoFar,
+        daysInMonth,
+        activityRate,
       };
     })
   );
