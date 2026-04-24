@@ -420,9 +420,10 @@ const Leaderboard = () => {
               <div className="space-y-2 md:space-y-1">
                 {filtered.map((c, i) => {
                   const rank = i + 1;
-                  const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : null;
                   const accentBorder =
                     rank === 1 ? '#F7931A' : rank === 2 ? '#9CA3AF' : rank === 3 ? '#92400E' : null;
+                  const rankClass =
+                    rank === 1 ? 'font-bold' : rank === 2 ? 'font-bold' : rank === 3 ? 'font-bold' : '';
 
                   return (
                     <div
