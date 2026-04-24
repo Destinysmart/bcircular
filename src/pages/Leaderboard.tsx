@@ -494,7 +494,7 @@ const Leaderboard = () => {
                           </div>
                         )}
                         <div className="grid grid-cols-2 gap-2">
-                          <MobileMetric label="TXNS" value={(c.monthlyTransactions ?? 0).toLocaleString()} valueClass="text-score-amber" />
+                          <MobileMetric label="TXNS" value={(c.monthlyTransactions ?? 0).toLocaleString()} valueClass="text-score-amber" leadingIcon={<Zap className="w-3.5 h-3.5" style={{ color: '#F7931A' }} />} />
                           <MobileMetric label="ACTIVITY" value={`${c.activityRate ?? 0}%`} />
                           <MobileMetric label="MERCHANTS" value={String(c.merchants ?? 0)} />
                           <MobileMetric label="CIRCULARITY" value={String(c.score ?? 0)} valueClass={getScoreColor(c.score ?? 0)} />
