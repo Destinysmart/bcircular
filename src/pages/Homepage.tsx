@@ -432,6 +432,36 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
       {/* GLOBAL ECONOMIES MAP */}
       {!gated && list.length > 0 && <GlobalEconomiesMap economies={list as any} />}
 
+      {/* WHAT IS CIRCULARITY */}
+      <section className="border-t border-border bg-card/40">
+        <div className="container py-16">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">What makes an economy circular?</h2>
+            <p className="text-sm text-muted-foreground mt-2">Five pillars. One score. Zero guesswork.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+            {[
+              { icon: <Repeat className="h-5 w-5" />, title: 'Retention', desc: 'Sats earned stay local.' },
+              { icon: <Zap className="h-5 w-5" />, title: 'Velocity', desc: 'How fast sats move.' },
+              { icon: <TrendingUp className="h-5 w-5" />, title: 'Growth', desc: 'New merchant adoption.' },
+            ].map(p => (
+              <div key={p.title} className="rounded-2xl border border-border bg-card p-6 hover:border-score-amber/40 transition-colors">
+                <div className="h-10 w-10 rounded-xl bg-score-amber/10 border border-score-amber/30 text-score-amber flex items-center justify-center mb-4">
+                  {p.icon}
+                </div>
+                <div className="font-semibold text-base mb-1">{p.title}</div>
+                <div className="text-sm text-muted-foreground">{p.desc}</div>
+              </div>
+            ))}
+          </div>
+          <div className="text-center mt-8">
+            <Link to="/methodology" className="inline-flex items-center gap-1 text-sm text-score-amber hover:underline">
+              Read the full methodology <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* REGISTER YOUR ECONOMY CTA */}
       {!gated && (
         <motion.section
@@ -478,36 +508,6 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
           </div>
         </motion.section>
       )}
-
-      {/* WHAT IS CIRCULARITY */}
-      <section className="border-t border-border bg-card/40">
-        <div className="container py-16">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">What makes an economy circular?</h2>
-            <p className="text-sm text-muted-foreground mt-2">Five pillars. One score. Zero guesswork.</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
-            {[
-              { icon: <Repeat className="h-5 w-5" />, title: 'Retention', desc: 'Sats earned stay local.' },
-              { icon: <Zap className="h-5 w-5" />, title: 'Velocity', desc: 'How fast sats move.' },
-              { icon: <TrendingUp className="h-5 w-5" />, title: 'Growth', desc: 'New merchant adoption.' },
-            ].map(p => (
-              <div key={p.title} className="rounded-2xl border border-border bg-card p-6 hover:border-score-amber/40 transition-colors">
-                <div className="h-10 w-10 rounded-xl bg-score-amber/10 border border-score-amber/30 text-score-amber flex items-center justify-center mb-4">
-                  {p.icon}
-                </div>
-                <div className="font-semibold text-base mb-1">{p.title}</div>
-                <div className="text-sm text-muted-foreground">{p.desc}</div>
-              </div>
-            ))}
-          </div>
-          <div className="text-center mt-8">
-            <Link to="/methodology" className="inline-flex items-center gap-1 text-sm text-score-amber hover:underline">
-              Read the full methodology <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
-        </div>
-      </section>
 
       {/* TRUST / SOCIAL PROOF BAR */}
       <section className="border-t border-border bg-card/30">
