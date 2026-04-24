@@ -468,7 +468,7 @@ const CommunityDashboard = () => {
               className="inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90 transition-opacity whitespace-nowrap"
               style={{ backgroundColor: '#F7931A' }}
             >
-              Shop Community Merch ⚡
+              <Zap className="w-4 h-4" /> Shop Community Merch
             </a>
           </div>
         </div>
