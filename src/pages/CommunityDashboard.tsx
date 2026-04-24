@@ -397,6 +397,8 @@ const CommunityDashboard = () => {
             </div>
           </div>
         )}
+
+        {/* CIRCULARITY INDEX — secondary section */}
         <div className="rounded-2xl border border-border bg-card p-6 mb-10">
           <div className="flex items-start justify-between gap-4 mb-5 flex-wrap">
             <div>
