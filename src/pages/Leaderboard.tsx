@@ -5,6 +5,7 @@ import { ArrowUpRight, Scale, Search, SlidersHorizontal, X } from 'lucide-react'
 import Navbar from '@/components/Navbar';
 import ConfidenceBadge from '@/components/ConfidenceBadge';
 import EconomyLogo from '@/components/EconomyLogo';
+import { TierBadge } from '@/components/TierBadge';
 import { fetchAllCommunitiesWithStats } from '@/lib/api';
 import { getFlagEmoji, getScoreColor, getScoreBgColor } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,7 @@ type Volume = 'all' | 'low' | 'medium' | 'high';
 type Retention = 'all' | 'high' | 'low';
 type Confidence = 'all' | 'high' | 'medium' | 'low';
 type Source = 'all' | 'btcmap' | 'self_reported' | 'combined';
+type TierFilter = 'all' | 'emerging' | 'advanced';
 
 const regions = ['All', 'Africa', 'Latin America', 'Europe', 'Asia'];
 
@@ -49,6 +51,7 @@ const Leaderboard = () => {
   const [retention, setRetention] = useState<Retention>('all');
   const [confidence, setConfidence] = useState<Confidence>('all');
   const [source, setSource] = useState<Source>('all');
+  const [tierFilter, setTierFilter] = useState<TierFilter>('all');
   const [sortBy, setSortBy] = useState<SortKey>('transactions');
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth >= 1024 : true);
 
@@ -127,6 +130,14 @@ const Leaderboard = () => {
   };
 
   const matchesSource = (c: any) => source === 'all' || c.dataSource === source;
+
+  const matchesTier = (c: any) => {
+    if (tierFilter === 'all') return true;
+    const t = c.fbce_tier ?? 0;
+    if (tierFilter === 'emerging') return t === 1 || t === 2;
+    if (tierFilter === 'advanced') return t >= 3 && t <= 5;
+    return true;
+  };
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
