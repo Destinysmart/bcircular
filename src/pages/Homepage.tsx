@@ -8,6 +8,7 @@ import Navbar from '@/components/Navbar';
 import { fetchAllCommunitiesWithStats } from '@/lib/api';
 import { getFlagEmoji } from '@/lib/mock-data';
 import circularLogo from '@/assets/circular-logo.png';
+import heroImage from '@/assets/hero-image.jpg';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
