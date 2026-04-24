@@ -1,16 +1,15 @@
 import { useMemo } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Copy, Scale } from 'lucide-react';
+import { Scale } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import { MapContainer, Marker, TileLayer } from 'react-leaflet';
 import Navbar from '@/components/Navbar';
 import ScoreRing from '@/components/ScoreRing';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { fetchAllCommunitiesWithStats, fetchComparisonDetails } from '@/lib/api';
 import { getFlagEmoji } from '@/lib/mock-data';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 const pillars = [
   ['merchant_density_score', 'Merchant Saturation'],
@@ -32,9 +31,56 @@ const MiniMap = ({ merchants }: { merchants: any[] }) => {
 
 const confidence = (proofCount: number) => proofCount >= 5 ? 'High ✓' : proofCount >= 1 ? 'Medium' : 'Low';
 
+const generateInsights = (a: any, b: any, aDetails: any, bDetails: any): string[] => {
+  if (!a || !b) return [];
+  const insights: string[] = [];
+
+  const aMerchants = a.merchants ?? 0;
+  const bMerchants = b.merchants ?? 0;
+  if (aMerchants > 0 && bMerchants > 0) {
+    if (aMerchants >= bMerchants * 2) {
+      insights.push(`${a.name} has ${Math.round(aMerchants / bMerchants)}× more merchants than ${b.name}`);
+    } else if (bMerchants >= aMerchants * 2) {
+      insights.push(`${b.name} has ${Math.round(bMerchants / aMerchants)}× more merchants than ${a.name}`);
+    }
+  } else if (aMerchants > 0 && bMerchants === 0) {
+    insights.push(`${a.name} has ${aMerchants} merchants — ${b.name} has none mapped yet`);
+  } else if (bMerchants > 0 && aMerchants === 0) {
+    insights.push(`${b.name} has ${bMerchants} merchants — ${a.name} has none mapped yet`);
+  }
+
+  const aScore = Math.round(a.score ?? 0);
+  const bScore = Math.round(b.score ?? 0);
+  const scoreDiff = Math.abs(aScore - bScore);
+  if (scoreDiff >= 10) {
+    const leader = aScore > bScore ? a.name : b.name;
+    insights.push(`${leader} leads by ${scoreDiff} circularity points`);
+  }
+
+  const aRet = Math.round(Number(aDetails?.score?.retention_score ?? 0));
+  const bRet = Math.round(Number(bDetails?.score?.retention_score ?? 0));
+  if (aRet >= 70) insights.push(`${a.name} has strong retention — ${aRet}% of sats stay local`);
+  else if (bRet >= 70) insights.push(`${b.name} has strong retention — ${bRet}% of sats stay local`);
+
+  const aGrowth = Math.round(Number(aDetails?.score?.growth_score ?? 0));
+  const bGrowth = Math.round(Number(bDetails?.score?.growth_score ?? 0));
+  if (aGrowth > bGrowth + 15) insights.push(`${a.name} is growing faster — momentum score ${aGrowth} vs ${bGrowth}`);
+  else if (bGrowth > aGrowth + 15) insights.push(`${b.name} is growing faster — momentum score ${bGrowth} vs ${aGrowth}`);
+
+  const aEarners = a.earners ?? 0;
+  const bEarners = b.earners ?? 0;
+  if (aEarners > 0 && bEarners === 0) insights.push(`${a.name} has ${aEarners} registered earners — ${b.name} has none yet`);
+  else if (bEarners > 0 && aEarners === 0) insights.push(`${b.name} has ${bEarners} registered earners — ${a.name} has none yet`);
+
+  if (insights.length === 0) {
+    insights.push(`Both economies are in early stages — more data will reveal stronger insights`);
+  }
+
+  return insights.slice(0, 4);
+};
+
 const Compare = () => {
   const [params, setParams] = useSearchParams();
-  const { toast } = useToast();
   const aSlug = params.get('a') || '';
   const bSlug = params.get('b') || '';
   const { data: economies } = useQuery({ queryKey: ['communities-stats'], queryFn: fetchAllCommunitiesWithStats });
@@ -43,16 +89,7 @@ const Compare = () => {
   const { data: aDetails } = useQuery({ queryKey: ['compare-details', a?.id], queryFn: () => fetchComparisonDetails(a!.id), enabled: !!a?.id });
   const { data: bDetails } = useQuery({ queryKey: ['compare-details', b?.id], queryFn: () => fetchComparisonDetails(b!.id), enabled: !!b?.id });
 
-  const insights = useMemo(() => {
-    if (!a || !b || !aDetails?.score || !bDetails?.score) return [];
-    const items: string[] = [];
-    if ((a.merchants || 0) > (b.merchants || 0) * 2) items.push(`${a.name} has ${Math.round((a.merchants || 1) / Math.max(b.merchants || 1, 1))}x more merchants`);
-    if ((b.merchants || 0) > (a.merchants || 0) * 2) items.push(`${b.name} has ${Math.round((b.merchants || 1) / Math.max(a.merchants || 1, 1))}x more merchants`);
-    if ((bDetails.score.growth_score || 0) > (aDetails.score.growth_score || 0)) items.push(`${b.name} is growing faster (+${Math.round((bDetails.score.growth_score || 0) - (aDetails.score.growth_score || 0))} pts on momentum)`);
-    if ((aDetails.score.retention_score || 0) > 80) items.push(`${a.name} has exceptional retention — ${Math.round(aDetails.score.retention_score)}% of sats stay local`);
-    if ((bDetails.score.retention_score || 0) > 80) items.push(`${b.name} has exceptional retention — ${Math.round(bDetails.score.retention_score)}% of sats stay local`);
-    return items.slice(0, 4);
-  }, [a, b, aDetails, bDetails]);
+  const insights = useMemo(() => generateInsights(a, b, aDetails, bDetails), [a, b, aDetails, bDetails]);
 
   const setParam = (key: 'a' | 'b', value: string) => {
     const next = new URLSearchParams(params);
@@ -61,8 +98,9 @@ const Compare = () => {
   };
 
   const share = async () => {
-    await navigator.clipboard.writeText(window.location.href);
-    toast({ title: 'Comparison URL copied' });
+    const url = `${window.location.origin}/compare?a=${a?.slug}&b=${b?.slug}`;
+    await navigator.clipboard.writeText(url);
+    toast.success('Comparison link copied ✓');
   };
 
   return (
@@ -71,7 +109,22 @@ const Compare = () => {
       <main className="container py-10">
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div><h1 className="text-2xl font-bold mb-1">Economy Comparison</h1><p className="text-sm text-muted-foreground">Compare scores, pillars, and merchant networks side by side.</p></div>
-          {a && b && <Button variant="outline" className="gap-1.5" onClick={share}><Copy className="h-4 w-4" /> Share comparison</Button>}
+          {a && b && (
+            <button
+              onClick={share}
+              style={{
+                background: 'transparent',
+                border: '1px solid #374151',
+                color: '#9CA3AF',
+                padding: '6px 16px',
+                borderRadius: 8,
+                fontSize: 13,
+                cursor: 'pointer',
+              }}
+            >
+              Share comparison ↗
+            </button>
+          )}
         </div>
         <div className="mb-8 grid grid-cols-1 gap-3 md:grid-cols-2">
           <Select value={aSlug} onValueChange={value => setParam('a', value)}><SelectTrigger><SelectValue placeholder="Select first economy" /></SelectTrigger><SelectContent>{economies?.map(e => <SelectItem key={e.id} value={e.slug}>{e.name}</SelectItem>)}</SelectContent></Select>
@@ -84,7 +137,33 @@ const Compare = () => {
             </section>
             <section className="rounded-lg border border-border bg-card p-5"><h2 className="mb-5 text-lg font-semibold">Pillar Breakdown</h2><div className="space-y-5">{pillars.map(([key, label]) => { const av = Number(aDetails?.score?.[key] || 0); const bv = Number(bDetails?.score?.[key] || 0); return <div key={key} className="grid gap-2 md:grid-cols-[180px_1fr_60px_1fr]"><span className="text-sm font-medium">{label}</span>{bar(av, av >= bv)}<span className="text-center font-mono text-xs text-muted-foreground">{av >= bv ? '+' : '-'}{Math.abs(Math.round(av - bv))} pts</span>{bar(bv, bv > av)}</div>; })}</div></section>
             <section className="overflow-hidden rounded-lg border border-border bg-card"><table className="w-full text-sm"><tbody>{[['Merchants', a.merchants, b.merchants], ['Earners', a.earners, b.earners], ['Transactions', a.transactions, b.transactions], ['Population', a.declared_population, b.declared_population], ['Merchants/1000', ((a.merchants || 0) / Math.max(a.declared_population || 1, 1) * 1000).toFixed(2), ((b.merchants || 0) / Math.max(b.declared_population || 1, 1) * 1000).toFixed(2)], ['Founded', a.founding_year || '—', b.founding_year || '—'], ['Confidence', confidence(aDetails?.proofCount || 0), confidence(bDetails?.proofCount || 0)]].map(row => <tr key={row[0]} className="border-b border-border last:border-0"><td className="p-3 text-muted-foreground">{row[0]}</td><td className="p-3 font-medium">{row[1]}</td><td className="p-3 font-medium">{row[2]}</td></tr>)}</tbody></table></section>
-            <section className="rounded-lg border border-border bg-card p-5"><h2 className="mb-3 text-lg font-semibold">Strengths and Gaps</h2>{insights.length ? <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">{insights.map(i => <li key={i}>{i}</li>)}</ul> : <p className="text-sm text-muted-foreground">Select economies with score history to generate insights.</p>}</section>
+            <section
+              style={{
+                background: '#111827',
+                border: '1px solid #1F2937',
+                borderRadius: 12,
+                padding: '20px 24px',
+              }}
+            >
+              <h3 style={{ color: '#F9FAFB', fontSize: 16, fontWeight: 600, marginBottom: 16 }}>
+                ⚡ Strengths & Gaps
+              </h3>
+              {insights.map((insight, i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: 'flex',
+                    gap: 10,
+                    alignItems: 'flex-start',
+                    padding: '8px 0',
+                    borderBottom: i < insights.length - 1 ? '1px solid #1F2937' : 'none',
+                  }}
+                >
+                  <span style={{ color: '#F59E0B', flexShrink: 0, marginTop: 1 }}>→</span>
+                  <span style={{ fontSize: 14, color: '#D1D5DB', lineHeight: 1.6 }}>{insight}</span>
+                </div>
+              ))}
+            </section>
             {(a.bbox_north && b.bbox_north) && <section className="grid grid-cols-1 gap-5 md:grid-cols-2"><div><h3 className="mb-2 font-medium">{a.name}</h3><MiniMap merchants={aDetails?.merchants || []} /></div><div><h3 className="mb-2 font-medium">{b.name}</h3><MiniMap merchants={bDetails?.merchants || []} /></div></section>}
           </div>
         )}
