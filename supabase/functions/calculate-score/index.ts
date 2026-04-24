@@ -232,6 +232,11 @@ Deno.serve(async (req) => {
           connectedWallets: wallets.length,
           blinkTransactions: blinkTx.length,
           proofCount,
+          monthlyTransactions,
+          activeDays,
+          daysSoFar,
+          daysInMonth,
+          activityRate,
           confidence: proofCount >= 5 ? 'High' : proofCount >= 1 ? 'Medium' : 'Low',
         },
       })
