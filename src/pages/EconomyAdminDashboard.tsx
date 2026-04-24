@@ -38,14 +38,25 @@ const EconomyAdminDashboard = () => {
     enabled: !!id,
   });
 
+  // Check super admin status
+  const { data: isSuperAdmin } = useQuery({
+    queryKey: ['is-super-admin', user?.id],
+    queryFn: async () => {
+      if (!user) return false;
+      const { data } = await supabase.from('profiles').select('is_super_admin').eq('user_id', user.id).maybeSingle();
+      return !!data?.is_super_admin;
+    },
+    enabled: !!user,
+  });
+
   // Auth guard
   useEffect(() => {
     if (!authLoading && !user) navigate('/login');
-    if (community && user && community.admin_id !== user.id) {
+    if (community && user && community.admin_id !== user.id && isSuperAdmin === false) {
       toast({ title: 'Access denied', description: 'You are not the admin of this economy.', variant: 'destructive' });
       navigate('/');
     }
-  }, [community, user, authLoading]);
+  }, [community, user, authLoading, isSuperAdmin]);
 
   const communityId = community?.id;
 
