@@ -74,7 +74,7 @@ const Home = () => {
     </section>
   );
 
-  return <Homepage topSlot={personalSection} hideHero />;
+  return <Homepage topSlot={personalSection} compactHero />;
 };
 
 export default Home;
