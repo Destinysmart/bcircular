@@ -189,6 +189,8 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
       </section>
       )}
 
+      {topSlot}
+
       {/* FILTER PILLS */}
       {!gated && (
       <section className="border-b border-border">
