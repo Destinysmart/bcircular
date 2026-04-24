@@ -25,12 +25,15 @@ const Navbar = () => {
   });
 
   const navLinks = [
-    { to: '/', label: 'Home' },
-    { to: '/leaderboard', label: 'Leaderboard' },
-    { to: '/compare', label: 'Compare' },
-    { to: '/register', label: 'Register' },
-    ...(user ? [{ to: '/validate', label: 'Validate' }] : []),
+    { to: '/', label: 'Home', Icon: Home },
+    { to: '/leaderboard', label: 'Leaderboard', Icon: Trophy },
+    { to: '/compare', label: 'Compare', Icon: BarChart2 },
+    { to: '/register', label: 'Register', Icon: PlusCircle },
+    ...(user ? [{ to: '/validate', label: 'Validate', Icon: CheckCircle }] : []),
   ];
+
+  const displayName = profile?.display_name || user?.email?.split('@')[0] || '';
+  const initials = (profile?.display_name || user?.email || '?').slice(0, 2).toUpperCase();
 
   return (
     <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
