@@ -565,7 +565,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
           </div>
 
           <div className="border-t border-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
-            <span>Built with ⚡ by the Bitcoin community · Open source</span>
+            <span className="inline-flex items-center gap-1">Built with <Zap className="w-3.5 h-3.5" style={{ color: '#F7931A' }} /> by the Bitcoin community · Open source</span>
             <span>No funds held. Ever.</span>
           </div>
           <div className="text-center mt-4 text-xs text-muted-foreground">
