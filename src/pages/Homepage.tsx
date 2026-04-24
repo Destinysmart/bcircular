@@ -108,8 +108,6 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      {topSlot}
-
       {/* HERO */}
       {!hideHero && (
       <section className="relative overflow-hidden">
