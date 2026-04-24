@@ -66,10 +66,11 @@ type FilterId = typeof FILTERS[number]['id'];
 
 const HERO_IMAGE = heroImage;
 
-const Homepage = ({ topSlot, hideHero = false }: { topSlot?: React.ReactNode; hideHero?: boolean } = {}) => {
+const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = false }: { topSlot?: React.ReactNode; hideHero?: boolean; compactHero?: boolean; gated?: boolean } = {}) => {
   const [filter, setFilter] = useState<FilterId>('featured');
   const { data, isLoading } = useQuery({ queryKey: ['communities-stats'], queryFn: fetchAllCommunitiesWithStats });
   const list: Economy[] = data || [];
+  const heroHeight = compactHero ? 320 : 520;
 
   const totalMerchants = list.reduce((s, c) => s + (c.merchants ?? 0), 0);
   const countries = new Set(list.map(c => c.country).filter(Boolean)).size;
