@@ -214,7 +214,7 @@ const Leaderboard = () => {
         </div>
 
         {/* Search + sort row */}
-        <div className="flex gap-3 mb-4 flex-wrap items-center">
+        <div className="flex gap-3 mb-4 flex-wrap items-center sticky top-14 z-30 bg-background py-2 -mx-1 px-1 md:static md:bg-transparent md:py-0 md:mx-0 md:px-0">
           <div className="relative flex-1 min-w-[240px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -417,53 +417,88 @@ const Leaderboard = () => {
                 <button onClick={clearAll} className="text-primary hover:underline text-sm">Clear all filters</button>
               </div>
             ) : (
-              <div className="space-y-1">
-                {filtered.map((c, i) => (
-                  <div
-                    key={c.id || i}
-                    onClick={() => navigate(`/c/${c.slug}`)}
-                    className={`group flex items-center gap-4 rounded-xl border-l-4 ${scoreBorderColor(c.score ?? 0)} p-4 transition-all hover:bg-secondary/60 hover:shadow-[0_0_24px_hsl(var(--score-amber)/0.12)] cursor-pointer`}
-                  >
-                    <span className="font-mono text-sm text-muted-foreground w-8 text-right">{i + 1}</span>
-                    <EconomyLogo economy={c as any} size="sm" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-lg">{getFlagEmoji(c.countryCode || '')}</span>
-                        <span className="font-medium">{c.name}</span>
-                        <span className="text-muted-foreground text-xs hidden md:inline">{c.city}, {c.country}</span>
-                        <ConfidenceBadge totalApproved={c.totalApproved} proofCount={c.proofCount} />
-                        {c.dataSource === 'btcmap' || c.dataSource === 'combined' ? (
-                          <Badge variant="outline" className="font-mono text-[10px] rounded-full">BTCMap</Badge>
-                        ) : null}
-                        {c.fbce_tier && <TierBadge tier={c.fbce_tier} verified={c.fbce_tier_verified} showSelfReported={false} />}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-6">
-                      <div className="hidden md:flex flex-col items-end text-xs">
-                        <div className="font-mono text-base font-bold text-score-amber tabular-nums">⚡ {(c.monthlyTransactions ?? 0).toLocaleString()}</div>
-                        <div className="text-muted-foreground">txns / month</div>
-                      </div>
-                      <div className="hidden lg:flex flex-col items-end text-xs">
-                        <div className="font-mono text-base font-bold text-foreground tabular-nums">{c.activityRate ?? 0}%</div>
-                        <div className="text-muted-foreground">{c.activeDays ?? 0}/{c.daysInMonth ?? 30} days</div>
-                      </div>
-                      <div className="hidden sm:flex flex-col items-end text-xs text-muted-foreground">
-                        <span>{c.merchants} merchants</span>
-                        <span className="font-mono">{formatSats(c.satsTotal ?? 0)} sats</span>
-                      </div>
-                      <div className="flex flex-col items-end">
-                        <span className={`font-mono text-base font-bold ${getScoreColor(c.score ?? 0)}`}>
-                          {c.score ?? 0}
+              <div className="space-y-2 md:space-y-1">
+                {filtered.map((c, i) => {
+                  const rank = i + 1;
+                  const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : null;
+                  const accentBorder =
+                    rank === 1 ? '#F7931A' : rank === 2 ? '#9CA3AF' : rank === 3 ? '#92400E' : null;
+
+                  return (
+                    <div
+                      key={c.id || i}
+                      onClick={() => navigate(`/c/${c.slug}`)}
+                      className={`group rounded-xl border border-border md:border-0 md:border-l-4 ${scoreBorderColor(c.score ?? 0)} cursor-pointer transition-all hover:bg-secondary/60 hover:shadow-[0_0_24px_hsl(var(--score-amber)/0.12)]`}
+                      style={accentBorder ? { borderLeftColor: accentBorder, borderLeftWidth: 4 } : undefined}
+                    >
+                      {/* DESKTOP layout */}
+                      <div className="hidden md:flex items-center gap-4 py-4 px-4">
+                        <span className="font-mono text-sm text-muted-foreground w-8 text-right">
+                          {medal ?? rank}
                         </span>
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider">circularity</span>
+                        <EconomyLogo economy={c as any} size="sm" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">{getFlagEmoji(c.countryCode || '')}</span>
+                            <span className="font-medium truncate">{c.name}</span>
+                            <span className="text-muted-foreground text-xs truncate">{c.city}, {c.country}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                            {c.fbce_tier && <TierBadge tier={c.fbce_tier} verified={c.fbce_tier_verified} showSelfReported={false} />}
+                            {(c.dataSource === 'btcmap' || c.dataSource === 'combined') && (
+                              <Badge variant="outline" className="font-mono text-[10px] rounded-full">BTCMap</Badge>
+                            )}
+                            <ConfidenceBadge totalApproved={c.totalApproved} proofCount={c.proofCount} />
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-6">
+                          <Metric label="TXNS" value={`⚡ ${(c.monthlyTransactions ?? 0).toLocaleString()}`} valueClass="text-score-amber" />
+                          <div className="hidden lg:block">
+                            <Metric label="ACTIVITY" value={`${c.activityRate ?? 0}%`} />
+                          </div>
+                          <Metric label="MERCHANTS" value={String(c.merchants ?? 0)} />
+                          <Metric label="CIRCULARITY" value={String(c.score ?? 0)} valueClass={getScoreColor(c.score ?? 0)} />
+                          <button onClick={(event) => { event.stopPropagation(); navigate(`/compare?a=${c.slug}`); }} className="text-muted-foreground hover:text-primary" aria-label={`Compare ${c.name}`}>
+                            <Scale className="h-4 w-4" />
+                          </button>
+                          <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
                       </div>
-                      <button onClick={(event) => { event.stopPropagation(); navigate(`/compare?a=${c.slug}`); }} className="text-muted-foreground hover:text-primary" aria-label={`Compare ${c.name}`}>
-                        <Scale className="h-4 w-4" />
-                      </button>
-                      <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                      {/* MOBILE card layout */}
+                      <div className="md:hidden p-3 space-y-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-mono text-sm text-muted-foreground shrink-0">
+                            {medal ?? `#${rank}`}
+                          </span>
+                          <span className="font-medium text-sm text-center truncate flex-1">{c.name}</span>
+                          <span className="text-lg shrink-0">{getFlagEmoji(c.countryCode || '')}</span>
+                        </div>
+                        <div className="text-xs text-muted-foreground text-center">
+                          {c.city}, {c.country}
+                        </div>
+                        {(c.fbce_tier || c.dataSource === 'btcmap' || c.dataSource === 'combined' || c.proofCount >= 0) && (
+                          <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                            {c.fbce_tier && <TierBadge tier={c.fbce_tier} verified={c.fbce_tier_verified} showSelfReported={false} />}
+                            {(c.dataSource === 'btcmap' || c.dataSource === 'combined') && (
+                              <Badge variant="outline" className="font-mono text-[10px] rounded-full">BTCMap</Badge>
+                            )}
+                            <ConfidenceBadge totalApproved={c.totalApproved} proofCount={c.proofCount} />
+                          </div>
+                        )}
+                        <div className="grid grid-cols-2 gap-2">
+                          <MobileMetric label="TXNS" value={(c.monthlyTransactions ?? 0).toLocaleString()} valueClass="text-score-amber" />
+                          <MobileMetric label="ACTIVITY" value={`${c.activityRate ?? 0}%`} />
+                          <MobileMetric label="MERCHANTS" value={String(c.merchants ?? 0)} />
+                          <MobileMetric label="CIRCULARITY" value={String(c.score ?? 0)} valueClass={getScoreColor(c.score ?? 0)} />
+                        </div>
+                        <Button variant="outline" size="sm" className="w-full rounded-full" onClick={(e) => { e.stopPropagation(); navigate(`/c/${c.slug}`); }}>
+                          View
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -477,6 +512,20 @@ const FilterBlock = ({ label, children }: { label: string; children: React.React
   <div className="space-y-2">
     <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
     {children}
+  </div>
+);
+
+const Metric = ({ label, value, valueClass = 'text-foreground' }: { label: string; value: string; valueClass?: string }) => (
+  <div className="flex flex-col items-end">
+    <span className={`font-mono text-base font-bold tabular-nums ${valueClass}`}>{value}</span>
+    <span className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">{label}</span>
+  </div>
+);
+
+const MobileMetric = ({ label, value, valueClass = 'text-foreground' }: { label: string; value: string; valueClass?: string }) => (
+  <div className="rounded-lg border border-border bg-background/50 px-3 py-2 flex flex-col">
+    <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{label}</span>
+    <span className={`font-mono text-base font-bold tabular-nums ${valueClass}`}>{value}</span>
   </div>
 );
 
