@@ -194,8 +194,8 @@ const Leaderboard = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="container py-10">
-        <div className="mb-6 rounded-xl border border-score-amber/30 bg-foreground px-5 py-4 font-mono text-sm font-semibold text-score-amber shadow-[0_0_24px_hsl(var(--score-amber)/0.10)]">
-          🌍 {list.length} Bitcoin circular economies tracked globally
+        <div className="mb-6 rounded-xl border border-score-amber/30 bg-foreground px-5 py-4 font-mono text-sm font-semibold text-score-amber shadow-[0_0_24px_hsl(var(--score-amber)/0.10)] flex items-center gap-2">
+          <Globe className="w-4 h-4" /> {list.length} Bitcoin circular economies tracked globally
         </div>
 
         <div className="flex items-end justify-between mb-6 gap-4 flex-wrap">
