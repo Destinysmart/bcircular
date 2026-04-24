@@ -214,7 +214,7 @@ const Leaderboard = () => {
         </div>
 
         {/* Search + sort row */}
-        <div className="flex gap-3 mb-4 flex-wrap items-center">
+        <div className="flex gap-3 mb-4 flex-wrap items-center sticky top-14 z-30 bg-background py-2 -mx-1 px-1 md:static md:bg-transparent md:py-0 md:mx-0 md:px-0">
           <div className="relative flex-1 min-w-[240px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
