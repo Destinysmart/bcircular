@@ -432,6 +432,53 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
         )}
       </section>
 
+      {/* REGISTER YOUR ECONOMY CTA */}
+      {!gated && (
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.5 }}
+          className="container py-10"
+        >
+          <div className="relative overflow-hidden rounded-2xl border border-score-amber/30 bg-gradient-to-br from-score-amber/15 via-background to-background p-8 md:p-12">
+            {/* Decorative pattern */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 opacity-30"
+              style={{
+                backgroundImage: 'radial-gradient(circle at 20% 30%, hsl(var(--score-amber) / 0.25) 1px, transparent 1px), radial-gradient(circle at 80% 70%, hsl(var(--score-amber) / 0.18) 1px, transparent 1px)',
+                backgroundSize: '36px 36px, 28px 28px',
+              }}
+            />
+            <div className="relative max-w-2xl">
+              <div className="inline-flex items-center gap-2 rounded-full border border-score-amber/40 bg-score-amber/10 px-3 py-1 text-[11px] font-mono uppercase tracking-wider text-score-amber mb-4">
+                <Bitcoin className="h-3 w-3" />
+                Add your community
+              </div>
+              <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight text-foreground mb-3">
+                Is your Bitcoin community missing?
+              </h2>
+              <p className="text-sm md:text-base text-muted-foreground mb-6 leading-relaxed">
+                Join the global network of circular economies. Track your sats flow and prove real adoption.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link to="/register" className="w-full sm:w-auto">
+                  <Button size="lg" className="w-full sm:w-auto rounded-full px-6 gap-2 h-12 bg-score-amber text-background hover:bg-score-amber/90 font-semibold">
+                    Register Your Economy <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link to="/methodology" className="w-full sm:w-auto">
+                  <Button variant="outline" size="lg" className="w-full sm:w-auto rounded-full px-6 h-12 border-foreground/20 hover:border-score-amber hover:text-score-amber">
+                    Learn how it works <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </motion.section>
+      )}
+
       {/* WHAT IS CIRCULARITY */}
       <section className="border-t border-border bg-card/40">
         <div className="container py-16">
