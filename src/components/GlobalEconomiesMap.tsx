@@ -107,7 +107,32 @@ const GlobalEconomiesMap = ({ economies }: Props) => {
       mapRef.current.setZoom(8);
     }
 
-    return () => { mapRef.current?.remove(); };
+    // Ensure the map sizes correctly even if its container started hidden / 0-height
+    // (common when section enters via whileInView or after a reorder).
+    const map = mapRef.current;
+    const container = containerRef.current;
+    const triggerResize = () => map?.resize();
+
+    // Resize after first paint and once load completes
+    requestAnimationFrame(triggerResize);
+    map.once('load', triggerResize);
+    const t1 = window.setTimeout(triggerResize, 250);
+    const t2 = window.setTimeout(triggerResize, 800);
+
+    // Observe container size changes (e.g., when it becomes visible)
+    let ro: ResizeObserver | null = null;
+    if (container && typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(() => triggerResize());
+      ro.observe(container);
+    }
+
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      ro?.disconnect();
+      mapRef.current?.remove();
+      mapRef.current = null;
+    };
   }, [economies]);
 
   const handleReset = () => {
