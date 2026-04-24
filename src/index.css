@@ -1,12 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
-html { background-color: #0A0F1E !important; }
-body { background-color: #0A0F1E !important; color: #F9FAFB !important; }
-#root { background-color: #0A0F1E !important; min-height: 100vh; }
+html.dark { background-color: #0A0F1E; }
+html.dark body { background-color: #0A0F1E; color: #F9FAFB; }
+html.dark #root { background-color: #0A0F1E; min-height: 100vh; }
+
+html.light { background-color: #F9FAFB; }
+html.light body { background-color: #F9FAFB; color: #111827; }
+html.light #root { background-color: #F9FAFB; min-height: 100vh; }
 
 .dark { color-scheme: dark; }
+.light { color-scheme: light; }
 
-.leaflet-container { background-color: #1a1a2e !important; }
+.leaflet-container { background-color: #1a1a2e; }
+html.light .leaflet-container { background-color: #e5e7eb; }
 
 @tailwind base;
 @tailwind components;
