@@ -155,7 +155,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
                 <Sparkles className="h-3 w-3" />
                 Bitcoin Circular Economy
               </motion.div>
-              <motion.h1 variants={fadeUp} custom={1} className={`${compactHero ? 'text-2xl sm:text-3xl md:text-4xl mb-3' : 'text-4xl sm:text-5xl md:text-6xl mb-4 md:mb-5'} font-extrabold tracking-tight leading-[1.05] text-foreground`}>
+              <motion.h1 variants={fadeUp} custom={1} className={`${compactHero ? 'text-2xl sm:text-3xl md:text-4xl mb-3' : 'text-3xl sm:text-5xl md:text-6xl mb-4 md:mb-5'} font-extrabold tracking-tight leading-[1.1] text-foreground`}>
                 See where Bitcoin
                 <br />
                 <span className="text-score-amber">actually circulates.</span>
