@@ -456,7 +456,7 @@ const Leaderboard = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-6">
-                          <Metric label="TXNS" value={`⚡ ${(c.monthlyTransactions ?? 0).toLocaleString()}`} valueClass="text-score-amber" />
+                          <Metric label="TXNS" value={(c.monthlyTransactions ?? 0).toLocaleString()} valueClass="text-score-amber" leadingIcon={<Zap className="w-3.5 h-3.5" style={{ color: '#F7931A' }} />} />
                           <div className="hidden lg:block">
                             <Metric label="ACTIVITY" value={`${c.activityRate ?? 0}%`} />
                           </div>
