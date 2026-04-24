@@ -14,6 +14,7 @@ import SatsMovementPanel from '@/components/SatsMovementPanel';
 import BlinkWalletSettings from '@/components/BlinkWalletSettings';
 import StatCard from '@/components/StatCard';
 import EconomyLogo from '@/components/EconomyLogo';
+import { TierBadge, TIER_CHECKLIST, getTierMeta, type FbceTier } from '@/components/TierBadge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -367,7 +368,35 @@ const CommunityDashboard = () => {
           />
         </div>
 
-        {/* CIRCULARITY INDEX — secondary section */}
+        {/* FBCE Classification (only shown if set) */}
+        {(community as any).fbce_tier && getTierMeta((community as any).fbce_tier) && (
+          <div className="rounded-2xl border border-border bg-card p-6 mb-10">
+            <div className="flex items-start justify-between gap-4 mb-4 flex-wrap">
+              <div>
+                <h2 className="text-lg font-bold text-foreground">FBCE Classification</h2>
+                <p className="text-xs text-muted-foreground mt-1 max-w-md">
+                  {getTierMeta((community as any).fbce_tier)!.description}
+                </p>
+              </div>
+              <TierBadge
+                tier={(community as any).fbce_tier}
+                verified={(community as any).fbce_tier_verified}
+                size="md"
+              />
+            </div>
+            <ul className="space-y-1.5 text-sm">
+              {TIER_CHECKLIST[(community as any).fbce_tier as FbceTier].map((item) => (
+                <li key={item} className="flex items-start gap-2 text-foreground">
+                  <span className="mt-0.5 inline-flex h-4 w-4 items-center justify-center rounded-sm border border-border text-score-green">✓</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-4 text-[11px] text-muted-foreground">
+              Framework by FBCE · <a href="https://fbce.io" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">fbce.io</a>
+            </div>
+          </div>
+        )}
         <div className="rounded-2xl border border-border bg-card p-6 mb-10">
           <div className="flex items-start justify-between gap-4 mb-5 flex-wrap">
             <div>
