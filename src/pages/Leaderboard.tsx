@@ -434,8 +434,11 @@ const Leaderboard = () => {
                     >
                       {/* DESKTOP layout */}
                       <div className="hidden md:flex items-center gap-4 py-4 px-4">
-                        <span className="font-mono text-sm text-muted-foreground w-8 text-right">
-                          {medal ?? rank}
+                        <span
+                          className={`font-mono text-sm w-8 text-right ${accentBorder ? '' : 'text-muted-foreground'} ${rankClass}`}
+                          style={accentBorder ? { color: accentBorder } : undefined}
+                        >
+                          {rank}
                         </span>
                         <EconomyLogo economy={c as any} size="sm" />
                         <div className="flex-1 min-w-0">
