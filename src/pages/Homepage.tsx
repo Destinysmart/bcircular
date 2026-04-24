@@ -106,7 +106,10 @@ const Homepage = ({ topSlot, hideHero = false }: { topSlot?: React.ReactNode; hi
     <div className="min-h-screen bg-background">
       <Navbar />
 
+      {topSlot}
+
       {/* HERO */}
+      {!hideHero && (
       <section className="relative overflow-hidden">
         <div
           className="relative h-[520px] w-full bg-cover bg-center"
