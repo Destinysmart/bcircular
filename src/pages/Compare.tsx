@@ -28,8 +28,10 @@ const MiniMap = ({ merchants }: { merchants: any[] }) => {
   if (!points.length) return <div className="flex h-56 items-center justify-center rounded-lg bg-secondary/40 text-sm text-muted-foreground">No mapped merchants</div>;
   return (
     <MapContainer center={[points[0].lat, points[0].lng]} zoom={12} className="h-56 rounded-lg" scrollWheelZoom={false}>
-      <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-      <>{points.map(m => <Marker key={m.id} position={[m.lat, m.lng]} />)}</>
+      {[
+        <TileLayer key="tiles" attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />,
+        ...points.map(m => <Marker key={m.id} position={[m.lat, m.lng]} />),
+      ]}
     </MapContainer>
   );
 };
