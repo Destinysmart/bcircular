@@ -223,7 +223,7 @@ Deno.serve(async (req) => {
       success: true,
       community_name: area.tags?.name || area.osm_json?.tags?.name || btcmapAreaId,
       total_scanned: elements.length,
-      bitcoin_merchants_found: btcMerchants.length,
+      bitcoin_merchants_found: rows.length,
       synced,
       errors,
       bbox: { north, south, east, west },
