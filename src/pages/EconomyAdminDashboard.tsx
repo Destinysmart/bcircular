@@ -17,6 +17,8 @@ import BlinkWalletSettings from '@/components/BlinkWalletSettings';
 import EconomyLogo from '@/components/EconomyLogo';
 import UploadZone from '@/components/UploadZone';
 import { QRCodeCanvas } from 'qrcode.react';
+import { TierBadge, TIER_CHECKLIST, getTierMeta, type FbceTier } from '@/components/TierBadge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const EconomyAdminDashboard = () => {
   const { id } = useParams();
@@ -106,6 +108,7 @@ const EconomyAdminDashboard = () => {
   const [foundingYear, setFoundingYear] = useState('');
   const [ecoZoneDesc, setEcoZoneDesc] = useState('');
   const [validatorEmail, setValidatorEmail] = useState('');
+  const [fbceTier, setFbceTier] = useState<string>('');
   const [saving, setSaving] = useState(false);
   const [recalculating, setRecalculating] = useState(false);
   const [syncingBtcmap, setSyncingBtcmap] = useState(false);
@@ -211,6 +214,7 @@ const EconomyAdminDashboard = () => {
       setFoundingYear(String(community.founding_year || ''));
       setEcoZoneDesc(community.economic_zone_description || '');
       setBtcmapAreaId((community as any).btcmap_area_id || '');
+      setFbceTier((community as any).fbce_tier ? String((community as any).fbce_tier) : '');
     }
   }, [community]);
 
@@ -224,7 +228,8 @@ const EconomyAdminDashboard = () => {
         declared_population: parseInt(declaredPop) || 100,
         founding_year: parseInt(foundingYear) || null,
         economic_zone_description: ecoZoneDesc,
-      }).eq('id', communityId);
+        fbce_tier: fbceTier ? parseInt(fbceTier) : null,
+      } as any).eq('id', communityId);
 
       // Upsert community_profiles
       const { data: existing } = await supabase.from('community_profiles').select('id').eq('community_id', communityId).maybeSingle();
