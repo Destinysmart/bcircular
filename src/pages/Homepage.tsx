@@ -79,11 +79,19 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
     : 0;
   const countries = new Set(list.map(c => c.country).filter(Boolean)).size;
 
+  const DISPLAY_CAP = 9;
+
   const filtered = useMemo(() => {
     let res = [...list];
     switch (filter) {
       case 'featured':
-        res = res.sort((a, b) => (b.score ?? 0) - (a.score ?? 0)).slice(0, 6);
+        // Sort by monthly transactions (primary metric), tiebreak on score
+        res = res.sort((a, b) => {
+          const at = (a as any).monthlyTransactions ?? 0;
+          const bt = (b as any).monthlyTransactions ?? 0;
+          if (bt !== at) return bt - at;
+          return (b.score ?? 0) - (a.score ?? 0);
+        });
         break;
       case 'africa':
       case 'latam':
@@ -97,7 +105,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
         res = res.filter(c => (c.score ?? 0) >= 60).sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
         break;
       case 'growing':
-        res = res.sort((a, b) => (b.growthScore ?? 0) - (a.growthScore ?? 0)).slice(0, 9);
+        res = res.sort((a, b) => (b.growthScore ?? 0) - (a.growthScore ?? 0));
         break;
       case 'new': {
         const cutoff = Date.now() - 30 * 86400_000;
@@ -107,6 +115,9 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
     }
     return res;
   }, [list, filter]);
+
+  const displayed = useMemo(() => filtered.slice(0, DISPLAY_CAP), [filtered]);
+  const hasMore = filtered.length > displayed.length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -249,8 +260,14 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-16 border border-dashed border-border rounded-2xl">
-            <p className="text-muted-foreground mb-2">No economies match this filter yet.</p>
-            <button onClick={() => setFilter('featured')} className="text-score-amber text-sm hover:underline">Show featured →</button>
+            {list.length === 0 ? (
+              <p className="text-muted-foreground">No economies yet. Be the first to <Link to="/register" className="text-score-amber hover:underline">create one</Link>.</p>
+            ) : (
+              <>
+                <p className="text-muted-foreground mb-2">No economies match this filter yet.</p>
+                <button onClick={() => setFilter('featured')} className="text-score-amber text-sm hover:underline">Show featured →</button>
+              </>
+            )}
           </div>
         ) : (
           <div className="relative">
@@ -261,7 +278,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
               viewport={{ once: true, margin: '-40px' }}
               className={`grid grid-cols-1 sm:grid-cols-2 ${gated ? '' : 'lg:grid-cols-3'} gap-6 ${gated ? 'pointer-events-none select-none opacity-60 blur-[6px]' : ''}`}
             >
-              {(gated ? filtered.slice(0, 2) : filtered).map((e, i) => {
+              {(gated ? displayed.slice(0, 2) : displayed).map((e, i) => {
                 const status = getStatus(e);
                 const score = e.score ?? 0;
                 const monthlyTxns = (e as any).monthlyTransactions ?? 0;
@@ -368,6 +385,16 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
                 );
               })}
             </motion.div>
+
+            {!gated && hasMore && (
+              <div className="flex justify-center mt-10">
+                <Link to="/leaderboard">
+                  <Button variant="outline" size="lg" className="rounded-full px-6 gap-2 border-foreground/20 hover:border-score-amber hover:text-score-amber">
+                    View all economies <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            )}
 
             {gated && (
               <div className="absolute inset-0 flex items-center justify-center z-10">
