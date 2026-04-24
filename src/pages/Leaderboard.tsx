@@ -216,6 +216,8 @@ const Leaderboard = () => {
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="transactions">Sort: Transactions</SelectItem>
+              <SelectItem value="activity">Sort: Activity rate</SelectItem>
               <SelectItem value="score">Sort: Circularity Score</SelectItem>
               <SelectItem value="sats">Sort: Sats Volume</SelectItem>
               <SelectItem value="growth">Sort: Growth rate</SelectItem>
