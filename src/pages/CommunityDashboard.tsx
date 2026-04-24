@@ -307,55 +307,103 @@ const CommunityDashboard = () => {
               <Link to={`/c/${slug}/proofs`}><Button size="sm" className="gap-1.5 rounded-full bg-score-amber text-background hover:bg-score-amber/90"><Shield className="h-3.5 w-3.5" /> Proof of Circularity</Button></Link>
             </div>
           </div>
-          <div className="flex flex-col items-center gap-2">
-            <ScoreRing score={displayScore} size={180} strokeWidth={12} />
-            <span className="text-xs text-muted-foreground">
-              {latestScore ? `Updated ${new Date(latestScore.calculated_at).toLocaleDateString()}` : 'No score yet'}
-            </span>
-            <Link to={`/compare?a=${community.slug}`} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
-              <Scale className="h-3 w-3" /> Compare with another economy →
-            </Link>
+          <Link to={`/compare?a=${community.slug}`} className="hidden md:inline-flex items-center gap-1 text-xs text-primary hover:underline self-start">
+            <Scale className="h-3 w-3" /> Compare with another economy →
+          </Link>
+        </div>
+
+        {/* PRIMARY METRICS — transaction-first */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          <div className="rounded-2xl border border-score-amber/30 bg-card p-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Zap className="h-5 w-5 text-score-amber" />
+              <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Transactions</span>
+            </div>
+            <div className="font-mono text-4xl font-extrabold text-foreground tabular-nums">
+              {(monthlyMetrics?.monthlyTransactions ?? 0).toLocaleString()}
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">this month</div>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-card p-6">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-base">📅</span>
+              <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Activity rate</span>
+            </div>
+            <div className="font-mono text-4xl font-extrabold text-foreground tabular-nums">
+              {monthlyMetrics?.activityRate ?? 0}%
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              {monthlyMetrics?.activeDays ?? 0} of {monthlyMetrics?.daysInMonth ?? 30} days active
+            </div>
+            <div className="h-1.5 rounded-full bg-muted overflow-hidden mt-3">
+              <div className="h-full bg-score-amber transition-all" style={{ width: `${Math.min(100, monthlyMetrics?.activityRate ?? 0)}%` }} />
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-card p-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Store className="h-5 w-5 text-score-amber" />
+              <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Merchants</span>
+            </div>
+            <div className="font-mono text-4xl font-extrabold text-foreground tabular-nums">
+              {displayMerchants.toLocaleString()}
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              {btcmapCount > 0 ? `${btcmapCount} BTCMap verified` : 'accepting Bitcoin'}
+            </div>
           </div>
         </div>
 
-        {/* Score Pillars */}
-        <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 mb-3 p-5 rounded-xl border border-border bg-card">
-          {pillars.map(p => (
-            <ScoreBar key={p.label} label={p.label} value={Math.round(p.value)} />
-          ))}
-        </div>
-
-        <Collapsible className="mb-8">
-          <CollapsibleTrigger className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
-            <Info className="h-3 w-3" /> How this score is calculated <ChevronDown className="h-3 w-3" />
-          </CollapsibleTrigger>
-          <CollapsibleContent className="mt-3 rounded-xl border border-border bg-card p-5 space-y-3">
-            {pillars.map(p => (
-              <div key={p.label} className="text-sm">
-                <span className="font-medium text-foreground">{p.label}</span>
-                <span className="text-muted-foreground ml-2">{pillarDescriptions[p.label]}</span>
-              </div>
-            ))}
-            <Link to="/methodology" className="text-xs text-primary hover:underline inline-block mt-2">Read full methodology →</Link>
-          </CollapsibleContent>
-        </Collapsible>
-
-        {/* Key Metrics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+        {/* Secondary stats */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-10">
+          <StatCard label="Earners" value={displayEarners} icon={<Users className="h-5 w-5 text-score-green" />} />
+          <StatCard label="Wallets" value={walletCount ?? 0} icon={<Wallet className="h-5 w-5 text-primary" />} />
           <StatCard
-            label="Merchants"
-            value={displayMerchants}
-            icon={<Store className="h-6 w-6 text-score-amber" />}
-            subtitle={btcmapCount > 0 ? `${btcmapCount} BTCMap · ${displayMerchants - btcmapCount} self-reported` : undefined}
-          />
-          <StatCard label="Earners" value={displayEarners} icon={<Users className="h-6 w-6 text-score-green" />} />
-          <StatCard label="Wallets" value={walletCount ?? 0} icon={<Wallet className="h-6 w-6 text-primary" />} />
-          <StatCard
-            label="Transactions"
+            label="Blink txns synced"
             value={hasBlinkData ? (blinkTxStats || 0).toLocaleString() : '—'}
-            icon={<Zap className="h-6 w-6 text-chart-4" />}
+            icon={<Zap className="h-5 w-5 text-chart-4" />}
             subtitle={hasBlinkData ? 'Auto-synced via Blink' : undefined}
           />
+        </div>
+
+        {/* CIRCULARITY INDEX — secondary section */}
+        <div className="rounded-2xl border border-border bg-card p-6 mb-10">
+          <div className="flex items-start justify-between gap-4 mb-5 flex-wrap">
+            <div>
+              <h2 className="text-lg font-bold text-foreground">Circularity Index</h2>
+              <p className="text-xs text-muted-foreground max-w-md mt-1">
+                A composite score measuring merchant density, earner participation, and transaction patterns.
+              </p>
+            </div>
+            <Collapsible>
+              <CollapsibleTrigger className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                <Info className="h-3 w-3" /> How it's calculated <ChevronDown className="h-3 w-3" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-3 space-y-2 text-xs">
+                {pillars.map(p => (
+                  <div key={p.label}>
+                    <span className="font-medium text-foreground">{p.label}:</span>{' '}
+                    <span className="text-muted-foreground">{pillarDescriptions[p.label]}</span>
+                  </div>
+                ))}
+                <Link to="/methodology" className="text-primary hover:underline inline-block mt-1">Read full methodology →</Link>
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
+            <div className="flex flex-col items-center gap-2 shrink-0">
+              <ScoreRing score={displayScore} size={140} strokeWidth={10} />
+              <span className="text-[10px] text-muted-foreground">
+                {latestScore ? `Updated ${new Date(latestScore.calculated_at).toLocaleDateString()}` : 'No score yet'}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 flex-1 w-full">
+              {pillars.map(p => (
+                <ScoreBar key={p.label} label={p.label} value={Math.round(p.value)} />
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Intelligence Section */}
