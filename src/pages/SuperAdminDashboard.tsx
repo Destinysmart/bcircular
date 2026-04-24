@@ -252,6 +252,9 @@ const SuperAdminDashboard = () => {
                     <Badge variant={c.status === 'active' ? 'default' : 'destructive'} className="ml-2 text-[10px]">{c.status}</Badge>
                   </div>
                   <div className="flex gap-2">
+                    <Button size="sm" variant="outline" className="gap-1" onClick={() => navigate(`/dashboard/economy/${c.id}`)}>
+                      Manage
+                    </Button>
                     <Button size="sm" variant="outline" className="gap-1" onClick={() => handleRecalcScore(c.id)}>
                       <RefreshCw className="h-3 w-3" /> Recalc
                     </Button>
