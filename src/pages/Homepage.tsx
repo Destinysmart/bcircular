@@ -232,7 +232,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
                       : 'border-border bg-card text-muted-foreground hover:text-foreground hover:border-foreground/30'
                   }`}
                 >
-                  <span aria-hidden>{f.icon}</span>
+                  <f.Icon className="w-3.5 h-3.5" aria-hidden />
                   {f.label}
                 </button>
               );
