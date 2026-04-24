@@ -130,7 +130,24 @@ const RegisterCommunity = () => {
             <Checkbox className="mt-0.5" />
             <span>I will appoint at least 2 validators and ensure submitted data is accurate.</span>
           </label>
-          <Button type="submit" className="w-full" disabled={loading || !user}>{loading ? 'Submitting...' : 'Submit registration'}</Button>
+          <button
+            type="submit"
+            disabled={loading || !user}
+            style={{
+              background: '#F59E0B',
+              color: '#0A0F1E',
+              fontWeight: 700,
+              padding: '12px 32px',
+              borderRadius: 8,
+              border: 'none',
+              width: '100%',
+              fontSize: 15,
+              cursor: loading || !user ? 'not-allowed' : 'pointer',
+              opacity: loading || !user ? 0.6 : 1,
+            }}
+          >
+            {loading ? 'Submitting...' : 'Submit registration'}
+          </button>
         </form>
       </div>
     </div>
