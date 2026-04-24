@@ -121,7 +121,28 @@ const CommunityDashboard = () => {
     enabled: !!communityId,
   });
 
-  // Check if user is a community admin or super admin
+  const { data: monthlyMetrics } = useQuery({
+    queryKey: ['monthly-metrics', communityId],
+    queryFn: async () => {
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      const daysSoFar = now.getDate();
+      const [txRes, blinkRes] = await Promise.all([
+        supabase.from('transactions').select('created_at').eq('community_id', communityId!).eq('status', 'approved').gte('created_at', startOfMonth.toISOString()),
+        supabase.from('blink_transactions').select('blink_created_at').eq('community_id', communityId!).gte('blink_created_at', startOfMonth.toISOString()),
+      ]);
+      const dates = [
+        ...((txRes.data as any[]) || []).map((t: any) => t.created_at),
+        ...((blinkRes.data as any[]) || []).map((t: any) => t.blink_created_at),
+      ];
+      const activeDays = new Set(dates.map(d => new Date(d).toDateString())).size;
+      const monthlyTransactions = dates.length;
+      const activityRate = daysSoFar > 0 ? Math.round((activeDays / daysSoFar) * 100) : 0;
+      return { monthlyTransactions, activeDays, daysInMonth, daysSoFar, activityRate };
+    },
+    enabled: !!communityId,
+  });
   const { data: isCommunityAdmin } = useQuery({
     queryKey: ['is-community-admin', communityId, user?.id],
     queryFn: async () => {
