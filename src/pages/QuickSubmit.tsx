@@ -94,7 +94,7 @@ const QuickSubmit = () => {
         {!kind ? (
           <section className="space-y-3">
             <h2 className="text-xl font-bold">What are you submitting?</h2>
-            {[['merchant', '🏪 A merchant that accepts Bitcoin'], ['earner', '👤 Someone who earns in Bitcoin'], ['transaction', '⚡ A Bitcoin transaction I made']].map(([value, label]) => <button key={value} onClick={() => setKind(value as SubmitKind)} className="min-h-14 w-full rounded-lg border border-border bg-card px-4 text-left text-base font-medium">{label}</button>)}
+            {([['merchant', Store, 'A merchant that accepts Bitcoin'], ['earner', User, 'Someone who earns in Bitcoin'], ['transaction', Zap, 'A Bitcoin transaction I made']] as Array<[SubmitKind, LucideIcon, string]>).map(([value, Icon, label]) => <button key={value} onClick={() => setKind(value)} className="min-h-14 w-full rounded-lg border border-border bg-card px-4 text-left text-base font-medium inline-flex items-center gap-2"><Icon className="w-4 h-4 shrink-0" /> {label}</button>)}
           </section>
         ) : (
           <section className="space-y-5">
