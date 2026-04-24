@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-type SortKey = 'score' | 'sats' | 'growth' | 'merchants';
+type SortKey = 'transactions' | 'activity' | 'score' | 'sats' | 'growth' | 'merchants';
 type Activity = 'all' | 'active' | 'growing' | 'dormant';
 type Coverage = 'all' | 'high' | 'medium' | 'low' | 'btcmap';
 type Volume = 'all' | 'low' | 'medium' | 'high';
