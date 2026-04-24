@@ -59,15 +59,96 @@ const dataSources = [
   },
 ];
 
+const pillarCards = [
+  {
+    icon: '⚡',
+    title: 'Real Sats Flow',
+    source: 'Blink Wallet API',
+    badge: 'Live Integration',
+    color: '#F7931A',
+    description:
+      'Bitcoin circular economies connect their Blink wallet via read-only API. We automatically track real transaction flow between participants. No manual input. No fabrication possible. Real sats. Real data.',
+    tracks: ['Transaction count', 'Flow between participants', 'Activity frequency', 'Sats velocity'],
+  },
+  {
+    icon: '📍',
+    title: 'Verified Merchants',
+    source: 'BTCMap',
+    badge: 'Open Source Data',
+    color: '#10B981',
+    description:
+      'Merchant data is sourced from BTCMap — the open-source global directory of Bitcoin-accepting businesses trusted by researchers and institutions worldwide. BTCMap-verified merchants carry a 1.5x trust weight in our scoring.',
+    tracks: ['Merchant locations', 'Merchant categories', 'Payment methods accepted', 'Coverage vs active ratio'],
+  },
+  {
+    icon: '🏆',
+    title: 'Development Standard',
+    source: 'FBCE 5-Tier Framework',
+    badge: 'International Standard',
+    color: '#3B82F6',
+    description:
+      'We implement the globally recognized FBCE (Foundation for Bitcoin Circular Economies) 5-tier development classification. This allows apples-to-apples comparison between emerging and advanced economies worldwide.',
+    tracks: ['Tier 1-2: Emerging economies', 'Tier 3-5: Advanced economies', 'Development milestone checklist', 'Progression over time'],
+  },
+];
+
 const Methodology = () => (
   <div className="min-h-screen bg-background">
     <Navbar />
-    <div className="container py-12 max-w-3xl">
+    <div className="container py-12 max-w-5xl">
       <div className="flex items-center gap-3 text-primary text-sm font-mono mb-4">
         <img src={circularLogo} alt="Circular" className="h-12 w-auto object-contain" />
         <span>METHODOLOGY</span>
       </div>
-      <h1 className="text-3xl font-bold mb-2">How the Circularity Score Works</h1>
+
+      <h1 className="text-3xl font-bold mb-2">How Circularity Works</h1>
+      <p className="text-muted-foreground mb-10 max-w-3xl">
+        We combine three independent verified data sources to measure real Bitcoin circular economy activity.
+        No single point of failure. No self-reported only data.
+      </p>
+
+      <div className="grid md:grid-cols-3 gap-5 mb-10">
+        {pillarCards.map((c) => (
+          <div
+            key={c.title}
+            className="rounded-lg border bg-card p-5 flex flex-col"
+            style={{ borderTopWidth: '3px', borderTopColor: c.color }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-2xl" aria-hidden>{c.icon}</span>
+              <span
+                className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full border"
+                style={{ color: c.color, borderColor: `${c.color}55`, backgroundColor: `${c.color}14` }}
+              >
+                {c.badge}
+              </span>
+            </div>
+            <h3 className="font-semibold text-foreground">{c.title}</h3>
+            <div className="text-xs font-mono text-muted-foreground mb-3">Source: {c.source}</div>
+            <p className="text-sm text-muted-foreground mb-4">{c.description}</p>
+            <div className="mt-auto">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">What we track</div>
+              <ul className="space-y-1">
+                {c.tracks.map((t) => (
+                  <li key={t} className="text-sm text-foreground flex items-start gap-2">
+                    <span style={{ color: c.color }}>•</span>
+                    <span>{t}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="rounded-lg border border-primary/30 bg-primary/5 p-5 mb-12 max-w-3xl">
+        <p className="text-sm text-foreground">
+          Together these three sources create the most comprehensive and independently verifiable
+          picture of Bitcoin circular economy activity available anywhere.
+        </p>
+      </div>
+
+      <h2 className="text-2xl font-bold mb-2">How the Circularity Score Works</h2>
       <p className="text-muted-foreground mb-10">
         The circularity score is a composite metric (0–100) that measures how effectively a Bitcoin circular economy
         uses Bitcoin as a medium of exchange. It is calculated from five weighted pillars.
