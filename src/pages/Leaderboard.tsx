@@ -239,7 +239,21 @@ const Leaderboard = () => {
           </Select>
         </div>
 
-        {/* Active filter tags */}
+        {/* FBCE Tier filter chips */}
+        <div className="flex items-center gap-2 flex-wrap mb-4">
+          <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-mono mr-1">FBCE Tier:</span>
+          {([['all', 'All Tiers'], ['emerging', 'Emerging (1-2)'], ['advanced', 'Advanced (3-5)']] as [TierFilter, string][]).map(([val, label]) => (
+            <Button
+              key={val}
+              variant={tierFilter === val ? 'default' : 'outline'}
+              size="sm"
+              className="rounded-full h-7 px-3 text-xs"
+              onClick={() => setTierFilter(val)}
+            >
+              {label}
+            </Button>
+          ))}
+        </div>
         {activeFilters.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap mb-5">
             {activeFilters.map(f => (
