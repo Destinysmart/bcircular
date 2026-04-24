@@ -54,6 +54,8 @@ Deno.serve(async (req) => {
         supabase.from('blink_transactions').select('id, direction, settlement_amount, is_internal, counterparty_wallet_id, wallet_id, blink_created_at').eq('community_id', communityId),
         supabase.from('wallets').select('id, user_id').eq('community_id', communityId),
         supabase.from('proofs').select('*', { count: 'exact', head: true }).eq('community_id', communityId).eq('status', 'approved'),
+        supabase.from('transactions').select('id, created_at').eq('community_id', communityId).eq('status', 'approved').gte('created_at', startOfMonth.toISOString()),
+        supabase.from('blink_transactions').select('id, blink_created_at').eq('community_id', communityId).gte('blink_created_at', startOfMonth.toISOString()),
       ])
 
       const pop = Math.max(communityRes.data?.declared_population || 100, 1)
