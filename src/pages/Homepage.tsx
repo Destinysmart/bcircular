@@ -75,7 +75,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
   const { data, isLoading } = useQuery({ queryKey: ['communities-stats'], queryFn: fetchAllCommunitiesWithStats });
   const list: Economy[] = data || [];
   const heroHeight = compactHero ? 320 : 520;
-  const heroHeightMobile = compactHero ? 260 : 460;
+  const heroHeightMobile = compactHero ? 260 : 380;
 
   const totalMerchants = list.reduce((s, c) => s + (c.merchants ?? 0), 0);
   const totalMonthlyTxns = list.reduce((s, c) => s + ((c as any).monthlyTransactions ?? 0), 0);
