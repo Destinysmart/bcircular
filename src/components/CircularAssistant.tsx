@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, X, Send } from 'lucide-react';
+import { Zap, X, Send, Search, ChevronDown } from 'lucide-react';
 
 interface Message {
   role: 'user' | 'assistant';
