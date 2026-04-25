@@ -542,15 +542,21 @@ export default function CircularAssistant() {
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            initial={{ opacity: 0, y: 20, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            exit={{ opacity: 0, y: 20, scale: 0.98 }}
             transition={{ duration: 0.18 }}
-            className="fixed z-50 bg-card border border-border rounded-2xl shadow-2xl flex flex-col
-                       inset-0 sm:inset-auto sm:bottom-5 sm:right-5 sm:w-[360px] sm:h-[480px] sm:rounded-2xl"
+            style={{ height: '100dvh' }}
+            className="fixed z-50 bg-card flex flex-col
+                       inset-0 w-full
+                       sm:!h-[480px] sm:inset-auto sm:bottom-5 sm:right-5 sm:w-[360px]
+                       sm:rounded-2xl sm:border sm:border-border sm:shadow-2xl"
           >
-            {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+            {/* Header — sticky on mobile */}
+            <div
+              className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 border-b border-border bg-card"
+              style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}
+            >
               <div className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-lg bg-score-amber/15 border border-score-amber/30 flex items-center justify-center">
                   <Zap className="h-4 w-4 text-score-amber" fill="currentColor" />
@@ -562,15 +568,15 @@ export default function CircularAssistant() {
               </div>
               <button
                 onClick={() => setOpen(false)}
-                className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted"
+                className="text-muted-foreground hover:text-foreground transition-colors p-2 -mr-1 rounded-md hover:bg-muted"
                 aria-label="Close assistant"
               >
-                <X className="h-4 w-4" />
+                <X className="h-5 w-5 sm:h-4 sm:w-4" />
               </button>
             </div>
 
-            {/* Topic search dropdown */}
-            <div ref={topicWrapRef} className="relative px-3 py-2 border-b border-border bg-background/50">
+            {/* Topic search dropdown — sticky on mobile */}
+            <div ref={topicWrapRef} className="sticky top-[57px] sm:top-auto z-10 relative px-3 py-2 border-b border-border bg-background/95 backdrop-blur-sm">
               <div className="relative">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                 <input
@@ -581,7 +587,7 @@ export default function CircularAssistant() {
                   }}
                   onFocus={() => setTopicOpen(true)}
                   placeholder="Jump to a topic…"
-                  className="w-full bg-card border border-border rounded-lg pl-8 pr-8 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-score-amber"
+                  className="w-full bg-card border border-border rounded-lg pl-8 pr-8 py-2 text-base sm:text-xs sm:py-1.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-score-amber"
                 />
                 <button
                   type="button"
