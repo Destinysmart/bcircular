@@ -3,14 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import ConfidenceBadge from '@/components/ConfidenceBadge';
+import EconomyLogo from '@/components/EconomyLogo';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { CheckCircle, XCircle, RefreshCw, Shield, Trash2 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  CheckCircle, XCircle, RefreshCw, Shield, Trash2, Globe,
+  ClipboardList, Users, BarChart3, Inbox,
+} from 'lucide-react';
 
 const SuperAdminDashboard = () => {
   const { user, loading: authLoading } = useAuth();
@@ -18,6 +19,8 @@ const SuperAdminDashboard = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [recalcAllLoading, setRecalcAllLoading] = useState(false);
+  const [resyncAllLoading, setResyncAllLoading] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(() => new Date());
 
   // Check super admin status
   const { data: userProfile, isLoading: profileLoading } = useQuery({
@@ -39,7 +42,7 @@ const SuperAdminDashboard = () => {
   }, [user, authLoading, userProfile]);
 
   // All communities
-  const { data: communities } = useQuery({
+  const { data: communities, dataUpdatedAt: communitiesUpdatedAt } = useQuery({
     queryKey: ['admin-communities'],
     queryFn: async () => {
       const { data, error } = await supabase.from('communities').select('*').order('created_at', { ascending: false });
@@ -115,8 +118,12 @@ const SuperAdminDashboard = () => {
     enabled: !!userProfile?.is_super_admin,
   });
 
+  useEffect(() => {
+    if (communitiesUpdatedAt) setLastUpdated(new Date(communitiesUpdatedAt));
+  }, [communitiesUpdatedAt]);
+
   const handleCommunityAction = async (communityId: string, status: 'active' | 'suspended') => {
-    const { error, count } = await supabase.from('communities').update({ status }).eq('id', communityId);
+    const { error } = await supabase.from('communities').update({ status }).eq('id', communityId);
     if (error) {
       toast({ title: 'Failed', description: error.message, variant: 'destructive' });
       return;
@@ -127,7 +134,6 @@ const SuperAdminDashboard = () => {
 
   const handleDeleteCommunity = async (communityId: string, communityName: string) => {
     if (!confirm(`Permanently delete "${communityName}" and all its data? This cannot be undone.`)) return;
-    // Delete related data first, then the community
     await Promise.all([
       supabase.from('circularity_scores').delete().eq('community_id', communityId),
       supabase.from('validation_votes').delete().in('submission_id',
@@ -188,8 +194,6 @@ const SuperAdminDashboard = () => {
     }
   };
 
-  const [resyncAllLoading, setResyncAllLoading] = useState(false);
-
   const handleResyncAllBtcmap = async () => {
     setResyncAllLoading(true);
     toast({ title: 'Resyncing all economies from BTCMap...' });
@@ -246,67 +250,155 @@ const SuperAdminDashboard = () => {
   const pendingCommunities = communities?.filter(c => c.status === 'pending') || [];
   const activeCommunities = communities?.filter(c => c.status === 'active') || [];
   const totalEconomies = communities?.length || 0;
+  const nonPending = communities?.filter(c => c.status !== 'pending') || [];
+
+  const formatTime = (d: Date) => d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="container py-8">
-        <div className="flex items-center gap-2 mb-1">
-          <Shield className="h-5 w-5 text-primary" />
-          <h1 className="text-2xl font-bold">Super Admin Dashboard</h1>
-        </div>
-        <p className="text-sm text-muted-foreground mb-8">Platform-wide management</p>
 
+      {/* Page header */}
+      <header className="border-b border-border bg-card/40">
+        <div className="container py-6 flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1.5">
+              <Shield className="h-5 w-5 text-score-amber" />
+              <h1 className="text-2xl font-bold tracking-tight">Super Admin</h1>
+            </div>
+            <p className="text-[13px] text-muted-foreground">
+              Platform-wide management
+              <span className="mx-2 opacity-50">·</span>
+              <span className="font-mono-data text-xs">Last updated: {formatTime(lastUpdated)}</span>
+            </p>
+          </div>
+          {user?.email && (
+            <div className="text-xs text-muted-foreground hidden sm:block max-w-[220px] truncate">{user.email}</div>
+          )}
+        </div>
+      </header>
+
+      <div className="container py-8">
         <Tabs defaultValue="economies">
-          <TabsList className="mb-6">
-            <TabsTrigger value="economies">Economies {pendingCommunities.length > 0 && <Badge className="ml-1.5 text-[10px]" variant="destructive">{pendingCommunities.length}</Badge>}</TabsTrigger>
-            <TabsTrigger value="submissions">Submissions</TabsTrigger>
-            <TabsTrigger value="users">Users</TabsTrigger>
-            <TabsTrigger value="stats">Platform Stats</TabsTrigger>
+          <TabsList className="mb-6 bg-transparent p-0 h-auto gap-2 flex-wrap justify-start">
+            <TabsTrigger
+              value="economies"
+              className="border border-border rounded-lg px-4 py-2 text-[13px] font-medium text-muted-foreground gap-1.5 data-[state=active]:bg-secondary data-[state=active]:text-foreground data-[state=active]:border-score-amber data-[state=active]:border-b-2 data-[state=active]:shadow-none"
+            >
+              <Globe className="h-3.5 w-3.5" />
+              Economies
+              <span className="ml-1 bg-muted text-foreground text-[11px] px-1.5 py-0.5 rounded-full leading-none">
+                {totalEconomies}
+              </span>
+              {pendingCommunities.length > 0 && (
+                <span className="ml-1 bg-score-amber/20 text-score-amber text-[11px] px-1.5 py-0.5 rounded-full leading-none">
+                  {pendingCommunities.length}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger
+              value="submissions"
+              className="border border-border rounded-lg px-4 py-2 text-[13px] font-medium text-muted-foreground gap-1.5 data-[state=active]:bg-secondary data-[state=active]:text-foreground data-[state=active]:border-score-amber data-[state=active]:border-b-2 data-[state=active]:shadow-none"
+            >
+              <ClipboardList className="h-3.5 w-3.5" />
+              Submissions
+              <span className="ml-1 bg-muted text-foreground text-[11px] px-1.5 py-0.5 rounded-full leading-none">
+                {(pendingMerchants?.length || 0) + (pendingEarners?.length || 0) + (pendingTransactions?.length || 0)}
+              </span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="users"
+              className="border border-border rounded-lg px-4 py-2 text-[13px] font-medium text-muted-foreground gap-1.5 data-[state=active]:bg-secondary data-[state=active]:text-foreground data-[state=active]:border-score-amber data-[state=active]:border-b-2 data-[state=active]:shadow-none"
+            >
+              <Users className="h-3.5 w-3.5" />
+              Users
+              <span className="ml-1 bg-muted text-foreground text-[11px] px-1.5 py-0.5 rounded-full leading-none">
+                {users?.length || 0}
+              </span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="stats"
+              className="border border-border rounded-lg px-4 py-2 text-[13px] font-medium text-muted-foreground gap-1.5 data-[state=active]:bg-secondary data-[state=active]:text-foreground data-[state=active]:border-score-amber data-[state=active]:border-b-2 data-[state=active]:shadow-none"
+            >
+              <BarChart3 className="h-3.5 w-3.5" />
+              Platform Stats
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="economies">
             {pendingCommunities.length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-sm font-semibold mb-3 text-amber-400">Pending Approval</h3>
-                <div className="space-y-2">
+              <div className="mb-6 rounded-xl border border-score-amber/30 bg-score-amber/5 overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-score-amber/20 bg-score-amber/5">
+                  <h3 className="text-[11px] font-semibold uppercase tracking-wider text-score-amber">
+                    Pending approval · {pendingCommunities.length}
+                  </h3>
+                </div>
+                <div>
                   {pendingCommunities.map(c => (
-                    <div key={c.id} className="flex items-center justify-between rounded-lg border border-amber-400/30 bg-amber-400/5 p-4">
-                      <div>
-                        <span className="font-medium">{c.name}</span>
-                        <span className="text-muted-foreground text-xs ml-2">{c.city}, {c.country}</span>
-                        <Badge className="ml-2 text-[10px]">New</Badge>
+                    <div key={c.id} className="flex items-center justify-between p-4 border-b border-border last:border-b-0">
+                      <div className="flex items-center gap-3">
+                        <EconomyLogo economy={c} size="sm" />
+                        <div>
+                          <div className="font-semibold text-sm">{c.name}</div>
+                          <div className="text-xs text-muted-foreground">{c.city}, {c.country}</div>
+                        </div>
                       </div>
                       <div className="flex gap-2">
                         <Button size="sm" onClick={() => handleCommunityAction(c.id, 'active')}>Approve</Button>
-                        <Button size="sm" variant="destructive" onClick={() => handleCommunityAction(c.id, 'suspended')}>Reject</Button>
+                        <Button size="sm" variant="outline" className="border-destructive/30 text-destructive hover:bg-destructive/10" onClick={() => handleCommunityAction(c.id, 'suspended')}>Reject</Button>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
             )}
-            <div className="space-y-2">
-              {communities?.filter(c => c.status !== 'pending').map(c => (
-                <div key={c.id} className="flex items-center justify-between rounded-lg border border-border bg-card p-4 text-sm">
-                  <div>
-                    <span className="font-medium">{c.name}</span>
-                    <span className="text-muted-foreground text-xs ml-2">{c.city}, {c.country}</span>
-                    <Badge variant={c.status === 'active' ? 'default' : 'destructive'} className="ml-2 text-[10px]">{c.status}</Badge>
+
+            {/* Data table */}
+            <div className="rounded-xl border border-border overflow-hidden">
+              <div className="grid grid-cols-[40px_1fr_180px_110px_auto] gap-3 items-center px-4 py-2.5 bg-background border-b border-border text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <div>#</div>
+                <div>Economy</div>
+                <div>Location</div>
+                <div>Status</div>
+                <div className="text-right">Actions</div>
+              </div>
+              {nonPending.map((c, idx) => (
+                <div
+                  key={c.id}
+                  className="grid grid-cols-[40px_1fr_180px_110px_auto] gap-3 items-center px-4 py-3.5 border-b border-border last:border-b-0 hover:bg-card/60 transition-colors"
+                >
+                  <div className="text-xs font-mono-data text-muted-foreground">{idx + 1}</div>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <EconomyLogo economy={c} size="sm" />
+                    <span className="font-semibold text-sm truncate">{c.name}</span>
                   </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" className="gap-1" onClick={() => navigate(`/dashboard/economy/${c.id}`)}>
+                  <div className="text-[13px] text-muted-foreground truncate">{c.city}, {c.country}</div>
+                  <div>
+                    {c.status === 'active' ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-score-green/15 text-score-green border border-score-green/30">
+                        <span className="h-1.5 w-1.5 rounded-full bg-score-green" /> Active
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-destructive/15 text-destructive border border-destructive/30">
+                        <span className="h-1.5 w-1.5 rounded-full bg-destructive" /> {c.status}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex justify-end gap-1.5">
+                    <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={() => navigate(`/dashboard/economy/${c.id}`)}>
                       Manage
                     </Button>
-                    <Button size="sm" variant="outline" className="gap-1" onClick={() => handleRecalcScore(c.id)}>
+                    <Button size="sm" variant="outline" className="h-7 text-xs gap-1 border-score-amber/40 text-score-amber hover:bg-score-amber/10 hover:text-score-amber" onClick={() => handleRecalcScore(c.id)}>
                       <RefreshCw className="h-3 w-3" /> Recalc
                     </Button>
                     {c.status === 'active' ? (
-                      <Button size="sm" variant="outline" className="text-destructive" onClick={() => handleCommunityAction(c.id, 'suspended')}>Suspend</Button>
+                      <Button size="sm" variant="outline" className="h-7 text-xs border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => handleCommunityAction(c.id, 'suspended')}>
+                        Suspend
+                      </Button>
                     ) : (
                       <>
-                        <Button size="sm" variant="outline" onClick={() => handleCommunityAction(c.id, 'active')}>Activate</Button>
-                        <Button size="sm" variant="destructive" className="gap-1" onClick={() => handleDeleteCommunity(c.id, c.name)}>
+                        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleCommunityAction(c.id, 'active')}>Activate</Button>
+                        <Button size="sm" variant="destructive" className="h-7 text-xs gap-1" onClick={() => handleDeleteCommunity(c.id, c.name)}>
                           <Trash2 className="h-3 w-3" /> Delete
                         </Button>
                       </>
@@ -318,112 +410,150 @@ const SuperAdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="submissions">
-            <div className="space-y-2">
-              {(pendingMerchants || []).map(m => (
-                <div key={m.id} className="flex items-center justify-between rounded-md border border-border p-3 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs">Merchant</Badge>
-                    <span className="font-medium">{m.name}</span>
-                    <span className="text-muted-foreground text-xs">{(m as any).communities?.name}</span>
+            {(pendingMerchants?.length || pendingEarners?.length || pendingTransactions?.length) ? (
+              <div className="rounded-xl border border-border overflow-hidden">
+                {(pendingMerchants || []).map(m => (
+                  <div key={m.id} className="flex items-center justify-between p-3.5 border-b border-border last:border-b-0 hover:bg-card/60 transition-colors">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-secondary text-muted-foreground">Merchant</span>
+                      <span className="font-medium text-sm">{m.name}</span>
+                      <span className="text-muted-foreground text-xs">{(m as any).communities?.name}</span>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => handleOverrideSubmission('merchants', m.id, 'approved')}><CheckCircle className="h-4 w-4 text-score-green" /></Button>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => handleOverrideSubmission('merchants', m.id, 'rejected')}><XCircle className="h-4 w-4 text-destructive" /></Button>
+                    </div>
                   </div>
-                  <div className="flex gap-1">
-                    <Button size="sm" variant="ghost" onClick={() => handleOverrideSubmission('merchants', m.id, 'approved')}><CheckCircle className="h-3.5 w-3.5 text-emerald-400" /></Button>
-                    <Button size="sm" variant="ghost" onClick={() => handleOverrideSubmission('merchants', m.id, 'rejected')}><XCircle className="h-3.5 w-3.5 text-destructive" /></Button>
+                ))}
+                {(pendingEarners || []).map(e => (
+                  <div key={e.id} className="flex items-center justify-between p-3.5 border-b border-border last:border-b-0 hover:bg-card/60 transition-colors">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-secondary text-muted-foreground">Earner</span>
+                      <span className="font-medium text-sm">{e.description}</span>
+                      <span className="text-muted-foreground text-xs">{(e as any).communities?.name}</span>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => handleOverrideSubmission('earners', e.id, 'approved')}><CheckCircle className="h-4 w-4 text-score-green" /></Button>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => handleOverrideSubmission('earners', e.id, 'rejected')}><XCircle className="h-4 w-4 text-destructive" /></Button>
+                    </div>
                   </div>
+                ))}
+                {(pendingTransactions || []).map(t => (
+                  <div key={t.id} className="flex items-center justify-between p-3.5 border-b border-border last:border-b-0 hover:bg-card/60 transition-colors">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-secondary text-muted-foreground">Transaction</span>
+                      <span className="font-medium text-sm font-mono-data">{t.amount_sats} sats</span>
+                      <span className="text-muted-foreground text-xs">— {t.category}</span>
+                      <span className="text-muted-foreground text-xs">{(t as any).communities?.name}</span>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => handleOverrideSubmission('transactions', t.id, 'approved')}><CheckCircle className="h-4 w-4 text-score-green" /></Button>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => handleOverrideSubmission('transactions', t.id, 'rejected')}><XCircle className="h-4 w-4 text-destructive" /></Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-xl border border-border bg-card/40 py-16 px-6 text-center flex flex-col items-center gap-3">
+                <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                  <Inbox className="h-6 w-6 text-muted-foreground" />
                 </div>
-              ))}
-              {(pendingEarners || []).map(e => (
-                <div key={e.id} className="flex items-center justify-between rounded-md border border-border p-3 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs">Earner</Badge>
-                    <span className="font-medium">{e.description}</span>
-                    <span className="text-muted-foreground text-xs">{(e as any).communities?.name}</span>
-                  </div>
-                  <div className="flex gap-1">
-                    <Button size="sm" variant="ghost" onClick={() => handleOverrideSubmission('earners', e.id, 'approved')}><CheckCircle className="h-3.5 w-3.5 text-emerald-400" /></Button>
-                    <Button size="sm" variant="ghost" onClick={() => handleOverrideSubmission('earners', e.id, 'rejected')}><XCircle className="h-3.5 w-3.5 text-destructive" /></Button>
-                  </div>
+                <div>
+                  <div className="text-base font-semibold text-foreground">No pending submissions</div>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    All submissions have been reviewed.<br />The platform is up to date.
+                  </p>
                 </div>
-              ))}
-              {(pendingTransactions || []).map(t => (
-                <div key={t.id} className="flex items-center justify-between rounded-md border border-border p-3 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs">Transaction</Badge>
-                    <span className="font-medium">{t.amount_sats} sats — {t.category}</span>
-                    <span className="text-muted-foreground text-xs">{(t as any).communities?.name}</span>
-                  </div>
-                  <div className="flex gap-1">
-                    <Button size="sm" variant="ghost" onClick={() => handleOverrideSubmission('transactions', t.id, 'approved')}><CheckCircle className="h-3.5 w-3.5 text-emerald-400" /></Button>
-                    <Button size="sm" variant="ghost" onClick={() => handleOverrideSubmission('transactions', t.id, 'rejected')}><XCircle className="h-3.5 w-3.5 text-destructive" /></Button>
-                  </div>
-                </div>
-              ))}
-              {!(pendingMerchants?.length || pendingEarners?.length || pendingTransactions?.length) && (
-                <p className="text-sm text-muted-foreground py-8 text-center">No pending submissions across the platform.</p>
-              )}
-            </div>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="users">
-            <div className="space-y-2">
-              {users?.map(u => (
-                <div key={u.id} className="flex items-center justify-between rounded-md border border-border p-3 text-sm">
-                  <div>
-                    <span className="font-medium">{u.display_name || u.email}</span>
-                    <span className="text-muted-foreground text-xs ml-2">{u.email}</span>
-                    <span className="text-muted-foreground text-xs ml-2">Joined {new Date(u.created_at).toLocaleDateString()}</span>
-                    {u.is_super_admin && <Badge className="ml-2 text-[10px]">Super Admin</Badge>}
+            <div className="rounded-xl border border-border overflow-hidden">
+              {users?.map(u => {
+                const isSelf = u.user_id === user?.id;
+                return (
+                  <div key={u.id} className="flex items-center justify-between p-4 border-b border-border last:border-b-0 hover:bg-card/60 transition-colors">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-9 w-9 rounded-full bg-secondary flex items-center justify-center text-sm font-semibold text-muted-foreground shrink-0">
+                        {(u.display_name || u.email || '?').charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-sm truncate">{u.display_name || u.email}</span>
+                          {u.is_super_admin && (
+                            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-score-amber/15 text-score-amber border border-score-amber/30">
+                              Super Admin
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground truncate">
+                          {u.email} <span className="opacity-50 mx-1">·</span> Joined {new Date(u.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                    {!isSelf && (
+                      u.is_super_admin ? (
+                        <Button size="sm" variant="outline" className="h-8 text-xs border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => handleToggleSuperAdmin(u.user_id, u.is_super_admin)}>
+                          Revoke Admin
+                        </Button>
+                      ) : (
+                        <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => handleToggleSuperAdmin(u.user_id, u.is_super_admin)}>
+                          Make Admin
+                        </Button>
+                      )
+                    )}
                   </div>
-                  <Button size="sm" variant={u.is_super_admin ? 'destructive' : 'outline'} onClick={() => handleToggleSuperAdmin(u.user_id, u.is_super_admin)}>
-                    {u.is_super_admin ? 'Revoke Admin' : 'Make Admin'}
-                  </Button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </TabsContent>
 
           <TabsContent value="stats">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              <div className="rounded-lg border border-border bg-card p-4 text-center">
-                <div className="text-2xl font-bold">{totalEconomies}</div>
-                <div className="text-xs text-muted-foreground">Total Economies</div>
-              </div>
-              <div className="rounded-lg border border-border bg-card p-4 text-center">
-                <div className="text-2xl font-bold">{allMerchants}</div>
-                <div className="text-xs text-muted-foreground">Approved Merchants</div>
-              </div>
-              <div className="rounded-lg border border-border bg-card p-4 text-center">
-                <div className="text-2xl font-bold">{allEarners}</div>
-                <div className="text-xs text-muted-foreground">Approved Earners</div>
-              </div>
-              <div className="rounded-lg border border-border bg-card p-4 text-center">
-                <div className="text-2xl font-bold">{allTransactions}</div>
-                <div className="text-xs text-muted-foreground">Approved Transactions</div>
-              </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              {[
+                { value: totalEconomies, label: 'Economies', sub: 'total' },
+                { value: allMerchants ?? 0, label: 'Merchants', sub: 'approved' },
+                { value: allEarners ?? 0, label: 'Earners', sub: 'approved' },
+                { value: allTransactions ?? 0, label: 'Transactions', sub: 'approved' },
+              ].map((s) => (
+                <div key={s.label} className="rounded-xl border border-border bg-card p-5 border-t-2 border-t-score-amber relative overflow-hidden">
+                  <div className="font-mono-data text-[40px] leading-none font-bold text-score-amber mb-1">
+                    {s.value}
+                  </div>
+                  <div className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">{s.label}</div>
+                  <div className="text-xs text-muted-foreground/70 mt-0.5">{s.sub}</div>
+                </div>
+              ))}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <div className="rounded-lg border border-border bg-card p-4">
-                <h3 className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Active Economies: {activeCommunities.length}</h3>
-                <p className="text-sm text-muted-foreground">Pending: {pendingCommunities.length} · Users: {users?.length || 0}</p>
-              </div>
+
+            {/* Summary bar */}
+            <div className="rounded-lg border border-border bg-card/40 px-4 py-3 mb-6 text-sm text-muted-foreground">
+              <span className="text-foreground font-semibold">{activeCommunities.length}</span> active economies
+              <span className="mx-2 opacity-50">·</span>
+              <span className="text-foreground font-semibold">{pendingCommunities.length}</span> pending
+              <span className="mx-2 opacity-50">·</span>
+              <span className="text-foreground font-semibold">{users?.length || 0}</span> users
             </div>
-            <Button
-              onClick={handleRecalcAll}
-              disabled={recalcAllLoading}
-              className="w-full bg-score-amber text-background hover:bg-score-amber/90 gap-2"
-            >
-              <RefreshCw className={`h-4 w-4 ${recalcAllLoading ? 'animate-spin' : ''}`} />
-              {recalcAllLoading ? 'Recalculating...' : 'Recalculate all scores'}
-            </Button>
-            <Button
-              onClick={handleResyncAllBtcmap}
-              disabled={resyncAllLoading}
-              variant="outline"
-              className="w-full mt-3 gap-2"
-            >
-              <RefreshCw className={`h-4 w-4 ${resyncAllLoading ? 'animate-spin' : ''}`} />
-              {resyncAllLoading ? 'Resyncing all economies...' : 'Resync all economies from BTCMap'}
-            </Button>
+
+            <div className="space-y-3">
+              <button
+                onClick={handleRecalcAll}
+                disabled={recalcAllLoading}
+                className="w-full flex items-center justify-center gap-2 rounded-[10px] px-8 py-3.5 text-sm font-bold tracking-wide text-background bg-gradient-to-br from-score-amber to-[hsl(32_95%_44%)] shadow-[0_4px_12px_hsl(var(--score-amber)/0.3)] hover:shadow-[0_6px_16px_hsl(var(--score-amber)/0.4)] hover:-translate-y-px transition-all disabled:opacity-70 disabled:cursor-not-allowed disabled:translate-y-0"
+              >
+                <RefreshCw className={`h-4 w-4 ${recalcAllLoading ? 'animate-spin' : ''}`} />
+                {recalcAllLoading ? 'Recalculating...' : 'Recalculate all scores'}
+              </button>
+              <button
+                onClick={handleResyncAllBtcmap}
+                disabled={resyncAllLoading}
+                className="w-full flex items-center justify-center gap-2 rounded-[10px] px-8 py-3.5 text-sm font-bold tracking-wide bg-transparent border border-score-amber text-score-amber hover:bg-score-amber/10 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                <RefreshCw className={`h-4 w-4 ${resyncAllLoading ? 'animate-spin' : ''}`} />
+                {resyncAllLoading ? 'Resyncing all economies...' : 'Resync all economies from BTCMap'}
+              </button>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
