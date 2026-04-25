@@ -25,6 +25,7 @@ import Proofs from "./pages/Proofs";
 import QuickSubmit from "./pages/QuickSubmit";
 import Compare from "./pages/Compare";
 import NotFound from "./pages/NotFound";
+import CircularAssistant from "./components/CircularAssistant";
 
 const queryClient = new QueryClient();
 
