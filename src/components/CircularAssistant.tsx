@@ -651,27 +651,28 @@ export default function CircularAssistant() {
               )}
             </div>
 
-            {/* Input */}
+            {/* Input — sticky bottom with safe-area padding */}
             <form
               onSubmit={e => {
                 e.preventDefault();
                 send(input);
               }}
-              className="border-t border-border p-3 flex items-center gap-2"
+              className="sticky bottom-0 border-t border-border p-3 flex items-center gap-2 bg-card"
+              style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
             >
               <input
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 placeholder="Type your question..."
-                className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-score-amber"
+                className="flex-1 bg-background border border-border rounded-lg px-3 py-2.5 sm:py-2 text-base sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-score-amber"
               />
               <button
                 type="submit"
                 disabled={!input.trim()}
-                className="h-9 w-9 inline-flex items-center justify-center rounded-lg bg-score-amber text-background disabled:opacity-40 hover:opacity-90 transition-opacity"
+                className="h-11 w-11 sm:h-9 sm:w-9 inline-flex items-center justify-center rounded-lg bg-score-amber text-background disabled:opacity-40 hover:opacity-90 transition-opacity shrink-0"
                 aria-label="Send"
               >
-                <Send className="h-4 w-4" />
+                <Send className="h-5 w-5 sm:h-4 sm:w-4" />
               </button>
             </form>
           </motion.div>
