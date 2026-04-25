@@ -712,7 +712,13 @@ export default function CircularAssistant() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
             onClick={() => setOpen(true)}
-            className="fixed bottom-5 right-5 z-50 inline-flex items-center gap-2 rounded-full bg-score-amber px-5 py-3 text-sm font-semibold text-background shadow-lg shadow-score-amber/30 hover:shadow-score-amber/50 hover:-translate-y-0.5 transition-all"
+            style={{ zIndex: 999 }}
+            className="fixed bottom-4 right-4 md:bottom-6 md:right-6
+                       inline-flex items-center gap-2 rounded-full bg-score-amber
+                       h-11 md:h-auto px-4 md:px-5 py-0 md:py-3
+                       text-[13px] md:text-sm font-semibold text-background
+                       shadow-lg shadow-score-amber/30 hover:shadow-score-amber/50
+                       hover:-translate-y-0.5 transition-all"
             aria-label="Open Circular Assistant"
           >
             <Zap className="h-4 w-4" fill="currentColor" />
@@ -729,10 +735,10 @@ export default function CircularAssistant() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.98 }}
             transition={{ duration: 0.18 }}
-            style={{ height: '100dvh' }}
-            className="fixed z-50 bg-card flex flex-col
+            style={{ height: '100dvh', zIndex: 999 }}
+            className="fixed bg-card flex flex-col
                        inset-0 w-full
-                       sm:!h-[480px] sm:inset-auto sm:bottom-5 sm:right-5 sm:w-[360px]
+                       sm:!h-[min(480px,calc(100dvh-96px))] sm:inset-auto sm:bottom-6 sm:right-6 sm:w-[360px]
                        sm:rounded-2xl sm:border sm:border-border sm:shadow-2xl"
           >
             {/* Header — sticky on mobile */}
