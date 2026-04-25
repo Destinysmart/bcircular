@@ -416,7 +416,31 @@ const DEFAULT_RESPONSE = `I can help you with:
 Just ask about any of these topics, or contact us at:
 smartdestinyonyekachi@gmail.com`;
 
-function findResponse(input: string): string {
+interface Topic {
+  label: string;
+  question: string;
+  ruleIndex: number;
+}
+
+const TOPICS: Topic[] = [
+  { label: 'Register an economy', question: 'How do I register my economy?', ruleIndex: 0 },
+  { label: 'Sync BTCMap merchants', question: 'How do I sync BTCMap?', ruleIndex: 1 },
+  { label: 'Circularity score', question: 'What is the circularity score?', ruleIndex: 2 },
+  { label: 'Appoint validators', question: 'How do I appoint validators?', ruleIndex: 3 },
+  { label: 'Connect Blink wallet', question: 'How do I connect my Blink wallet?', ruleIndex: 4 },
+  { label: 'FBCE tier classification', question: 'What is FBCE tier?', ruleIndex: 5 },
+  { label: 'Logo & banner upload', question: 'How do I upload a logo and banner?', ruleIndex: 6 },
+  { label: 'Merchant map', question: 'How does the merchant map work?', ruleIndex: 7 },
+  { label: 'Leaderboard & compare', question: 'How does the leaderboard work?', ruleIndex: 8 },
+  { label: 'Proof of Circularity', question: 'How do I submit proof of circularity?', ruleIndex: 9 },
+  { label: 'Quick Submit QR', question: 'How does Quick Submit work?', ruleIndex: 10 },
+  { label: 'Admin dashboard', question: 'How do I use the admin dashboard?', ruleIndex: 11 },
+  { label: 'Funding & grants', question: 'How can I get funding or grants?', ruleIndex: 12 },
+  { label: 'Privacy & data', question: 'How does Circular handle privacy?', ruleIndex: 13 },
+  { label: 'Troubleshooting', question: 'I have a problem — how do I get help?', ruleIndex: 14 },
+];
+
+
   const text = input.toLowerCase();
   let best: { rule: Rule; score: number } | null = null;
   for (const rule of RULES) {
