@@ -58,6 +58,7 @@ const App = () => (
               <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <CircularAssistant />
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>
