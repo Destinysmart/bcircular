@@ -819,6 +819,18 @@ export default function CircularAssistant() {
                 </div>
               ))}
 
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="bg-muted text-foreground rounded-2xl rounded-bl-sm px-3.5 py-3">
+                    <div className="flex items-center gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {!hasUserMsg && (
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   {QUICK_REPLIES.map(q => (
