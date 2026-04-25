@@ -117,6 +117,13 @@ html.light .leaflet-container { background-color: #e5e7eb; }
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    /* Reserve space for the floating Circular Assistant pill so it never overlaps page actions */
+    padding-bottom: 88px;
+  }
+  @media (min-width: 768px) {
+    body {
+      padding-bottom: 96px;
+    }
   }
 
   h1, h2, h3, h4, h5, h6 {
