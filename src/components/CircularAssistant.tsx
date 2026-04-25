@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, X, Send } from 'lucide-react';
+import { Zap, X, Send, Search, ChevronDown } from 'lucide-react';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -416,6 +416,30 @@ const DEFAULT_RESPONSE = `I can help you with:
 Just ask about any of these topics, or contact us at:
 smartdestinyonyekachi@gmail.com`;
 
+interface Topic {
+  label: string;
+  question: string;
+  ruleIndex: number;
+}
+
+const TOPICS: Topic[] = [
+  { label: 'Register an economy', question: 'How do I register my economy?', ruleIndex: 0 },
+  { label: 'Sync BTCMap merchants', question: 'How do I sync BTCMap?', ruleIndex: 1 },
+  { label: 'Circularity score', question: 'What is the circularity score?', ruleIndex: 2 },
+  { label: 'Appoint validators', question: 'How do I appoint validators?', ruleIndex: 3 },
+  { label: 'Connect Blink wallet', question: 'How do I connect my Blink wallet?', ruleIndex: 4 },
+  { label: 'FBCE tier classification', question: 'What is FBCE tier?', ruleIndex: 5 },
+  { label: 'Logo & banner upload', question: 'How do I upload a logo and banner?', ruleIndex: 6 },
+  { label: 'Merchant map', question: 'How does the merchant map work?', ruleIndex: 7 },
+  { label: 'Leaderboard & compare', question: 'How does the leaderboard work?', ruleIndex: 8 },
+  { label: 'Proof of Circularity', question: 'How do I submit proof of circularity?', ruleIndex: 9 },
+  { label: 'Quick Submit QR', question: 'How does Quick Submit work?', ruleIndex: 10 },
+  { label: 'Admin dashboard', question: 'How do I use the admin dashboard?', ruleIndex: 11 },
+  { label: 'Funding & grants', question: 'How can I get funding or grants?', ruleIndex: 12 },
+  { label: 'Privacy & data', question: 'How does Circular handle privacy?', ruleIndex: 13 },
+  { label: 'Troubleshooting', question: 'I have a problem — how do I get help?', ruleIndex: 14 },
+];
+
 function findResponse(input: string): string {
   const text = input.toLowerCase();
   let best: { rule: Rule; score: number } | null = null;
@@ -438,20 +462,50 @@ export default function CircularAssistant() {
     { role: 'assistant', content: OPENING },
   ]);
   const [input, setInput] = useState('');
+  const [topicQuery, setTopicQuery] = useState('');
+  const [topicOpen, setTopicOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const topicWrapRef = useRef<HTMLDivElement>(null);
   const hasUserMsg = messages.some(m => m.role === 'user');
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages, open]);
 
-  const send = (text: string) => {
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (topicWrapRef.current && !topicWrapRef.current.contains(e.target as Node)) {
+        setTopicOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, []);
+
+  const send = (text: string, presetReply?: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
-    const reply = findResponse(trimmed);
+    const reply = presetReply ?? findResponse(trimmed);
     setMessages(m => [...m, { role: 'user', content: trimmed }, { role: 'assistant', content: reply }]);
     setInput('');
   };
+
+  const pickTopic = (t: Topic) => {
+    send(t.question, RULES[t.ruleIndex]?.response);
+    setTopicQuery('');
+    setTopicOpen(false);
+  };
+
+  const filteredTopics = topicQuery.trim()
+    ? TOPICS.filter(t => {
+        const q = topicQuery.toLowerCase();
+        return (
+          t.label.toLowerCase().includes(q) ||
+          t.question.toLowerCase().includes(q) ||
+          RULES[t.ruleIndex]?.keywords.some(k => k.toLowerCase().includes(q))
+        );
+      })
+    : TOPICS;
 
   return (
     <>
@@ -501,6 +555,48 @@ export default function CircularAssistant() {
               >
                 <X className="h-4 w-4" />
               </button>
+            </div>
+
+            {/* Topic search dropdown */}
+            <div ref={topicWrapRef} className="relative px-3 py-2 border-b border-border bg-background/50">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                <input
+                  value={topicQuery}
+                  onChange={e => {
+                    setTopicQuery(e.target.value);
+                    setTopicOpen(true);
+                  }}
+                  onFocus={() => setTopicOpen(true)}
+                  placeholder="Jump to a topic…"
+                  className="w-full bg-card border border-border rounded-lg pl-8 pr-8 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-score-amber"
+                />
+                <button
+                  type="button"
+                  onClick={() => setTopicOpen(o => !o)}
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+                  aria-label="Toggle topics"
+                >
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${topicOpen ? 'rotate-180' : ''}`} />
+                </button>
+              </div>
+              {topicOpen && (
+                <div className="absolute left-3 right-3 top-full mt-1 z-10 max-h-56 overflow-y-auto rounded-lg border border-border bg-popover shadow-lg">
+                  {filteredTopics.length === 0 ? (
+                    <div className="px-3 py-2 text-xs text-muted-foreground">No topics match.</div>
+                  ) : (
+                    filteredTopics.map(t => (
+                      <button
+                        key={t.label}
+                        onClick={() => pickTopic(t)}
+                        className="w-full text-left px-3 py-2 text-xs text-foreground hover:bg-muted hover:text-score-amber transition-colors border-b border-border last:border-b-0"
+                      >
+                        {t.label}
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Messages */}
