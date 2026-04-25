@@ -558,6 +558,7 @@ export default function CircularAssistant() {
   };
 
   const [open, setOpen] = useState(false);
+  const [hasOpenedOnce, setHasOpenedOnce] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { role: 'assistant', content: buildOpening() },
   ]);
