@@ -415,6 +415,15 @@ const SuperAdminDashboard = () => {
               <RefreshCw className={`h-4 w-4 ${recalcAllLoading ? 'animate-spin' : ''}`} />
               {recalcAllLoading ? 'Recalculating...' : 'Recalculate all scores'}
             </Button>
+            <Button
+              onClick={handleResyncAllBtcmap}
+              disabled={resyncAllLoading}
+              variant="outline"
+              className="w-full mt-3 gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${resyncAllLoading ? 'animate-spin' : ''}`} />
+              {resyncAllLoading ? 'Resyncing all economies...' : 'Resync all economies from BTCMap'}
+            </Button>
           </TabsContent>
         </Tabs>
       </div>
