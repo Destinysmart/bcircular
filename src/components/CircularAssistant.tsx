@@ -1,15 +1,71 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, X, Send, Search, ChevronDown } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
 }
 
-const OPENING = `Hi! I'm the Circular Assistant ⚡
-I help Bitcoin circular economies get set up and grow on the platform.
-What do you need help with?`;
+const TIME_GREETING = (): string => {
+  const h = new Date().getHours();
+  if (h >= 5 && h < 12) return 'Good morning! ☀️';
+  if (h >= 12 && h < 17) return 'Good afternoon! ⚡';
+  if (h >= 17 && h < 22) return 'Good evening! 🌙';
+  return "You're up late! ⚡ Bitcoin never sleeps and neither do circular economies 😄";
+};
+
+const OPENING_VARIANTS = [
+  `Hey! 👋 I'm Circular's assistant — I've been helping Bitcoin communities get set up and grow since day one.\nWhat's on your mind?`,
+  `Hi there! ⚡ Good to see you.\nI know this platform inside out — from BTCMap syncing to circularity scores.\nWhat do you need help with today?`,
+  `Welcome! I'm here to make sure your Bitcoin circular economy gets the support it deserves.\nAsk me anything — I don't bite 😄`,
+];
+
+const LOGGED_IN_OPENING = (name: string) =>
+  `Hey ${name}! ⚡ Good to have you back.\nHow's your economy doing today?\nNeed help with anything?`;
+
+const PERSONALITY_PREFIXES = [
+  'Great question! ',
+  'Ah, this one comes up a lot — ',
+  'Happy to help with that! ',
+  'Good thinking — ',
+  'Absolutely! ',
+  'Let me break that down — ',
+  'Sure thing! ',
+  'On it! ',
+];
+
+const FOLLOWUPS_BY_RULE: Record<number, string> = {
+  0: 'Have you chosen a location focus for your economy yet?',
+  1: 'Do you know your BTCMap community ID? I can walk you through finding it.',
+  2: 'Does your economy have validators set up yet? That helps a lot with scoring.',
+  3: 'Do you have trusted community members in mind to appoint as validators?',
+  4: 'Is your Blink wallet already set up or do you need help getting started?',
+};
+const DEFAULT_FOLLOWUP = 'Is there anything else about the platform I can help clarify? 😊';
+
+const ENCOURAGEMENT = '\n\nEvery active economy on Circular makes the whole network stronger. Keep going! 🌍⚡';
+
+const GOODBYE_RESPONSES = [
+  `You're welcome! ⚡ Your circular economy is in good hands. Come back anytime — I'm always here!`,
+  `Glad I could help! 🙌 Keep building — the Bitcoin circular economy movement needs people like you.`,
+  `Anytime! Remember, if you ever get stuck the team is at smartdestinyonyekachi@gmail.com\nKeep stacking sats! ⚡`,
+];
+
+const CONFUSED_RESPONSE = `Hmm, I want to make sure I help you properly — could you tell me a bit more about what you're trying to do?
+
+For example:
+→ Are you setting up a new economy?
+→ Trying to improve your score?
+→ Having a technical issue?
+
+No rush — take your time! 😊`;
+
+const HUMAN_RESPONSE = `I'm Circular's AI assistant — not human, but I know this platform as well as anyone who built it! 😄
+What can I help you with?`;
+
+const ESCALATION_NOTE = `\n\nIf this one's beyond what I can sort out, don't worry — Destiny (the founder) personally handles these.\n📧 smartdestinyonyekachi@gmail.com\nDrop a message and you'll hear back within 24 hours. The team genuinely cares about every economy on here. 🙏`;
 
 const QUICK_REPLIES = [
   'How do I register my economy?',
