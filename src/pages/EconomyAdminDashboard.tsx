@@ -200,11 +200,18 @@ const EconomyAdminDashboard = () => {
       });
       if (error) throw error;
       setBtcmapAreaId(normalizedAreaId);
-      setBtcmapSyncResult({ type: data?.synced === 0 ? 'empty' : 'success', ...data });
+      // Re-query DB for ground truth count after sync (not the value returned by the function)
+      const { count: actualCount } = await supabase
+        .from('merchants')
+        .select('*', { count: 'exact', head: true })
+        .eq('community_id', communityId)
+        .eq('source', 'btcmap')
+        .eq('status', 'approved');
+      setBtcmapSyncResult({ type: (actualCount ?? 0) === 0 ? 'empty' : 'success', ...data, synced: actualCount ?? 0 });
       queryClient.invalidateQueries({ queryKey: ['community-by-id', id] });
       queryClient.invalidateQueries({ queryKey: ['merchants', communityId] });
       queryClient.invalidateQueries({ queryKey: ['score', communityId] });
-      toast({ title: 'BTCMap sync complete', description: `${data.synced} merchants synced from BTCMap.` });
+      toast({ title: 'BTCMap sync complete', description: `${actualCount ?? 0} merchants synced from BTCMap.` });
     } catch (err: any) {
       const message = err?.message || 'BTCMap sync failed';
       setBtcmapSyncResult({ type: 'error', error: message, areaId: btcmapAreaId.trim() });
