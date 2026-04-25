@@ -462,20 +462,50 @@ export default function CircularAssistant() {
     { role: 'assistant', content: OPENING },
   ]);
   const [input, setInput] = useState('');
+  const [topicQuery, setTopicQuery] = useState('');
+  const [topicOpen, setTopicOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const topicWrapRef = useRef<HTMLDivElement>(null);
   const hasUserMsg = messages.some(m => m.role === 'user');
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages, open]);
 
-  const send = (text: string) => {
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (topicWrapRef.current && !topicWrapRef.current.contains(e.target as Node)) {
+        setTopicOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, []);
+
+  const send = (text: string, presetReply?: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
-    const reply = findResponse(trimmed);
+    const reply = presetReply ?? findResponse(trimmed);
     setMessages(m => [...m, { role: 'user', content: trimmed }, { role: 'assistant', content: reply }]);
     setInput('');
   };
+
+  const pickTopic = (t: Topic) => {
+    send(t.question, RULES[t.ruleIndex]?.response);
+    setTopicQuery('');
+    setTopicOpen(false);
+  };
+
+  const filteredTopics = topicQuery.trim()
+    ? TOPICS.filter(t => {
+        const q = topicQuery.toLowerCase();
+        return (
+          t.label.toLowerCase().includes(q) ||
+          t.question.toLowerCase().includes(q) ||
+          RULES[t.ruleIndex]?.keywords.some(k => k.toLowerCase().includes(q))
+        );
+      })
+    : TOPICS;
 
   return (
     <>
