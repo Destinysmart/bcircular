@@ -705,26 +705,45 @@ export default function CircularAssistant() {
 
   return (
     <>
-      {/* Collapsed pill */}
+      {/* Collapsed circular icon button */}
       <AnimatePresence>
         {!open && (
-          <motion.button
+          <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            onClick={() => setOpen(true)}
             style={{ zIndex: 999 }}
-            className="fixed bottom-4 right-4 md:bottom-6 md:right-6
-                       inline-flex items-center gap-2 rounded-full bg-score-amber
-                       h-11 md:h-auto px-4 md:px-5 py-0 md:py-3
-                       text-[13px] md:text-sm font-semibold text-background
-                       shadow-lg shadow-score-amber/30 hover:shadow-score-amber/50
-                       hover:-translate-y-0.5 transition-all"
-            aria-label="Open Circular Assistant"
+            className="fixed bottom-4 right-4 md:bottom-6 md:right-6 group"
           >
-            <Zap className="h-4 w-4" fill="currentColor" />
-            Ask Circular AI
-          </motion.button>
+            {/* Tooltip */}
+            <div
+              className="pointer-events-none absolute right-0 bottom-full mb-2 px-2.5 py-1.5 rounded-md
+                         bg-popover text-popover-foreground text-xs font-medium border border-border shadow-md
+                         whitespace-nowrap opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0
+                         transition-all duration-150"
+            >
+              Ask Circular AI
+            </div>
+            <button
+              onClick={() => {
+                setOpen(true);
+                setHasOpenedOnce(true);
+              }}
+              className={`relative h-12 w-12 rounded-full bg-score-amber text-background
+                         flex items-center justify-center shadow-lg shadow-score-amber/40
+                         hover:shadow-score-amber/60 hover:-translate-y-0.5 transition-all
+                         ${!hasOpenedOnce ? 'circular-assistant-pulse' : ''}`}
+              aria-label="Open Circular Assistant"
+            >
+              <Zap className="h-5 w-5" fill="currentColor" />
+              {!hasOpenedOnce && (
+                <span
+                  aria-hidden
+                  className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-background"
+                />
+              )}
+            </button>
+          </motion.div>
         )}
       </AnimatePresence>
 
