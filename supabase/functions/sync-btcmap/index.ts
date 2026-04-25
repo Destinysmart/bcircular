@@ -226,6 +226,22 @@ Deno.serve(async (req) => {
 
     console.log(`Found ${rows.length} Bitcoin merchants within BTCMap area ${btcmapAreaId}`)
 
+    // Stale cleanup: remove BTCMap merchants for this community that are no longer
+    // present in the fresh BTCMap result (e.g. outside bbox after a tightening).
+    const freshBtcmapIds = rows.map(r => r.btcmap_id).filter(Boolean)
+    if (freshBtcmapIds.length > 0) {
+      const idList = freshBtcmapIds.map(id => `"${id}"`).join(',')
+      const { error: cleanupError } = await supabase
+        .from('merchants')
+        .delete()
+        .eq('community_id', community_id)
+        .eq('source', 'btcmap')
+        .not('btcmap_id', 'in', `(${idList})`)
+      if (cleanupError) console.error('Stale cleanup error:', cleanupError.message)
+    } else {
+      console.log('Skipping stale cleanup: BTCMap returned 0 merchants in bbox (safety guard)')
+    }
+
     // Batch upsert in chunks of 500
     let synced = 0
     let errors = 0
