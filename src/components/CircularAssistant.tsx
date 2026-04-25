@@ -440,7 +440,7 @@ const TOPICS: Topic[] = [
   { label: 'Troubleshooting', question: 'I have a problem — how do I get help?', ruleIndex: 14 },
 ];
 
-
+function findResponse(input: string): string {
   const text = input.toLowerCase();
   let best: { rule: Rule; score: number } | null = null;
   for (const rule of RULES) {
