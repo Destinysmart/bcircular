@@ -472,6 +472,18 @@ export default function CircularAssistant() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages, open]);
 
+  // Lock body scroll on mobile when chat is open (full-screen takeover)
+  useEffect(() => {
+    if (!open) return;
+    const mq = window.matchMedia('(max-width: 639px)');
+    if (!mq.matches) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
       if (topicWrapRef.current && !topicWrapRef.current.contains(e.target as Node)) {
