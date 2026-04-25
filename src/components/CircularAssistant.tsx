@@ -496,37 +496,92 @@ const TOPICS: Topic[] = [
   { label: 'Troubleshooting', question: 'I have a problem — how do I get help?', ruleIndex: 14 },
 ];
 
-function findResponse(input: string): string {
+function findResponse(input: string): { response: string; ruleIndex: number } {
   const text = input.toLowerCase();
-  let best: { rule: Rule; score: number } | null = null;
-  for (const rule of RULES) {
+  let best: { rule: Rule; index: number; score: number } | null = null;
+  RULES.forEach((rule, index) => {
     let matches = 0;
     for (const kw of rule.keywords) {
       if (text.includes(kw.toLowerCase())) matches++;
     }
     if (matches > 0) {
       const score = matches * 10 + rule.specificity;
-      if (!best || score > best.score) best = { rule, score };
+      if (!best || score > best.score) best = { rule, index, score };
     }
-  }
-  return best ? best.rule.response : DEFAULT_RESPONSE;
+  });
+  return best
+    ? { response: best.rule.response, ruleIndex: best.index }
+    : { response: DEFAULT_RESPONSE, ruleIndex: -1 };
 }
 
+const GOODBYE_RE = /\b(thanks|thank you|bye|goodbye|got it|perfect|great)\b/i;
+const HUMAN_RE = /\b(are you (a )?human|are you real|are you a bot|are you ai)\b/i;
+const ECONOMY_MENTION_RE = /\b(my economy|our community|our economy)\b/i;
+
+function pickRandom<T>(arr: T[], avoid?: T): T {
+  const pool = avoid ? arr.filter(x => x !== avoid) : arr;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function wordCount(s: string): number {
+  return s.trim().split(/\s+/).filter(Boolean).length;
+}
+
+function typingDelay(reply: string): number {
+  const w = wordCount(reply);
+  if (w < 50) return 800;
+  if (w <= 100) return 1200;
+  return 1800;
+}
+
+const TOPIC_TRANSITIONS: Record<number, string> = {
+  1: 'Since we’re still on BTCMap — ',
+  2: 'Going deeper on that score question — ',
+  3: 'Building on what I just explained about validators — ',
+  4: 'Sticking with the Blink wallet thread — ',
+  0: 'Continuing on registration — ',
+};
+
 export default function CircularAssistant() {
+  const { user } = useAuth();
+  const displayName =
+    (user?.user_metadata?.display_name as string) ||
+    (user?.user_metadata?.full_name as string) ||
+    (user?.email ? user.email.split('@')[0] : '');
+
+  const buildOpening = () => {
+    const greeting = TIME_GREETING();
+    const body = user && displayName
+      ? LOGGED_IN_OPENING(displayName)
+      : pickRandom(OPENING_VARIANTS);
+    return `${greeting}\n\n${body}`;
+  };
+
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: OPENING },
+    { role: 'assistant', content: buildOpening() },
   ]);
   const [input, setInput] = useState('');
   const [topicQuery, setTopicQuery] = useState('');
   const [topicOpen, setTopicOpen] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const lastPrefixRef = useRef<string | null>(null);
+  const lastTopicRef = useRef<number | null>(null);
+  const seenTopicsRef = useRef<Set<number>>(new Set());
   const scrollRef = useRef<HTMLDivElement>(null);
   const topicWrapRef = useRef<HTMLDivElement>(null);
   const hasUserMsg = messages.some(m => m.role === 'user');
 
+  // Refresh greeting if user logs in/out while widget is closed
+  useEffect(() => {
+    if (open) return;
+    setMessages([{ role: 'assistant', content: buildOpening() }]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-  }, [messages, open]);
+  }, [messages, open, isTyping]);
 
   // Lock body scroll on mobile when chat is open (full-screen takeover)
   useEffect(() => {
@@ -550,16 +605,88 @@ export default function CircularAssistant() {
     return () => document.removeEventListener('mousedown', onClick);
   }, []);
 
-  const send = (text: string, presetReply?: string) => {
+  const decorate = (
+    rawReply: string,
+    userText: string,
+    ruleIndex: number,
+    isPreset: boolean,
+  ): string => {
+    let reply = rawReply;
+
+    // Topic transition if continuing same topic
+    if (!isPreset && ruleIndex >= 0 && lastTopicRef.current === ruleIndex && TOPIC_TRANSITIONS[ruleIndex]) {
+      reply = TOPIC_TRANSITIONS[ruleIndex] + reply.charAt(0).toLowerCase() + reply.slice(1);
+    }
+
+    // Personality prefix 30% of the time (skip if topic transition was added)
+    if (!isPreset && Math.random() < 0.3 && !TOPIC_TRANSITIONS[ruleIndex]) {
+      const prefix = pickRandom(PERSONALITY_PREFIXES, lastPrefixRef.current ?? undefined);
+      lastPrefixRef.current = prefix;
+      reply = prefix + reply;
+    }
+
+    // Encouragement if user mentioned their economy
+    if (ECONOMY_MENTION_RE.test(userText)) {
+      reply += ENCOURAGEMENT;
+    }
+
+    // Follow-up question
+    const followup = ruleIndex >= 0 && FOLLOWUPS_BY_RULE[ruleIndex] ? FOLLOWUPS_BY_RULE[ruleIndex] : DEFAULT_FOLLOWUP;
+    reply += `\n\n${followup}`;
+
+    // Soft escalation hint for troubleshooting topic
+    if (ruleIndex === 14) {
+      reply += ESCALATION_NOTE;
+    }
+
+    return reply;
+  };
+
+  const pushAssistantWithTyping = (reply: string, ruleIndex: number) => {
+    setIsTyping(true);
+    if (ruleIndex >= 0) {
+      seenTopicsRef.current.add(ruleIndex);
+      lastTopicRef.current = ruleIndex;
+    }
+    const delay = typingDelay(reply);
+    window.setTimeout(() => {
+      setMessages(m => [...m, { role: 'assistant', content: reply }]);
+      setIsTyping(false);
+    }, delay);
+  };
+
+  const send = (text: string, presetReply?: string, presetRuleIndex?: number) => {
     const trimmed = text.trim();
     if (!trimmed) return;
-    const reply = presetReply ?? findResponse(trimmed);
-    setMessages(m => [...m, { role: 'user', content: trimmed }, { role: 'assistant', content: reply }]);
     setInput('');
+    setMessages(m => [...m, { role: 'user', content: trimmed }]);
+
+    let finalReply: string;
+    let ruleIndex = presetRuleIndex ?? -1;
+
+    if (presetReply !== undefined) {
+      // Topic dropdown / quick reply preset — still add follow-up + encouragement
+      finalReply = decorate(presetReply, trimmed, ruleIndex, true);
+    } else if (HUMAN_RE.test(trimmed)) {
+      finalReply = HUMAN_RESPONSE;
+      ruleIndex = -1;
+    } else if (GOODBYE_RE.test(trimmed) && wordCount(trimmed) <= 5) {
+      finalReply = pickRandom(GOODBYE_RESPONSES);
+      ruleIndex = -1;
+    } else if (wordCount(trimmed) < 3) {
+      finalReply = CONFUSED_RESPONSE;
+      ruleIndex = -1;
+    } else {
+      const found = findResponse(trimmed);
+      ruleIndex = found.ruleIndex;
+      finalReply = decorate(found.response, trimmed, ruleIndex, false);
+    }
+
+    pushAssistantWithTyping(finalReply, ruleIndex);
   };
 
   const pickTopic = (t: Topic) => {
-    send(t.question, RULES[t.ruleIndex]?.response);
+    send(t.question, RULES[t.ruleIndex]?.response, t.ruleIndex);
     setTopicQuery('');
     setTopicOpen(false);
   };
