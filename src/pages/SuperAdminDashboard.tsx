@@ -188,6 +188,49 @@ const SuperAdminDashboard = () => {
     }
   };
 
+  const [resyncAllLoading, setResyncAllLoading] = useState(false);
+
+  const handleResyncAllBtcmap = async () => {
+    setResyncAllLoading(true);
+    toast({ title: 'Resyncing all economies from BTCMap...' });
+    try {
+      const { data: economies, error: fetchError } = await supabase
+        .from('communities')
+        .select('id, name, btcmap_area_id, bbox_north')
+        .eq('status', 'active')
+        .not('btcmap_area_id', 'is', null);
+      if (fetchError) throw fetchError;
+
+      let synced = 0;
+      let skipped = 0;
+      let failed = 0;
+
+      for (const economy of economies || []) {
+        if (!economy.bbox_north) { skipped++; continue; }
+        const { error } = await supabase.functions.invoke('sync-btcmap', {
+          body: { community_id: economy.id },
+        });
+        if (error) {
+          console.error(`Failed to sync ${economy.name}:`, error);
+          failed++;
+        } else {
+          synced++;
+        }
+        await new Promise(r => setTimeout(r, 1000));
+      }
+
+      queryClient.invalidateQueries();
+      toast({
+        title: 'Resync complete',
+        description: `Synced ${synced} · Skipped ${skipped} (no bbox) · Failed ${failed}`,
+      });
+    } catch (err: any) {
+      toast({ title: 'Resync failed', description: err.message, variant: 'destructive' });
+    } finally {
+      setResyncAllLoading(false);
+    }
+  };
+
   const handleToggleSuperAdmin = async (userId: string, current: boolean) => {
     await supabase.from('profiles').update({ is_super_admin: !current }).eq('user_id', userId);
     queryClient.invalidateQueries({ queryKey: ['admin-users'] });
@@ -371,6 +414,15 @@ const SuperAdminDashboard = () => {
             >
               <RefreshCw className={`h-4 w-4 ${recalcAllLoading ? 'animate-spin' : ''}`} />
               {recalcAllLoading ? 'Recalculating...' : 'Recalculate all scores'}
+            </Button>
+            <Button
+              onClick={handleResyncAllBtcmap}
+              disabled={resyncAllLoading}
+              variant="outline"
+              className="w-full mt-3 gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${resyncAllLoading ? 'animate-spin' : ''}`} />
+              {resyncAllLoading ? 'Resyncing all economies...' : 'Resync all economies from BTCMap'}
             </Button>
           </TabsContent>
         </Tabs>
