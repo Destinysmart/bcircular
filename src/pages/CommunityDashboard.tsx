@@ -320,6 +320,11 @@ const CommunityDashboard = () => {
           </Link>
         </div>
 
+        {/* Verified Blink-data circularity (only renders when 2+ wallets connected) */}
+        <div className="mb-6">
+          <VerifiedCircularityBlock communityId={community.id} />
+        </div>
+
         {/* PRIMARY METRICS — transaction-first */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           <div className="rounded-2xl border border-score-amber/30 bg-card p-6">
