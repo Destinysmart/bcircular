@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.claim-merchant]
 verify_jwt = false
+
+[functions.save-pending-wallet]
+verify_jwt = false
