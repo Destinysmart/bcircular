@@ -1,4 +1,4 @@
-import { useState } from 'react';
+
 import { useParams, Link } from 'react-router-dom';
 import { Share2, Store, Users, Zap, ChevronDown, Info, ExternalLink, Shield, Wallet, Scale, Calendar } from 'lucide-react';
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
@@ -17,14 +17,12 @@ import StatCard from '@/components/StatCard';
 import EconomyLogo from '@/components/EconomyLogo';
 import { TierBadge, TIER_CHECKLIST, getTierMeta, type FbceTier } from '@/components/TierBadge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { fetchCommunityBySlug, fetchCommunityMerchants, fetchCommunityEarners, fetchLatestScore, fetchScoreHistory } from '@/lib/api';
 import { supabase } from '@/integrations/supabase/client';
 import { getFlagEmoji } from '@/lib/mock-data';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
+
 
 const pillarDescriptions: Record<string, string> = {
   'Merchant saturation': 'How many merchants accept Bitcoin relative to the economy size.',
@@ -37,7 +35,7 @@ const pillarDescriptions: Record<string, string> = {
 const CommunityDashboard = () => {
   const { user } = useAuth();
   const { slug } = useParams();
-  const { toast } = useToast();
+  
 
   const { data: community, isLoading, isError, error } = useQuery({
     queryKey: ['community', slug],
