@@ -12,6 +12,7 @@ import SatsFlowGraph from '@/components/SatsFlowGraph';
 import LiveActivityFeed from '@/components/LiveActivityFeed';
 import SatsMovementPanel from '@/components/SatsMovementPanel';
 import BlinkWalletSettings from '@/components/BlinkWalletSettings';
+import VerifiedCircularityBlock from '@/components/VerifiedCircularityBlock';
 import StatCard from '@/components/StatCard';
 import EconomyLogo from '@/components/EconomyLogo';
 import { TierBadge, TIER_CHECKLIST, getTierMeta, type FbceTier } from '@/components/TierBadge';
@@ -317,6 +318,11 @@ const CommunityDashboard = () => {
           <Link to={`/compare?a=${community.slug}`} className="hidden md:inline-flex items-center gap-1 text-xs text-primary hover:underline self-start">
             <Scale className="h-3 w-3" /> Compare with another economy →
           </Link>
+        </div>
+
+        {/* Verified Blink-data circularity (only renders when 2+ wallets connected) */}
+        <div className="mb-6">
+          <VerifiedCircularityBlock communityId={community.id} />
         </div>
 
         {/* PRIMARY METRICS — transaction-first */}
