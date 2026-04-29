@@ -297,21 +297,6 @@ const CommunityDashboard = () => {
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" size="sm" className="gap-1.5 rounded-full"><Share2 className="h-3.5 w-3.5" /> Share</Button>
               <a href={`/c/${slug}/submit`}><Button variant="outline" size="sm" className="gap-1.5 rounded-full"><Store className="h-3.5 w-3.5" /> Add merchant / earner</Button></a>
-              {canAdminEconomy && (
-                <Dialog open={earnerOpen} onOpenChange={setEarnerOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-1.5 rounded-full border-score-amber text-score-amber hover:text-score-amber"><PlusCircle className="h-3.5 w-3.5" /> Add earner</Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader><DialogTitle>Add earner</DialogTitle></DialogHeader>
-                    <div className="space-y-4">
-                      <div><Label>Role description</Label><Textarea value={earnerDescription} onChange={e => setEarnerDescription(e.target.value)} placeholder="e.g. Freelance designer paid in sats" /></div>
-                      <div><Label>Payment method</Label><Input value={earnerPaymentMethod} onChange={e => setEarnerPaymentMethod(e.target.value)} placeholder="Lightning, on-chain, or both" /></div>
-                      <Button className="w-full" disabled={!earnerDescription.trim() || addEarnerMutation.isPending} onClick={() => addEarnerMutation.mutate()}>{addEarnerMutation.isPending ? 'Submitting…' : 'Submit earner'}</Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              )}
               <Link to={`/c/${slug}/proofs`}><Button size="sm" className="gap-1.5 rounded-full bg-score-amber text-background hover:bg-score-amber/90"><Shield className="h-3.5 w-3.5" /> Proof of Circularity</Button></Link>
             </div>
           </div>
