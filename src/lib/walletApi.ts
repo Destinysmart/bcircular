@@ -41,6 +41,23 @@ export type OwnerSummary = {
   } | null;
 };
 
+/** Auto-detect owner type from a code prefix (mer_ / ear_) and fetch the owner. */
+export async function fetchOwnerByAnyCode(
+  code: string,
+): Promise<{ owner: OwnerSummary; owner_type: WalletOwnerType } | null> {
+  if (!code) return null;
+  const trimmed = code.trim();
+  // Try the prefix hint first, then fall back to the other type.
+  const order: WalletOwnerType[] = trimmed.startsWith('ear_')
+    ? ['earner', 'merchant']
+    : ['merchant', 'earner'];
+  for (const t of order) {
+    const owner = await fetchOwnerByCode(t, trimmed);
+    if (owner) return { owner, owner_type: t };
+  }
+  return null;
+}
+
 export async function fetchOwnerByCode(
   owner_type: WalletOwnerType,
   code: string,

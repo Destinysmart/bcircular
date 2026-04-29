@@ -7,11 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import {
-  fetchOwnerByCode, fetchWalletTransactions, fetchWalletMonthlyStats,
+  fetchOwnerByCode, fetchOwnerByAnyCode,
+  fetchWalletTransactions, fetchWalletMonthlyStats,
   walletApi, type WalletOwnerType,
 } from '@/lib/walletApi';
 
-interface Props { ownerType: WalletOwnerType }
+interface Props {
+  /** When omitted, the page detects merchant vs earner from the code prefix. */
+  ownerType?: WalletOwnerType;
+}
 
 function fingerprint(hash: string | null) {
   return hash ? `···${hash.slice(-8)}` : '—';
@@ -36,11 +40,19 @@ export default function WalletDashboard({ ownerType }: Props) {
   const [disconnecting, setDisconnecting] = useState(false);
 
   const ownerQ = useQuery({
-    queryKey: ['wallet-owner', ownerType, code],
-    queryFn: () => fetchOwnerByCode(ownerType, code),
+    queryKey: ['wallet-owner-lookup', ownerType ?? 'auto', code],
+    queryFn: async () => {
+      if (!code) return null;
+      if (ownerType) {
+        const owner = await fetchOwnerByCode(ownerType, code);
+        return owner ? { owner, owner_type: ownerType } : null;
+      }
+      return await fetchOwnerByAnyCode(code);
+    },
     enabled: !!code,
   });
-  const owner = ownerQ.data;
+  const owner = ownerQ.data?.owner;
+  const detectedType = ownerQ.data?.owner_type;
   const walletId = owner?.wallet?.id;
 
   const txQ = useQuery({
@@ -56,11 +68,12 @@ export default function WalletDashboard({ ownerType }: Props) {
   });
 
   async function handleSync() {
+    if (!detectedType) return;
     setSyncing(true);
     try {
-      const res = await walletApi.sync(ownerType, code);
+      const res = await walletApi.sync(detectedType, code);
       toast({ title: 'Sync complete', description: `${res.synced} transactions, ${res.internal} circular.` });
-      await qc.invalidateQueries({ queryKey: ['wallet-owner', ownerType, code] });
+      await qc.invalidateQueries({ queryKey: ['wallet-owner-lookup'] });
       await qc.invalidateQueries({ queryKey: ['wallet-tx', walletId] });
       await qc.invalidateQueries({ queryKey: ['wallet-stats', walletId] });
     } catch (err: any) {
@@ -69,12 +82,22 @@ export default function WalletDashboard({ ownerType }: Props) {
   }
 
   async function handleDisconnect() {
-    if (!confirm('Disconnect this wallet? Transactions already imported will remain visible to the economy.')) return;
+    if (!detectedType) return;
+    if (!confirm(
+      'Disconnect this wallet?\n\n' +
+      'This will permanently delete:\n' +
+      '• Your encrypted API key\n' +
+      '• Your Lightning address hash\n' +
+      '• ALL transactions imported for this wallet\n\n' +
+      'This cannot be undone.'
+    )) return;
     setDisconnecting(true);
     try {
-      await walletApi.disconnect(ownerType, code);
-      toast({ title: 'Disconnected' });
-      await qc.invalidateQueries({ queryKey: ['wallet-owner', ownerType, code] });
+      await walletApi.disconnect(detectedType, code);
+      toast({ title: 'Disconnected', description: 'All wallet data has been deleted.' });
+      await qc.invalidateQueries({ queryKey: ['wallet-owner-lookup'] });
+      await qc.invalidateQueries({ queryKey: ['wallet-tx'] });
+      await qc.invalidateQueries({ queryKey: ['wallet-stats'] });
     } catch (err: any) {
       toast({ title: 'Could not disconnect', description: err.message, variant: 'destructive' });
     } finally { setDisconnecting(false); }
@@ -93,11 +116,12 @@ export default function WalletDashboard({ ownerType }: Props) {
 
   if (!code) return <div className="min-h-screen flex items-center justify-center p-6"><Card className="max-w-md w-full"><CardHeader><CardTitle>Missing code</CardTitle></CardHeader></Card></div>;
   if (ownerQ.isLoading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
-  if (!owner) return <div className="min-h-screen flex items-center justify-center p-6"><Card className="max-w-md w-full"><CardHeader><CardTitle>Not found</CardTitle><CardDescription>Invalid code or unapproved {ownerType}.</CardDescription></CardHeader></Card></div>;
+  if (!owner || !detectedType) return <div className="min-h-screen flex items-center justify-center p-6"><Card className="max-w-md w-full"><CardHeader><CardTitle>Not found</CardTitle><CardDescription>Invalid code or unapproved submission.</CardDescription></CardHeader></Card></div>;
 
   const status = owner.wallet?.wallet_status;
   const connected = status === 'connected';
   const stats = statsQ.data;
+  const connectHref = `/connect?code=${code}`;
 
   return (
     <div className="min-h-screen p-4 md:p-8 bg-background">
@@ -123,7 +147,7 @@ export default function WalletDashboard({ ownerType }: Props) {
                 </Button>
               )}
               {!connected && (
-                <Link to={`/${ownerType}/connect?code=${code}`}>
+                <Link to={connectHref}>
                   <Button size="sm" className="bg-score-amber text-background hover:bg-score-amber/90">Connect wallet</Button>
                 </Link>
               )}
@@ -162,7 +186,7 @@ export default function WalletDashboard({ ownerType }: Props) {
             <div className="flex flex-wrap gap-3">
               <Button variant="outline" onClick={downloadData}>Download my data</Button>
               <Button variant="ghost" className="text-destructive" onClick={handleDisconnect} disabled={disconnecting}>
-                {disconnecting ? <Loader2 className="h-3 w-3 mr-2 animate-spin" /> : null} Disconnect wallet
+                {disconnecting ? <Loader2 className="h-3 w-3 mr-2 animate-spin" /> : null} Disconnect &amp; delete all data
               </Button>
             </div>
           </>

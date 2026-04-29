@@ -446,18 +446,36 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
+
+      // PRIVACY CONSTITUTION — disconnect is irreversible deletion.
+      // 1. Delete every blink_transactions row for this wallet (and any rows where
+      //    this wallet was the counterparty, so no trace of it remains).
+      await supabase.from('blink_transactions').delete().eq('wallet_id', wallet.id)
+      await supabase.from('blink_transactions')
+        .update({ counterparty_wallet_id: null })
+        .eq('counterparty_wallet_id', wallet.id)
+
+      // 2. Wipe the encrypted key, address hash, and Blink wallet id from the wallet row.
       await supabase.from('wallets').update({
         blink_api_key_encrypted: null,
         ln_address_hash: null,
-        wallet_status: 'pending',
+        blink_wallet_id: '',
+        balance_sats: 0,
+        wallet_status: 'disconnected',
+        last_synced_at: null,
       }).eq('id', wallet.id)
+
+      // 3. Unlink the merchant/earner.
       if (body.owner_type === 'merchant') {
         await supabase.from('merchants').update({ wallet_id: null }).eq('id', owner.id)
       } else {
         await supabase.from('earner_wallets').update({ wallet_id: null }).eq('earner_id', owner.id)
       }
+
+      // 4. Recompute economy aggregates so the public dashboard reflects the loss.
       await recomputeMetrics(supabase, owner.community_id)
-      return new Response(JSON.stringify({ success: true }), {
+
+      return new Response(JSON.stringify({ success: true, deleted: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }

@@ -62,6 +62,10 @@ const App = () => (
               <Route path="/settings" element={<Settings />} />
               <Route path="/merchant/claim/:publicId" element={<MerchantClaim />} />
               <Route path="/m/:publicId" element={<MerchantDashboard />} />
+              {/* Unified privacy-first connect flow — the code IS the auth */}
+              <Route path="/connect" element={<ConnectWallet />} />
+              <Route path="/connect/dashboard" element={<WalletDashboard />} />
+              {/* Legacy fixed-type routes still work for any links already in the wild */}
               <Route path="/merchant/connect" element={<ConnectWallet ownerType="merchant" />} />
               <Route path="/merchant/dashboard" element={<WalletDashboard ownerType="merchant" />} />
               <Route path="/earner/connect" element={<ConnectWallet ownerType="earner" />} />
