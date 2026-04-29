@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { fetchCommunityBySlug, fetchLatestScore, fetchPendingSubmissions, fetchCommunityMerchants, fetchCommunityEarners, fetchCommunityTransactions } from '@/lib/api';
 import { AlertTriangle, CheckCircle, XCircle, Trash2, RefreshCw, Download, Printer, ExternalLink } from 'lucide-react';
 import BlinkWalletSettings from '@/components/BlinkWalletSettings';
+import MerchantClaimManager from '@/components/MerchantClaimManager';
 import EconomyLogo from '@/components/EconomyLogo';
 import UploadZone from '@/components/UploadZone';
 import { QRCodeCanvas } from 'qrcode.react';
@@ -632,6 +633,11 @@ const EconomyAdminDashboard = () => {
         {/* Blink Wallet Integration */}
         <section className="mb-6">
           <BlinkWalletSettings communityId={communityId!} isAdmin={true} />
+        </section>
+
+        {/* Merchant claim links */}
+        <section className="mb-6">
+          <MerchantClaimManager communityId={communityId!} />
         </section>
 
         {/* Score Section */}
