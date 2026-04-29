@@ -403,12 +403,71 @@ export type Database = {
           },
         ]
       }
+      merchant_invoices: {
+        Row: {
+          amount_sats: number
+          blink_tx_id: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          memo: string | null
+          merchant_id: string
+          paid_at: string | null
+          payment_hash: string | null
+          payment_request: string
+          status: string
+        }
+        Insert: {
+          amount_sats: number
+          blink_tx_id?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          memo?: string | null
+          merchant_id: string
+          paid_at?: string | null
+          payment_hash?: string | null
+          payment_request: string
+          status?: string
+        }
+        Update: {
+          amount_sats?: number
+          blink_tx_id?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          memo?: string | null
+          merchant_id?: string
+          paid_at?: string | null
+          payment_hash?: string | null
+          payment_request?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_invoices_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_metrics"
+            referencedColumns: ["merchant_id"]
+          },
+          {
+            foreignKeyName: "merchant_invoices_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       merchants: {
         Row: {
           address: string | null
           approved_at: string | null
           btcmap_id: string | null
           category: string
+          claim_token_hash: string | null
+          claimed_at: string | null
           community_id: string
           created_at: string
           id: string
@@ -416,9 +475,11 @@ export type Database = {
           lng: number | null
           name: string
           payment_methods: string[]
+          public_merchant_id: string | null
           source: string | null
           status: Database["public"]["Enums"]["submission_status"]
           submitted_by: string | null
+          wallet_id: string | null
           website: string | null
         }
         Insert: {
@@ -426,6 +487,8 @@ export type Database = {
           approved_at?: string | null
           btcmap_id?: string | null
           category?: string
+          claim_token_hash?: string | null
+          claimed_at?: string | null
           community_id: string
           created_at?: string
           id?: string
@@ -433,9 +496,11 @@ export type Database = {
           lng?: number | null
           name: string
           payment_methods?: string[]
+          public_merchant_id?: string | null
           source?: string | null
           status?: Database["public"]["Enums"]["submission_status"]
           submitted_by?: string | null
+          wallet_id?: string | null
           website?: string | null
         }
         Update: {
@@ -443,6 +508,8 @@ export type Database = {
           approved_at?: string | null
           btcmap_id?: string | null
           category?: string
+          claim_token_hash?: string | null
+          claimed_at?: string | null
           community_id?: string
           created_at?: string
           id?: string
@@ -450,9 +517,11 @@ export type Database = {
           lng?: number | null
           name?: string
           payment_methods?: string[]
+          public_merchant_id?: string | null
           source?: string | null
           status?: Database["public"]["Enums"]["submission_status"]
           submitted_by?: string | null
+          wallet_id?: string | null
           website?: string | null
         }
         Relationships: [
@@ -461,6 +530,13 @@ export type Database = {
             columns: ["community_id"]
             isOneToOne: false
             referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchants_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
             referencedColumns: ["id"]
           },
         ]
@@ -721,6 +797,31 @@ export type Database = {
       }
     }
     Views: {
+      merchant_metrics: {
+        Row: {
+          category: string | null
+          circularity_score: number | null
+          community_id: string | null
+          inflow_sats: number | null
+          internal_sats: number | null
+          last_tx_at: string | null
+          merchant_id: string | null
+          name: string | null
+          outflow_sats: number | null
+          public_merchant_id: string | null
+          tx_count: number | null
+          wallet_linked: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchants_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       public_profiles: {
         Row: {
           avatar_url: string | null
@@ -753,6 +854,7 @@ export type Database = {
       }
     }
     Functions: {
+      generate_merchant_public_id: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
