@@ -1,1 +1,7 @@
 project_id = "gvpblngewoicxdwcirts"
+
+[functions.sync-wallet-transactions]
+verify_jwt = false
+
+[functions.claim-merchant]
+verify_jwt = false
