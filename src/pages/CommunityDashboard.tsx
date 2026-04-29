@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Share2, Store, Users, Zap, ChevronDown, Info, ExternalLink, Shield, Wallet, Scale, PlusCircle, Calendar } from 'lucide-react';
+import { Share2, Store, Users, Zap, ChevronDown, Info, ExternalLink, Shield, Wallet, Scale, Calendar } from 'lucide-react';
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import ScoreRing from '@/components/ScoreRing';
 import ScoreBar from '@/components/ScoreBar';
@@ -17,12 +17,10 @@ import StatCard from '@/components/StatCard';
 import EconomyLogo from '@/components/EconomyLogo';
 import { TierBadge, TIER_CHECKLIST, getTierMeta, type FbceTier } from '@/components/TierBadge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { fetchCommunityBySlug, fetchCommunityMerchants, fetchCommunityEarners, fetchLatestScore, fetchScoreHistory, submitEarner } from '@/lib/api';
+import { fetchCommunityBySlug, fetchCommunityMerchants, fetchCommunityEarners, fetchLatestScore, fetchScoreHistory } from '@/lib/api';
 import { supabase } from '@/integrations/supabase/client';
 import { getFlagEmoji } from '@/lib/mock-data';
 import { useAuth } from '@/contexts/AuthContext';
@@ -40,10 +38,6 @@ const CommunityDashboard = () => {
   const { user } = useAuth();
   const { slug } = useParams();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [earnerOpen, setEarnerOpen] = useState(false);
-  const [earnerDescription, setEarnerDescription] = useState('');
-  const [earnerPaymentMethod, setEarnerPaymentMethod] = useState('Lightning');
 
   const { data: community, isLoading, isError, error } = useQuery({
     queryKey: ['community', slug],
@@ -172,17 +166,6 @@ const CommunityDashboard = () => {
     enabled: !!user,
   });
 
-  const addEarnerMutation = useMutation({
-    mutationFn: () => submitEarner(communityId!, { description: earnerDescription, payment_method: earnerPaymentMethod }, user?.id),
-    onSuccess: () => {
-      setEarnerDescription('');
-      setEarnerPaymentMethod('Lightning');
-      setEarnerOpen(false);
-      queryClient.invalidateQueries({ queryKey: ['earners', communityId] });
-      toast({ title: 'Earner submitted', description: 'Validators will review this earner within 48 hours.' });
-    },
-    onError: (err: Error) => toast({ title: 'Could not add earner', description: err.message, variant: 'destructive' }),
-  });
 
   if (isLoading) {
     return (
