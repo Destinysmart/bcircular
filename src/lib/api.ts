@@ -169,12 +169,14 @@ export async function submitEarner(communityId: string, earner: {
   description: string;
   earning_method?: string;
   payment_method?: string;
+  earning_frequency?: 'daily' | 'weekly' | 'monthly' | 'occasionally';
 }, userId?: string) {
-  const { data, error } = await supabase.from('earners').insert({
+  const { data, error } = await (supabase as any).from('earners').insert({
     community_id: communityId,
     description: earner.description,
     earning_method: earner.earning_method,
     payment_method: earner.payment_method,
+    earning_frequency: earner.earning_frequency,
     submitted_by: userId || null,
   }).select().single();
   if (error) throw error;

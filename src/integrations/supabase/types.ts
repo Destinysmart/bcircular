@@ -401,9 +401,13 @@ export type Database = {
           created_at: string
           description: string
           earner_code: string | null
+          earning_frequency: string | null
           earning_method: string | null
+          has_wallet_pending: boolean
           id: string
           payment_method: string | null
+          pending_blink_api_key_encrypted: string | null
+          pending_ln_address_hash: string | null
           status: Database["public"]["Enums"]["submission_status"]
           submitted_by: string | null
         }
@@ -412,9 +416,13 @@ export type Database = {
           created_at?: string
           description: string
           earner_code?: string | null
+          earning_frequency?: string | null
           earning_method?: string | null
+          has_wallet_pending?: boolean
           id?: string
           payment_method?: string | null
+          pending_blink_api_key_encrypted?: string | null
+          pending_ln_address_hash?: string | null
           status?: Database["public"]["Enums"]["submission_status"]
           submitted_by?: string | null
         }
@@ -423,9 +431,13 @@ export type Database = {
           created_at?: string
           description?: string
           earner_code?: string | null
+          earning_frequency?: string | null
           earning_method?: string | null
+          has_wallet_pending?: boolean
           id?: string
           payment_method?: string | null
+          pending_blink_api_key_encrypted?: string | null
+          pending_ln_address_hash?: string | null
           status?: Database["public"]["Enums"]["submission_status"]
           submitted_by?: string | null
         }
@@ -554,12 +566,15 @@ export type Database = {
           claimed_at: string | null
           community_id: string
           created_at: string
+          has_wallet_pending: boolean
           id: string
           lat: number | null
           lng: number | null
           merchant_code: string | null
           name: string
           payment_methods: string[]
+          pending_blink_api_key_encrypted: string | null
+          pending_ln_address_hash: string | null
           public_merchant_id: string | null
           source: string | null
           status: Database["public"]["Enums"]["submission_status"]
@@ -576,12 +591,15 @@ export type Database = {
           claimed_at?: string | null
           community_id: string
           created_at?: string
+          has_wallet_pending?: boolean
           id?: string
           lat?: number | null
           lng?: number | null
           merchant_code?: string | null
           name: string
           payment_methods?: string[]
+          pending_blink_api_key_encrypted?: string | null
+          pending_ln_address_hash?: string | null
           public_merchant_id?: string | null
           source?: string | null
           status?: Database["public"]["Enums"]["submission_status"]
@@ -598,12 +616,15 @@ export type Database = {
           claimed_at?: string | null
           community_id?: string
           created_at?: string
+          has_wallet_pending?: boolean
           id?: string
           lat?: number | null
           lng?: number | null
           merchant_code?: string | null
           name?: string
           payment_methods?: string[]
+          pending_blink_api_key_encrypted?: string | null
+          pending_ln_address_hash?: string | null
           public_merchant_id?: string | null
           source?: string | null
           status?: Database["public"]["Enums"]["submission_status"]
