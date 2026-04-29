@@ -57,12 +57,14 @@ export type Database = {
           blink_created_at: string
           blink_tx_id: string
           community_id: string
+          counterparty_ln_hash: string | null
           counterparty_wallet_id: string | null
           created_at: string
           direction: string
           id: string
           is_internal: boolean
           memo: string | null
+          payment_hash_sha256: string | null
           settlement_amount: number
           settlement_currency: string
           status: string
@@ -72,12 +74,14 @@ export type Database = {
           blink_created_at: string
           blink_tx_id: string
           community_id: string
+          counterparty_ln_hash?: string | null
           counterparty_wallet_id?: string | null
           created_at?: string
           direction: string
           id?: string
           is_internal?: boolean
           memo?: string | null
+          payment_hash_sha256?: string | null
           settlement_amount: number
           settlement_currency?: string
           status?: string
@@ -87,12 +91,14 @@ export type Database = {
           blink_created_at?: string
           blink_tx_id?: string
           community_id?: string
+          counterparty_ln_hash?: string | null
           counterparty_wallet_id?: string | null
           created_at?: string
           direction?: string
           id?: string
           is_internal?: boolean
           memo?: string | null
+          payment_hash_sha256?: string | null
           settlement_amount?: number
           settlement_currency?: string
           status?: string
@@ -362,11 +368,39 @@ export type Database = {
           },
         ]
       }
+      earner_wallets: {
+        Row: {
+          claimed_at: string | null
+          community_id: string
+          created_at: string
+          earner_id: string
+          id: string
+          wallet_id: string | null
+        }
+        Insert: {
+          claimed_at?: string | null
+          community_id: string
+          created_at?: string
+          earner_id: string
+          id?: string
+          wallet_id?: string | null
+        }
+        Update: {
+          claimed_at?: string | null
+          community_id?: string
+          created_at?: string
+          earner_id?: string
+          id?: string
+          wallet_id?: string | null
+        }
+        Relationships: []
+      }
       earners: {
         Row: {
           community_id: string
           created_at: string
           description: string
+          earner_code: string | null
           earning_method: string | null
           id: string
           payment_method: string | null
@@ -377,6 +411,7 @@ export type Database = {
           community_id: string
           created_at?: string
           description: string
+          earner_code?: string | null
           earning_method?: string | null
           id?: string
           payment_method?: string | null
@@ -387,6 +422,7 @@ export type Database = {
           community_id?: string
           created_at?: string
           description?: string
+          earner_code?: string | null
           earning_method?: string | null
           id?: string
           payment_method?: string | null
@@ -402,6 +438,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      economy_wallet_metrics: {
+        Row: {
+          active_earner_wallets: number
+          active_merchant_wallets: number
+          calculated_at: string
+          circular_transaction_count: number
+          circular_volume_sats: number
+          community_id: string
+          id: string
+          period_end: string
+          period_start: string
+          real_circularity_rate: number
+          total_inflow_sats: number
+          total_outflow_sats: number
+          total_transaction_count: number
+        }
+        Insert: {
+          active_earner_wallets?: number
+          active_merchant_wallets?: number
+          calculated_at?: string
+          circular_transaction_count?: number
+          circular_volume_sats?: number
+          community_id: string
+          id?: string
+          period_end: string
+          period_start: string
+          real_circularity_rate?: number
+          total_inflow_sats?: number
+          total_outflow_sats?: number
+          total_transaction_count?: number
+        }
+        Update: {
+          active_earner_wallets?: number
+          active_merchant_wallets?: number
+          calculated_at?: string
+          circular_transaction_count?: number
+          circular_volume_sats?: number
+          community_id?: string
+          id?: string
+          period_end?: string
+          period_start?: string
+          real_circularity_rate?: number
+          total_inflow_sats?: number
+          total_outflow_sats?: number
+          total_transaction_count?: number
+        }
+        Relationships: []
       }
       merchant_invoices: {
         Row: {
@@ -473,6 +557,7 @@ export type Database = {
           id: string
           lat: number | null
           lng: number | null
+          merchant_code: string | null
           name: string
           payment_methods: string[]
           public_merchant_id: string | null
@@ -494,6 +579,7 @@ export type Database = {
           id?: string
           lat?: number | null
           lng?: number | null
+          merchant_code?: string | null
           name: string
           payment_methods?: string[]
           public_merchant_id?: string | null
@@ -515,6 +601,7 @@ export type Database = {
           id?: string
           lat?: number | null
           lng?: number | null
+          merchant_code?: string | null
           name?: string
           payment_methods?: string[]
           public_merchant_id?: string | null
@@ -754,36 +841,51 @@ export type Database = {
       wallets: {
         Row: {
           balance_sats: number
+          blink_api_key_encrypted: string | null
           blink_wallet_id: string
           community_id: string
           created_at: string
           id: string
           last_synced_at: string | null
+          ln_address_hash: string | null
+          owner_id: string | null
+          owner_type: string | null
           updated_at: string
           user_id: string
           wallet_currency: string
+          wallet_status: string
         }
         Insert: {
           balance_sats?: number
+          blink_api_key_encrypted?: string | null
           blink_wallet_id: string
           community_id: string
           created_at?: string
           id?: string
           last_synced_at?: string | null
+          ln_address_hash?: string | null
+          owner_id?: string | null
+          owner_type?: string | null
           updated_at?: string
           user_id: string
           wallet_currency?: string
+          wallet_status?: string
         }
         Update: {
           balance_sats?: number
+          blink_api_key_encrypted?: string | null
           blink_wallet_id?: string
           community_id?: string
           created_at?: string
           id?: string
           last_synced_at?: string | null
+          ln_address_hash?: string | null
+          owner_id?: string | null
+          owner_type?: string | null
           updated_at?: string
           user_id?: string
           wallet_currency?: string
+          wallet_status?: string
         }
         Relationships: [
           {
