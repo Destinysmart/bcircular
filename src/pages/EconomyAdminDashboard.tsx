@@ -15,6 +15,7 @@ import { fetchCommunityBySlug, fetchLatestScore, fetchPendingSubmissions, fetchC
 import { AlertTriangle, CheckCircle, XCircle, Trash2, RefreshCw, Download, Printer, ExternalLink } from 'lucide-react';
 import BlinkWalletSettings from '@/components/BlinkWalletSettings';
 import MerchantClaimManager from '@/components/MerchantClaimManager';
+import ConnectedWalletsManager from '@/components/ConnectedWalletsManager';
 import EconomyLogo from '@/components/EconomyLogo';
 import UploadZone from '@/components/UploadZone';
 import { QRCodeCanvas } from 'qrcode.react';
@@ -638,6 +639,11 @@ const EconomyAdminDashboard = () => {
         {/* Merchant claim links */}
         <section className="mb-6">
           <MerchantClaimManager communityId={communityId!} />
+        </section>
+
+        {/* Connected Blink wallets (merchants + earners) */}
+        <section className="mb-6">
+          <ConnectedWalletsManager communityId={communityId!} />
         </section>
 
         {/* Score Section */}

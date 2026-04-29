@@ -12,6 +12,7 @@ import SatsFlowGraph from '@/components/SatsFlowGraph';
 import LiveActivityFeed from '@/components/LiveActivityFeed';
 import SatsMovementPanel from '@/components/SatsMovementPanel';
 import BlinkWalletSettings from '@/components/BlinkWalletSettings';
+import VerifiedCircularityBlock from '@/components/VerifiedCircularityBlock';
 import StatCard from '@/components/StatCard';
 import EconomyLogo from '@/components/EconomyLogo';
 import { TierBadge, TIER_CHECKLIST, getTierMeta, type FbceTier } from '@/components/TierBadge';
