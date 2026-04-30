@@ -28,13 +28,25 @@ const SyncSchema = z.object({
   code: z.string().min(4).max(64),
 })
 
+const SyncWalletSchema = z.object({
+  action: z.literal('sync_wallet'),
+  community_id: z.string().uuid(),
+  wallet_id: z.string().uuid(),
+})
+
+const DashboardSchema = z.object({
+  action: z.literal('dashboard'),
+  code: z.string().min(4).max(64),
+  owner_type: z.enum(['merchant', 'earner']).optional(),
+})
+
 const DisconnectSchema = z.object({
   action: z.literal('disconnect'),
   owner_type: z.enum(['merchant', 'earner']),
   code: z.string().min(4).max(64),
 })
 
-const BodySchema = z.discriminatedUnion('action', [ConnectSchema, SyncSchema, DisconnectSchema])
+const BodySchema = z.discriminatedUnion('action', [ConnectSchema, SyncSchema, SyncWalletSchema, DashboardSchema, DisconnectSchema])
 
 // ── Crypto helpers ────────────────────────────────────────────────────────
 async function sha256Hex(input: string): Promise<string> {
@@ -62,12 +74,21 @@ async function encryptApiKey(plaintext: string): Promise<string> {
 }
 
 async function decryptApiKey(payload: string): Promise<string> {
-  const key = await getAesKey()
   const bytes = Uint8Array.from(atob(payload), c => c.charCodeAt(0))
   const iv = bytes.slice(0, 12)
   const ct = bytes.slice(12)
-  const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct)
-  return new TextDecoder().decode(pt)
+  try {
+    const key = await getAesKey()
+    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct)
+    return new TextDecoder().decode(pt)
+  } catch (_) {
+    const secret = Deno.env.get('BLINK_KEY_ENCRYPTION_SECRET')
+    if (!secret) throw new Error('BLINK_KEY_ENCRYPTION_SECRET not configured')
+    const legacyRaw = new TextEncoder().encode(secret.padEnd(32, '0').slice(0, 32))
+    const legacyKey = await crypto.subtle.importKey('raw', legacyRaw, 'AES-GCM', false, ['decrypt'])
+    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, legacyKey, ct)
+    return new TextDecoder().decode(pt)
+  }
 }
 
 // ── Blink GraphQL ─────────────────────────────────────────────────────────
