@@ -28,13 +28,25 @@ const SyncSchema = z.object({
   code: z.string().min(4).max(64),
 })
 
+const SyncWalletSchema = z.object({
+  action: z.literal('sync_wallet'),
+  community_id: z.string().uuid(),
+  wallet_id: z.string().uuid(),
+})
+
+const DashboardSchema = z.object({
+  action: z.literal('dashboard'),
+  code: z.string().min(4).max(64),
+  owner_type: z.enum(['merchant', 'earner']).optional(),
+})
+
 const DisconnectSchema = z.object({
   action: z.literal('disconnect'),
   owner_type: z.enum(['merchant', 'earner']),
   code: z.string().min(4).max(64),
 })
 
-const BodySchema = z.discriminatedUnion('action', [ConnectSchema, SyncSchema, DisconnectSchema])
+const BodySchema = z.discriminatedUnion('action', [ConnectSchema, SyncSchema, SyncWalletSchema, DashboardSchema, DisconnectSchema])
 
 // ── Crypto helpers ────────────────────────────────────────────────────────
 async function sha256Hex(input: string): Promise<string> {
@@ -62,12 +74,21 @@ async function encryptApiKey(plaintext: string): Promise<string> {
 }
 
 async function decryptApiKey(payload: string): Promise<string> {
-  const key = await getAesKey()
   const bytes = Uint8Array.from(atob(payload), c => c.charCodeAt(0))
   const iv = bytes.slice(0, 12)
   const ct = bytes.slice(12)
-  const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct)
-  return new TextDecoder().decode(pt)
+  try {
+    const key = await getAesKey()
+    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct)
+    return new TextDecoder().decode(pt)
+  } catch (_) {
+    const secret = Deno.env.get('BLINK_KEY_ENCRYPTION_SECRET')
+    if (!secret) throw new Error('BLINK_KEY_ENCRYPTION_SECRET not configured')
+    const legacyRaw = new TextEncoder().encode(secret.padEnd(32, '0').slice(0, 32))
+    const legacyKey = await crypto.subtle.importKey('raw', legacyRaw, 'AES-GCM', false, ['decrypt'])
+    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, legacyKey, ct)
+    return new TextDecoder().decode(pt)
+  }
 }
 
 // ── Blink GraphQL ─────────────────────────────────────────────────────────
@@ -121,7 +142,7 @@ async function lookupOwner(supabase: any, owner_type: 'merchant' | 'earner', cod
   if (owner_type === 'merchant') {
     const { data, error } = await supabase
       .from('merchants')
-      .select('id, community_id, status, name')
+      .select('id, community_id, status, name, pending_blink_api_key_encrypted, pending_ln_address_hash')
       .eq('merchant_code', code)
       .maybeSingle()
     if (error) throw error
@@ -131,7 +152,7 @@ async function lookupOwner(supabase: any, owner_type: 'merchant' | 'earner', cod
   } else {
     const { data, error } = await supabase
       .from('earners')
-      .select('id, community_id, status, description')
+      .select('id, community_id, status, description, pending_blink_api_key_encrypted, pending_ln_address_hash')
       .eq('earner_code', code)
       .maybeSingle()
     if (error) throw error
@@ -149,6 +170,81 @@ async function findOwnerWallet(supabase: any, owner_type: string, owner_id: stri
     .eq('owner_id', owner_id)
     .maybeSingle()
   return data
+}
+
+async function ensureOwnerWallet(supabase: any, owner_type: 'merchant' | 'earner', owner: any) {
+  const existing = await findOwnerWallet(supabase, owner_type, owner.id)
+  if (existing) return existing
+  if (!owner.pending_blink_api_key_encrypted) return null
+
+  const { data: community } = await supabase
+    .from('communities')
+    .select('admin_id')
+    .eq('id', owner.community_id)
+    .maybeSingle()
+  const { data, error } = await supabase.from('wallets').insert({
+    community_id: owner.community_id,
+    user_id: community?.admin_id || owner.community_id,
+    blink_wallet_id: '',
+    wallet_currency: 'BTC',
+    balance_sats: 0,
+    owner_type,
+    owner_id: owner.id,
+    ln_address_hash: owner.pending_ln_address_hash || null,
+    blink_api_key_encrypted: owner.pending_blink_api_key_encrypted,
+    wallet_status: 'pending',
+  }).select('*').single()
+  if (error) throw error
+
+  if (owner_type === 'merchant') {
+    await supabase.from('merchants').update({
+      wallet_id: data.id,
+      has_wallet_pending: false,
+      pending_blink_api_key_encrypted: null,
+      pending_ln_address_hash: null,
+    }).eq('id', owner.id)
+  } else {
+    const { data: earnerWallet } = await supabase.from('earner_wallets').select('id').eq('earner_id', owner.id).maybeSingle()
+    if (earnerWallet) {
+      await supabase.from('earner_wallets').update({ wallet_id: data.id, claimed_at: new Date().toISOString() }).eq('id', earnerWallet.id)
+    } else {
+      await supabase.from('earner_wallets').insert({
+        earner_id: owner.id,
+        community_id: owner.community_id,
+        wallet_id: data.id,
+        claimed_at: new Date().toISOString(),
+      })
+    }
+    await supabase.from('earners').update({
+      has_wallet_pending: false,
+      pending_blink_api_key_encrypted: null,
+      pending_ln_address_hash: null,
+    }).eq('id', owner.id)
+  }
+
+  return data
+}
+
+async function requireEconomyAdmin(req: Request, supabase: any, communityId: string): Promise<string | null> {
+  const authHeader = req.headers.get('Authorization')
+  if (!authHeader?.startsWith('Bearer ')) return 'Unauthorized'
+  const userClient = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_ANON_KEY')!,
+    { global: { headers: { Authorization: authHeader } } },
+  )
+  const token = authHeader.replace('Bearer ', '')
+  const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(token)
+  const userId = claimsData?.claims?.sub as string | undefined
+  if (claimsErr || !userId) return 'Unauthorized'
+
+  const [{ data: community }, { data: adminRow }, { data: roleRow }] = await Promise.all([
+    supabase.from('communities').select('admin_id').eq('id', communityId).maybeSingle(),
+    supabase.from('community_admins').select('id').eq('community_id', communityId).eq('user_id', userId).maybeSingle(),
+    supabase.from('user_roles').select('role').eq('user_id', userId).eq('role', 'admin').maybeSingle(),
+  ])
+  if (community?.admin_id === userId || adminRow || roleRow) return null
+  return 'Forbidden'
 }
 
 // ── Metric recompute ──────────────────────────────────────────────────────
@@ -327,7 +423,41 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     )
 
-    const owner = await lookupOwner(supabase, body.owner_type, body.code)
+    if (body.action === 'sync_wallet') {
+      const authError = await requireEconomyAdmin(req, supabase, body.community_id)
+      if (authError) {
+        return new Response(JSON.stringify({ error: authError }), {
+          status: authError === 'Unauthorized' ? 401 : 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      const { data: wallet, error: walletError } = await supabase
+        .from('wallets')
+        .select('*')
+        .eq('id', body.wallet_id)
+        .eq('community_id', body.community_id)
+        .maybeSingle()
+      if (walletError) throw walletError
+      if (!wallet?.blink_api_key_encrypted) {
+        return new Response(JSON.stringify({ error: 'Wallet not connected' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      const result = await performSync(supabase, wallet)
+      return new Response(JSON.stringify({ success: true, ...result }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    const ownerTypes: Array<'merchant' | 'earner'> = body.action === 'dashboard' && !body.owner_type
+      ? (body.code.startsWith('ear_') ? ['earner', 'merchant'] : ['merchant', 'earner'])
+      : [body.owner_type as 'merchant' | 'earner']
+    let owner: any = null
+    let resolvedOwnerType: 'merchant' | 'earner' | undefined
+    for (const ownerType of ownerTypes) {
+      if (!ownerType) continue
+      owner = await lookupOwner(supabase, ownerType, body.code)
+      if (owner) { resolvedOwnerType = ownerType; break }
+    }
     if (!owner) {
       return new Response(JSON.stringify({ error: 'Invalid code' }), {
         status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -337,6 +467,33 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'This submission has not been approved by validators yet.' }), {
         status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
+    }
+
+    if (body.action === 'dashboard') {
+      const [{ data: community }, wallet] = await Promise.all([
+        supabase.from('communities').select('name, slug, city, country').eq('id', owner.community_id).maybeSingle(),
+        ensureOwnerWallet(supabase, resolvedOwnerType!, owner),
+      ])
+      return new Response(JSON.stringify({
+        success: true,
+        owner_type: resolvedOwnerType,
+        owner: {
+          id: owner.id,
+          community_id: owner.community_id,
+          community_name: community?.name || '',
+          community_slug: community?.slug || '',
+          community_city: community?.city || '',
+          community_country: community?.country || '',
+          name: owner.name,
+        },
+        wallet: wallet ? {
+          id: wallet.id,
+          wallet_status: wallet.wallet_status,
+          last_synced_at: wallet.last_synced_at,
+          balance_sats: wallet.balance_sats,
+          ln_address_hash: wallet.ln_address_hash,
+        } : null,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
     // Get the community admin id (used as user_id placeholder for the wallet record so existing RLS still works)
@@ -427,7 +584,7 @@ Deno.serve(async (req) => {
     }
 
     if (body.action === 'sync') {
-      const wallet = await findOwnerWallet(supabase, body.owner_type, owner.id)
+      const wallet = await ensureOwnerWallet(supabase, body.owner_type, owner)
       if (!wallet?.blink_api_key_encrypted) {
         return new Response(JSON.stringify({ error: 'Wallet not connected' }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -485,7 +642,7 @@ Deno.serve(async (req) => {
     })
   } catch (err: any) {
     console.error('sync-wallet-transactions error:', err?.message || err)
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+    return new Response(JSON.stringify({ error: err?.message || 'Internal server error' }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }

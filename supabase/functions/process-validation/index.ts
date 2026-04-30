@@ -99,15 +99,82 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to update ${tableName}: ${updateError.message}`)
     }
 
-    // If approved, get community_id and trigger score recalculation
+    // If approved, get community_id, promote any pending wallet key, and trigger score recalculation
     if (newStatus === 'approved') {
       const { data: submission } = await supabase
         .from(tableName)
-        .select('community_id')
+        .select('id, community_id, pending_blink_api_key_encrypted, pending_ln_address_hash')
         .eq('id', submission_id)
         .single()
 
       if (submission) {
+        if ((submission_type === 'merchant' || submission_type === 'earner') && submission.pending_blink_api_key_encrypted) {
+          const { data: communityRow } = await supabase
+            .from('communities')
+            .select('admin_id')
+            .eq('id', submission.community_id)
+            .maybeSingle()
+          const { data: existingWallet } = await supabase
+            .from('wallets')
+            .select('id, blink_wallet_id')
+            .eq('owner_type', submission_type)
+            .eq('owner_id', submission.id)
+            .maybeSingle()
+
+          let walletId = existingWallet?.id
+          const walletPayload = {
+            community_id: submission.community_id,
+            user_id: communityRow?.admin_id || submission.community_id,
+            blink_wallet_id: existingWallet?.blink_wallet_id || '',
+            wallet_currency: 'BTC',
+            balance_sats: 0,
+            owner_type: submission_type,
+            owner_id: submission.id,
+            ln_address_hash: submission.pending_ln_address_hash || null,
+            blink_api_key_encrypted: submission.pending_blink_api_key_encrypted,
+            wallet_status: 'pending',
+          }
+
+          if (walletId) {
+            const { error: walletUpdateError } = await supabase.from('wallets').update(walletPayload).eq('id', walletId)
+            if (walletUpdateError) throw walletUpdateError
+          } else {
+            const { data: insertedWallet, error: walletInsertError } = await supabase
+              .from('wallets')
+              .insert(walletPayload)
+              .select('id')
+              .single()
+            if (walletInsertError) throw walletInsertError
+            walletId = insertedWallet.id
+          }
+
+          if (submission_type === 'merchant') {
+            await supabase.from('merchants').update({
+              wallet_id: walletId,
+              has_wallet_pending: false,
+              pending_blink_api_key_encrypted: null,
+              pending_ln_address_hash: null,
+            }).eq('id', submission.id)
+          } else {
+            const { data: earnerWallet } = await supabase.from('earner_wallets').select('id').eq('earner_id', submission.id).maybeSingle()
+            if (earnerWallet) {
+              await supabase.from('earner_wallets').update({ wallet_id: walletId, claimed_at: new Date().toISOString() }).eq('id', earnerWallet.id)
+            } else {
+              await supabase.from('earner_wallets').insert({
+                earner_id: submission.id,
+                community_id: submission.community_id,
+                wallet_id: walletId,
+                claimed_at: new Date().toISOString(),
+              })
+            }
+            await supabase.from('earners').update({
+              has_wallet_pending: false,
+              pending_blink_api_key_encrypted: null,
+              pending_ln_address_hash: null,
+            }).eq('id', submission.id)
+          }
+        }
+
         // Trigger score recalculation
         await supabase.functions.invoke('calculate-score', {
           body: { community_id: submission.community_id },

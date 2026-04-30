@@ -42,31 +42,53 @@ function timeAgo(iso: string | null) {
 
 export default function ConnectedWalletsManager({ communityId }: Props) {
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [resultById, setResultById] = useState<Record<string, { type: 'success' | 'error'; message: string }>>({});
 
   const { data, refetch, isLoading } = useQuery({
     queryKey: ['connected-wallets', communityId],
     queryFn: () => fetchOwnersWithWallets(communityId),
   });
 
-  const { data: metrics } = useQuery({
+  const { data: metrics, refetch: refetchMetrics } = useQuery({
     queryKey: ['economy-wallet-metrics', communityId],
     queryFn: () => fetchEconomyWalletMetrics(communityId),
   });
 
   function copyLink(ownerType: 'merchant' | 'earner', code: string) {
-    const url = `${appUrl()}/${ownerType}/connect?code=${code}`;
+    const url = `${appUrl()}/connect?code=${code}`;
     navigator.clipboard.writeText(url);
     toast({ title: 'Connect link copied', description: 'Share via WhatsApp, email, etc.' });
   }
 
-  async function syncOne(ownerType: 'merchant' | 'earner', code: string, id: string) {
+  async function syncOne(ownerType: 'merchant' | 'earner', code: string, id: string, walletId?: string) {
     setBusyId(id);
     try {
-      const res = await walletApi.sync(ownerType, code);
-      toast({ title: 'Sync complete', description: `${res.synced} txns, ${res.internal} circular.` });
-      refetch();
+      const res = walletId
+        ? await walletApi.syncWallet(communityId, walletId)
+        : await walletApi.sync(ownerType, code);
+      const message = `Synced ${res.synced ?? 0} transactions${typeof res.internal === 'number' ? ` (${res.internal} circular)` : ''}`;
+      setResultById(prev => ({ ...prev, [id]: { type: 'success', message } }));
+      toast({ title: 'Sync complete', description: message });
+      await refetch();
+      await refetchMetrics();
     } catch (err: any) {
-      toast({ title: 'Sync failed', description: err.message, variant: 'destructive' });
+      const message = err.message || 'Sync failed';
+      setResultById(prev => ({ ...prev, [id]: { type: 'error', message } }));
+      toast({ title: 'Sync failed', description: message, variant: 'destructive' });
+    } finally { setBusyId(null); }
+  }
+
+  async function testOne(id: string, walletId: string) {
+    setBusyId(id);
+    try {
+      const res = await walletApi.testConnection(communityId, walletId);
+      const message = res.message || 'Connection successful';
+      setResultById(prev => ({ ...prev, [id]: { type: 'success', message } }));
+      toast({ title: 'Connection test passed', description: message });
+    } catch (err: any) {
+      const message = err.message || 'Connection test failed';
+      setResultById(prev => ({ ...prev, [id]: { type: 'error', message } }));
+      toast({ title: 'Connection test failed', description: message, variant: 'destructive' });
     } finally { setBusyId(null); }
   }
 
@@ -110,17 +132,23 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
           <ul className="space-y-2">
             {merchants.map((m: any) => {
               const conn = m.wallet?.wallet_status === 'connected';
+              const hasWallet = !!m.wallet?.id;
+              const rowResult = resultById[m.id];
               return (
-                <li key={m.id} className="rounded-md border p-3 flex flex-wrap items-center justify-between gap-3">
-                  <div className="min-w-0">
+                <li key={m.id} className="rounded-md border p-3 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="min-w-0">
                     <div className="font-medium truncate">{m.name}</div>
-                    <div className="text-xs text-muted-foreground"><code>{m.merchant_code}</code> · <Badge variant={conn ? 'default' : 'secondary'} className={conn ? 'bg-score-green text-background' : ''}>{conn ? '● Connected' : '○ Pending'}</Badge> {conn && `· last sync ${timeAgo(m.wallet.last_synced_at)}`}</div>
-                  </div>
-                  <div className="flex gap-2">
+                      <div className="text-xs text-muted-foreground"><code>{m.merchant_code}</code> · <Badge variant={conn ? 'default' : 'secondary'} className={conn ? 'bg-score-green text-background' : ''}>{conn ? '● Connected' : hasWallet ? '○ Saved, not synced' : '○ Pending'}</Badge> {hasWallet && `· last sync ${timeAgo(m.wallet.last_synced_at)}`}</div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
                     <Button size="sm" variant="outline" onClick={() => copyLink('merchant', m.merchant_code)}><Copy className="h-3 w-3 mr-1" /> Copy link</Button>
-                    {conn && <Button size="sm" variant="outline" onClick={() => syncOne('merchant', m.merchant_code, m.id)} disabled={busyId === m.id}>{busyId === m.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCcw className="h-3 w-3" />}</Button>}
-                    {conn && <Button size="sm" variant="ghost" className="text-destructive" onClick={() => disconnectOne('merchant', m.merchant_code, m.id)} disabled={busyId === m.id}>Disconnect</Button>}
+                      {hasWallet && <Button size="sm" variant="outline" onClick={() => testOne(m.id, m.wallet.id)} disabled={busyId === m.id}>{busyId === m.id ? <Loader2 className="h-3 w-3 animate-spin" /> : null} Test connection</Button>}
+                      {hasWallet && <Button size="sm" variant="outline" onClick={() => syncOne('merchant', m.merchant_code, m.id, m.wallet.id)} disabled={busyId === m.id}>{busyId === m.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCcw className="h-3 w-3" />} Sync now</Button>}
+                      {conn && <Button size="sm" variant="ghost" className="text-destructive" onClick={() => disconnectOne('merchant', m.merchant_code, m.id)} disabled={busyId === m.id}>Disconnect</Button>}
+                    </div>
                   </div>
+                  {rowResult && <div className={`rounded-md border px-3 py-2 text-xs ${rowResult.type === 'success' ? 'border-score-green/40 bg-score-green/10 text-foreground' : 'border-destructive/40 bg-destructive/10 text-destructive'}`}>{rowResult.message}</div>}
                 </li>
               );
             })}
@@ -133,17 +161,23 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
           <ul className="space-y-2">
             {earners.map((e: any) => {
               const conn = e.wallet?.wallet_status === 'connected';
+              const hasWallet = !!e.wallet?.id;
+              const rowResult = resultById[e.id];
               return (
-                <li key={e.id} className="rounded-md border p-3 flex flex-wrap items-center justify-between gap-3">
-                  <div className="min-w-0">
+                <li key={e.id} className="rounded-md border p-3 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="min-w-0">
                     <div className="font-medium truncate">{e.description}</div>
-                    <div className="text-xs text-muted-foreground"><code>{e.earner_code}</code> · <Badge variant={conn ? 'default' : 'secondary'} className={conn ? 'bg-score-green text-background' : ''}>{conn ? '● Connected' : '○ Pending'}</Badge> {conn && `· last sync ${timeAgo(e.wallet.last_synced_at)}`}</div>
-                  </div>
-                  <div className="flex gap-2">
+                      <div className="text-xs text-muted-foreground"><code>{e.earner_code}</code> · <Badge variant={conn ? 'default' : 'secondary'} className={conn ? 'bg-score-green text-background' : ''}>{conn ? '● Connected' : hasWallet ? '○ Saved, not synced' : '○ Pending'}</Badge> {hasWallet && `· last sync ${timeAgo(e.wallet.last_synced_at)}`}</div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
                     <Button size="sm" variant="outline" onClick={() => copyLink('earner', e.earner_code)}><Copy className="h-3 w-3 mr-1" /> Copy link</Button>
-                    {conn && <Button size="sm" variant="outline" onClick={() => syncOne('earner', e.earner_code, e.id)} disabled={busyId === e.id}>{busyId === e.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCcw className="h-3 w-3" />}</Button>}
-                    {conn && <Button size="sm" variant="ghost" className="text-destructive" onClick={() => disconnectOne('earner', e.earner_code, e.id)} disabled={busyId === e.id}>Disconnect</Button>}
+                      {hasWallet && <Button size="sm" variant="outline" onClick={() => testOne(e.id, e.wallet.id)} disabled={busyId === e.id}>{busyId === e.id ? <Loader2 className="h-3 w-3 animate-spin" /> : null} Test connection</Button>}
+                      {hasWallet && <Button size="sm" variant="outline" onClick={() => syncOne('earner', e.earner_code, e.id, e.wallet.id)} disabled={busyId === e.id}>{busyId === e.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCcw className="h-3 w-3" />} Sync now</Button>}
+                      {conn && <Button size="sm" variant="ghost" className="text-destructive" onClick={() => disconnectOne('earner', e.earner_code, e.id)} disabled={busyId === e.id}>Disconnect</Button>}
+                    </div>
                   </div>
+                  {rowResult && <div className={`rounded-md border px-3 py-2 text-xs ${rowResult.type === 'success' ? 'border-score-green/40 bg-score-green/10 text-foreground' : 'border-destructive/40 bg-destructive/10 text-destructive'}`}>{rowResult.message}</div>}
                 </li>
               );
             })}

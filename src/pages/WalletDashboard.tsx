@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import {
-  fetchOwnerByCode, fetchOwnerByAnyCode,
   fetchWalletTransactions, fetchWalletMonthlyStats,
   walletApi, type WalletOwnerType,
 } from '@/lib/walletApi';
@@ -43,13 +42,18 @@ export default function WalletDashboard({ ownerType }: Props) {
     queryKey: ['wallet-owner-lookup', ownerType ?? 'auto', code],
     queryFn: async () => {
       if (!code) return null;
-      if (ownerType) {
-        const owner = await fetchOwnerByCode(ownerType, code);
-        return owner ? { owner, owner_type: ownerType } : null;
-      }
-      return await fetchOwnerByAnyCode(code);
+      const res = await walletApi.dashboard(code, ownerType);
+      if (!res?.owner) return null;
+      return {
+        owner_type: res.owner_type as WalletOwnerType,
+        owner: {
+          ...res.owner,
+          wallet: res.wallet,
+        },
+      };
     },
     enabled: !!code,
+    retry: false,
   });
   const owner = ownerQ.data?.owner;
   const detectedType = ownerQ.data?.owner_type;

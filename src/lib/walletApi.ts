@@ -9,18 +9,37 @@ export type ConnectInput = {
   ln_address?: string | null;
 };
 
-async function invoke(action: string, body: Record<string, unknown>) {
-  const { data, error } = await supabase.functions.invoke('sync-wallet-transactions', {
-    body: { action, ...body },
+async function invokeFunction(functionName: string, body: Record<string, unknown>) {
+  const { data, error } = await supabase.functions.invoke(functionName, {
+    body,
   });
-  if (error) throw new Error(error.message || 'Request failed');
+  if (error) {
+    let message = error.message || 'Request failed';
+    const response = (error as any).context;
+    if (response?.clone) {
+      try {
+        const payload = await response.clone().json();
+        message = payload?.error || payload?.message || message;
+      } catch (_) {
+        // Keep the original SDK error if the response body is not JSON.
+      }
+    }
+    throw new Error(message);
+  }
   if (data?.error) throw new Error(data.error);
   return data;
+}
+
+async function invoke(action: string, body: Record<string, unknown>) {
+  return invokeFunction('sync-wallet-transactions', { action, ...body });
 }
 
 export const walletApi = {
   connect: (input: ConnectInput) => invoke('connect', input),
   sync: (owner_type: WalletOwnerType, code: string) => invoke('sync', { owner_type, code }),
+  syncWallet: (community_id: string, wallet_id: string) => invoke('sync_wallet', { community_id, wallet_id }),
+  dashboard: (code: string, owner_type?: WalletOwnerType) => invoke('dashboard', { code, ...(owner_type ? { owner_type } : {}) }),
+  testConnection: (community_id: string, wallet_id: string) => invokeFunction('test-wallet-connection', { community_id, wallet_id }),
   disconnect: (owner_type: WalletOwnerType, code: string) => invoke('disconnect', { owner_type, code }),
 };
 
