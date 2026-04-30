@@ -31,9 +31,7 @@ async function invokeFunction(functionName: string, body: Record<string, unknown
 }
 
 async function invoke(action: string, body: Record<string, unknown>) {
-  return invokeFunction('sync-wallet-transactions', {
-    body: { action, ...body },
-  });
+  return invokeFunction('sync-wallet-transactions', { action, ...body });
 }
 
 export const walletApi = {
