@@ -118,7 +118,10 @@ export default function ConnectWallet({ ownerType }: Props) {
     );
   }
 
-  const alreadyConnected = owner.wallet?.wallet_status === 'connected';
+  // Treat 'pending' the same as 'connected' — it means the API key was already
+  // captured during the join/submission flow, so we should not ask again.
+  const alreadyConnected =
+    owner.wallet?.wallet_status === 'connected' || owner.wallet?.wallet_status === 'pending';
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
