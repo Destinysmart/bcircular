@@ -249,17 +249,18 @@ async function recomputeMetrics(supabase: any, community_id: string) {
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
   const { data: txns } = await supabase
     .from('blink_transactions')
-    .select('direction, settlement_amount, is_internal, wallet_id')
+    .select('direction, settlement_amount, is_internal, wallet_id, flow_type')
     .eq('community_id', community_id)
     .gte('blink_created_at', since)
 
   const list = txns || []
-  let inflow = 0, outflow = 0, circular = 0, circularCount = 0
+  let inflow = 0, outflow = 0, circular = 0, circularCount = 0, offramp = 0
   for (const t of list) {
     const amt = Number(t.settlement_amount) || 0
     if (t.direction === 'RECEIVE') inflow += amt
     else outflow += amt
     if (t.is_internal) { circular += amt; circularCount++ }
+    if (t.flow_type === 'offramp_or_external') offramp += amt
   }
   const totalVol = inflow + outflow
   const rate = totalVol > 0 ? Math.round((circular / totalVol) * 10000) / 100 : 0
@@ -283,6 +284,7 @@ async function recomputeMetrics(supabase: any, community_id: string) {
     circular_transaction_count: circularCount,
     total_transaction_count: list.length,
     real_circularity_rate: rate,
+    offramp_volume_sats: offramp,
     active_merchant_wallets: merch,
     active_earner_wallets: earn,
   })
