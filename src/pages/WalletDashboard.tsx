@@ -46,6 +46,7 @@ export default function WalletDashboard({ ownerType }: Props) {
       if (!res?.owner) return null;
       return {
         owner_type: res.owner_type as WalletOwnerType,
+        approval_status: (res.approval_status as 'pending' | 'approved') ?? 'approved',
         owner: {
           ...res.owner,
           wallet: res.wallet,
@@ -57,6 +58,8 @@ export default function WalletDashboard({ ownerType }: Props) {
   });
   const owner = ownerQ.data?.owner;
   const detectedType = ownerQ.data?.owner_type;
+  const approvalStatus = ownerQ.data?.approval_status ?? 'approved';
+  const isPending = approvalStatus === 'pending';
   const walletId = owner?.wallet?.id;
 
   const txQ = useQuery({
