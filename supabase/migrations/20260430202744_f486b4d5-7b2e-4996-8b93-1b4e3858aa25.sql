@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.generate_merchant_public_id() TO authenticated, anon, service_role;
