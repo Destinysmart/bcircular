@@ -158,20 +158,104 @@ export async function fetchWalletMonthlyStats(walletId: string) {
   since.setDate(since.getDate() - 30);
   const { data, error } = await (supabase as any)
     .from('blink_transactions')
-    .select('direction, settlement_amount, is_internal')
+    .select('direction, settlement_amount, is_internal, blink_created_at')
     .eq('wallet_id', walletId)
     .gte('blink_created_at', since.toISOString());
   if (error) throw error;
   const list = data || [];
   let received = 0, sent = 0, circular = 0;
+  const activeDaysSet = new Set<string>();
   for (const t of list) {
     const amt = Number(t.settlement_amount) || 0;
     if (t.direction === 'RECEIVE') received += amt; else sent += amt;
     if (t.is_internal) circular += amt;
+    activeDaysSet.add(new Date(t.blink_created_at).toDateString());
   }
   const total = received + sent;
   const rate = total > 0 ? Math.round((circular / total) * 100) : 0;
-  return { received, sent, circular, rate, count: list.length };
+  return { received, sent, circular, rate, count: list.length, activeDays: activeDaysSet.size };
+}
+
+/** 30-day daily series for the dashboard chart. */
+export async function fetchWalletDailySeries(walletId: string) {
+  const since = new Date();
+  since.setDate(since.getDate() - 29);
+  since.setHours(0, 0, 0, 0);
+  const { data, error } = await (supabase as any)
+    .from('blink_transactions')
+    .select('direction, settlement_amount, is_internal, blink_created_at')
+    .eq('wallet_id', walletId)
+    .gte('blink_created_at', since.toISOString());
+  if (error) throw error;
+  const list = data || [];
+
+  // Pre-build 30 day buckets
+  const buckets = new Map<string, { received: number; sent: number; circular: number }>();
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(since);
+    d.setDate(since.getDate() + i);
+    buckets.set(d.toDateString(), { received: 0, sent: 0, circular: 0 });
+  }
+  for (const t of list) {
+    const key = new Date(t.blink_created_at).toDateString();
+    const slot = buckets.get(key);
+    if (!slot) continue;
+    const amt = Number(t.settlement_amount) || 0;
+    if (t.direction === 'RECEIVE') slot.received += amt; else slot.sent += amt;
+    if (t.is_internal) slot.circular += amt;
+  }
+  return Array.from(buckets.entries()).map(([k, v]) => {
+    const d = new Date(k);
+    return {
+      date: d.toLocaleDateString('en', { month: 'short', day: 'numeric' }),
+      received: v.received,
+      sent: v.sent,
+      circular: v.circular,
+    };
+  });
+}
+
+/** This wallet's share of the economy's circular volume (last 30 days). */
+export async function fetchWalletContribution(walletId: string, communityId: string) {
+  const since = new Date();
+  since.setDate(since.getDate() - 30);
+  const sinceIso = since.toISOString();
+
+  const [{ data: mine }, { data: economy }, { count: walletCount }] = await Promise.all([
+    (supabase as any)
+      .from('blink_transactions')
+      .select('settlement_amount, is_internal')
+      .eq('wallet_id', walletId)
+      .gte('blink_created_at', sinceIso),
+    (supabase as any)
+      .from('blink_transactions')
+      .select('settlement_amount, is_internal')
+      .eq('community_id', communityId)
+      .gte('blink_created_at', sinceIso),
+    (supabase as any)
+      .from('wallets')
+      .select('id', { count: 'exact', head: true })
+      .eq('community_id', communityId)
+      .eq('wallet_status', 'connected'),
+  ]);
+
+  const myCircular = (mine || []).filter((t: any) => t.is_internal)
+    .reduce((s: number, t: any) => s + Number(t.settlement_amount || 0), 0);
+  const myCircularCount = (mine || []).filter((t: any) => t.is_internal).length;
+  const economyCircular = (economy || []).filter((t: any) => t.is_internal)
+    .reduce((s: number, t: any) => s + Number(t.settlement_amount || 0), 0);
+  const economyTotal = (economy || []).reduce((s: number, t: any) => s + Number(t.settlement_amount || 0), 0);
+  const economyCircularRate = economyTotal > 0 ? Math.round((economyCircular / economyTotal) * 100) : 0;
+  const contributionPct = economyCircular > 0 ? Math.round((myCircular / economyCircular) * 100) : 0;
+
+  return {
+    myCircular,
+    myCircularCount,
+    economyCircular,
+    economyCircularRate,
+    contributionPct,
+    connectedWalletCount: walletCount || 0,
+  };
 }
 
 export async function fetchEconomyWalletMetrics(communityId: string) {
