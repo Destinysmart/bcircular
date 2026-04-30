@@ -21,6 +21,8 @@ import UploadZone from '@/components/UploadZone';
 import { QRCodeCanvas } from 'qrcode.react';
 import { TierBadge, TIER_CHECKLIST, getTierMeta, type FbceTier } from '@/components/TierBadge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import SetupChecklist from '@/components/SetupChecklist';
+import EconomyAlerts from '@/components/EconomyAlerts';
 
 const EconomyAdminDashboard = () => {
   const { id } = useParams();
@@ -369,6 +371,8 @@ const EconomyAdminDashboard = () => {
         <h1 className="text-2xl font-bold mb-1">Economy Admin Dashboard</h1>
         <p className="text-sm text-muted-foreground mb-8">{community.name}</p>
 
+        <EconomyAlerts communityId={communityId!} />
+        <SetupChecklist communityId={communityId!} community={community} />
         {zeroPillar && (
           <div className="mb-6 flex flex-col gap-3 rounded-lg border border-score-amber/40 bg-score-amber/10 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3 text-sm">

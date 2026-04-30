@@ -28,6 +28,8 @@ import MerchantClaim from "./pages/MerchantClaim";
 import MerchantDashboard from "./pages/MerchantDashboard";
 import ConnectWallet from "./pages/ConnectWallet";
 import WalletDashboard from "./pages/WalletDashboard";
+import JoinAsEarner from "./pages/JoinAsEarner";
+import PublicData from "./pages/PublicData";
 import NotFound from "./pages/NotFound";
 import CircularAssistant from "./components/CircularAssistant";
 
@@ -46,8 +48,11 @@ const App = () => (
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/c/:slug" element={<CommunityDashboard />} />
               <Route path="/c/:slug/submit" element={<SubmitPage />} />
+              <Route path="/c/:slug/join-as-earner" element={<JoinAsEarner />} />
               <Route path="/c/:slug/report" element={<ProofOfCircularity />} />
+              <Route path="/c/:slug/proof" element={<ProofOfCircularity />} />
               <Route path="/c/:slug/proofs" element={<Proofs />} />
+              <Route path="/data" element={<PublicData />} />
               <Route path="/widget/:slug" element={<Widget />} />
               <Route path="/quick-submit" element={<QuickSubmit />} />
               <Route path="/compare" element={<Compare />} />

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowUpRight, Globe, Scale, Search, SlidersHorizontal, X, Zap } from 'lucide-react';
+import { ArrowUpRight, Globe, Scale, Search, SlidersHorizontal, X, Zap, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import ConfidenceBadge from '@/components/ConfidenceBadge';
 import EconomyLogo from '@/components/EconomyLogo';
@@ -190,6 +190,10 @@ const Leaderboard = () => {
     return String(n);
   };
 
+  const mostImproved = useMemo(() => {
+    return [...list].filter(c => (c.weeklyChange ?? 0) > 0).sort((a, b) => (b.weeklyChange ?? 0) - (a.weeklyChange ?? 0))[0];
+  }, [list]);
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -197,6 +201,15 @@ const Leaderboard = () => {
         <div className="mb-6 rounded-xl border border-score-amber/30 bg-foreground px-5 py-4 font-mono text-sm font-semibold text-score-amber shadow-[0_0_24px_hsl(var(--score-amber)/0.10)] flex items-center gap-2">
           <Globe className="w-4 h-4" /> {list.length} Bitcoin circular economies tracked globally
         </div>
+
+        {mostImproved && (mostImproved.weeklyChange ?? 0) >= 3 && (
+          <div className="mb-6 rounded-xl border border-score-green/30 bg-score-green/5 px-5 py-3 text-sm flex items-center gap-2 flex-wrap">
+            <span className="text-lg">🚀</span>
+            <span className="font-semibold text-score-green">Most improved this week:</span>
+            <Link to={`/c/${mostImproved.slug}`} className="text-foreground font-medium hover:underline">{mostImproved.name}</Link>
+            <span className="text-muted-foreground">+{mostImproved.weeklyChange} score points</span>
+          </div>
+        )}
 
         <div className="flex items-end justify-between mb-6 gap-4 flex-wrap">
           <div>
@@ -461,7 +474,7 @@ const Leaderboard = () => {
                             <Metric label="ACTIVITY" value={`${c.activityRate ?? 0}%`} />
                           </div>
                           <Metric label="MERCHANTS" value={String(c.merchants ?? 0)} />
-                          <Metric label="CIRCULARITY" value={String(c.score ?? 0)} valueClass={getScoreColor(c.score ?? 0)} />
+                          <ScoreWithDelta score={c.score ?? 0} delta={c.weeklyChange ?? 0} />
                           <button onClick={(event) => { event.stopPropagation(); navigate(`/compare?a=${c.slug}`); }} className="text-muted-foreground hover:text-primary" aria-label={`Compare ${c.name}`}>
                             <Scale className="h-4 w-4" />
                           </button>
@@ -542,5 +555,21 @@ const MobileMetric = ({ label, value, valueClass = 'text-foreground', leadingIco
     </span>
   </div>
 );
+
+const ScoreWithDelta = ({ score, delta }: { score: number; delta: number }) => {
+  const Icon = delta > 0 ? TrendingUp : delta < 0 ? TrendingDown : Minus;
+  const deltaColor = delta > 0 ? 'text-score-green' : delta < 0 ? 'text-destructive' : 'text-muted-foreground';
+  return (
+    <div className="flex flex-col items-end">
+      <span className={`font-mono text-base font-bold tabular-nums inline-flex items-center gap-1 ${getScoreColor(score)}`}>
+        {score}
+        {delta !== 0 && <Icon className={`h-3 w-3 ${deltaColor}`} />}
+      </span>
+      <span className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">
+        CIRCULARITY{delta !== 0 && <span className={`ml-1 ${deltaColor}`}>{delta > 0 ? '+' : ''}{delta}</span>}
+      </span>
+    </div>
+  );
+};
 
 export default Leaderboard;

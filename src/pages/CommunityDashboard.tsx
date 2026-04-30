@@ -13,6 +13,7 @@ import LiveActivityFeed from '@/components/LiveActivityFeed';
 import SatsMovementPanel from '@/components/SatsMovementPanel';
 import BlinkWalletSettings from '@/components/BlinkWalletSettings';
 import VerifiedCircularityBlock from '@/components/VerifiedCircularityBlock';
+import CircularFlowSpotlight from '@/components/CircularFlowSpotlight';
 import EconomyGrowthPanel from '@/components/EconomyGrowthPanel';
 import EconomyLogo from '@/components/EconomyLogo';
 import { TierBadge, TIER_CHECKLIST, getTierMeta, type FbceTier } from '@/components/TierBadge';
@@ -277,8 +278,10 @@ const CommunityDashboard = () => {
             </div>
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" size="sm" className="gap-1.5 rounded-full"><Share2 className="h-3.5 w-3.5" /> Share</Button>
+              <Link to={`/c/${slug}/join-as-earner`}><Button size="sm" className="gap-1.5 rounded-full bg-score-amber text-background hover:bg-score-amber/90"><Zap className="h-3.5 w-3.5" /> Join as earner</Button></Link>
               <a href={`/c/${slug}/submit`}><Button variant="outline" size="sm" className="gap-1.5 rounded-full"><Store className="h-3.5 w-3.5" /> Add merchant / earner</Button></a>
-              <Link to={`/c/${slug}/proofs`}><Button size="sm" className="gap-1.5 rounded-full bg-score-amber text-background hover:bg-score-amber/90"><Shield className="h-3.5 w-3.5" /> Proof of Circularity</Button></Link>
+              <Link to={`/c/${slug}/report`}><Button variant="outline" size="sm" className="gap-1.5 rounded-full"><Shield className="h-3.5 w-3.5" /> Generate report</Button></Link>
+              <Link to={`/c/${slug}/proofs`}><Button variant="outline" size="sm" className="gap-1.5 rounded-full"><Shield className="h-3.5 w-3.5" /> Proofs</Button></Link>
             </div>
           </div>
           <Link to={`/compare?a=${community.slug}`} className="hidden md:inline-flex items-center gap-1 text-xs text-primary hover:underline self-start">
@@ -286,7 +289,10 @@ const CommunityDashboard = () => {
           </Link>
         </div>
 
-        {/* Verified Blink-data circularity (only renders when 2+ wallets connected) */}
+        {/* Verified Blink-data circularity spotlight (always renders, with adaptive states) */}
+        <div className="mb-6">
+          <CircularFlowSpotlight communityId={community.id} slug={slug!} />
+        </div>
         <div className="mb-6">
           <VerifiedCircularityBlock communityId={community.id} />
         </div>

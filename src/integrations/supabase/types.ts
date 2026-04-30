@@ -203,6 +203,7 @@ export type Database = {
           monthly_transactions: number
           name: string
           region: string
+          setup_checklist: Json
           slug: string
           status: Database["public"]["Enums"]["community_status"]
           twitter_handle: string | null
@@ -239,6 +240,7 @@ export type Database = {
           monthly_transactions?: number
           name: string
           region?: string
+          setup_checklist?: Json
           slug: string
           status?: Database["public"]["Enums"]["community_status"]
           twitter_handle?: string | null
@@ -275,6 +277,7 @@ export type Database = {
           monthly_transactions?: number
           name?: string
           region?: string
+          setup_checklist?: Json
           slug?: string
           status?: Database["public"]["Enums"]["community_status"]
           twitter_handle?: string | null
@@ -444,6 +447,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "earners_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      economy_alerts: {
+        Row: {
+          action_url: string | null
+          alert_key: string
+          alert_type: string
+          community_id: string
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+        }
+        Insert: {
+          action_url?: string | null
+          alert_key: string
+          alert_type: string
+          community_id: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+        }
+        Update: {
+          action_url?: string | null
+          alert_key?: string
+          alert_type?: string
+          community_id?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "economy_alerts_community_id_fkey"
             columns: ["community_id"]
             isOneToOne: false
             referencedRelation: "communities"
