@@ -11,6 +11,19 @@ html.light #root { background-color: #F9FAFB; min-height: 100vh; }
 .dark { color-scheme: dark; }
 .light { color-scheme: light; }
 
+/* Remove Lovable branding */
+[data-lovable-badge],
+[class*="lovable-badge"],
+[id*="lovable-badge"],
+a[href*="lovable.dev"],
+div[class*="powered-by"],
+.lovable-watermark {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 .leaflet-container { background-color: #1a1a2e; }
 html.light .leaflet-container { background-color: #e5e7eb; }
 
