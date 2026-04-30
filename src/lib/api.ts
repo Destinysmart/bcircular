@@ -149,8 +149,9 @@ export async function submitMerchant(communityId: string, merchant: {
   lng?: number;
   payment_methods: string[];
   website?: string;
+  btcmap_node_id?: string;
 }, userId?: string) {
-  const { data, error } = await supabase.from('merchants').insert({
+  const { data, error } = await (supabase as any).from('merchants').insert({
     community_id: communityId,
     name: merchant.name,
     category: merchant.category,
@@ -159,6 +160,7 @@ export async function submitMerchant(communityId: string, merchant: {
     lng: merchant.lng,
     payment_methods: merchant.payment_methods,
     website: merchant.website,
+    btcmap_node_id: merchant.btcmap_node_id,
     submitted_by: userId || null,
   }).select().single();
   if (error) throw error;
