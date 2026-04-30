@@ -118,7 +118,10 @@ export default function ConnectWallet({ ownerType }: Props) {
     );
   }
 
-  const alreadyConnected = owner.wallet?.wallet_status === 'connected';
+  // Treat 'pending' the same as 'connected' — it means the API key was already
+  // captured during the join/submission flow, so we should not ask again.
+  const alreadyConnected =
+    owner.wallet?.wallet_status === 'connected' || owner.wallet?.wallet_status === 'pending';
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
@@ -156,15 +159,17 @@ export default function ConnectWallet({ ownerType }: Props) {
           {alreadyConnected ? (
             <div className="space-y-3">
               <div className="rounded-md border border-score-green/40 bg-score-green/10 p-4 text-sm">
-                ✓ A wallet is already connected. Connecting again will replace the existing API key.
+                ✓ Your wallet API key is already on file
+                {owner.wallet?.wallet_status === 'pending' ? ' (saved during signup)' : ''}.
+                You don't need to enter it again.
               </div>
               <Link to={dashHref}>
-                <Button variant="outline" className="w-full">
+                <Button className="w-full bg-score-amber text-background hover:bg-score-amber/90">
                   View dashboard <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
               </Link>
             </div>
-          ) : null}
+          ) : (
 
           <form onSubmit={handleConnect} className="space-y-4">
             <div className="space-y-2">
@@ -221,6 +226,7 @@ export default function ConnectWallet({ ownerType }: Props) {
               )}
             </Button>
           </form>
+          )}
         </CardContent>
       </Card>
     </div>

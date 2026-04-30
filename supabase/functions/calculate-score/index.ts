@@ -121,6 +121,8 @@ Deno.serve(async (req) => {
       const wallets = walletsRes.data || []
       const proofCount = proofRes.count || 0
 
+      console.log('[calculate-score]', communityId, 'approved earners:', e.length, 'merchants:', m.length, 'pop:', pop)
+
       const hasBlinkData = blinkTx.length > 0
 
       // ── Pillar 1: Merchant Saturation (25%) — logarithmic scale ──

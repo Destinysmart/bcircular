@@ -177,14 +177,11 @@ async function ensureOwnerWallet(supabase: any, owner_type: 'merchant' | 'earner
   if (existing) return existing
   if (!owner.pending_blink_api_key_encrypted) return null
 
-  const { data: community } = await supabase
-    .from('communities')
-    .select('admin_id')
-    .eq('id', owner.community_id)
-    .maybeSingle()
-  const { data, error } = await supabase.from('wallets').insert({
+  // Use owner.id as user_id placeholder so the (user_id, community_id, wallet_currency)
+  // unique constraint never collides between two owners in the same community.
+  const { data, error } = await supabase.from('wallets').upsert({
     community_id: owner.community_id,
-    user_id: community?.admin_id || owner.community_id,
+    user_id: owner.id,
     blink_wallet_id: '',
     wallet_currency: 'BTC',
     balance_sats: 0,
@@ -193,7 +190,7 @@ async function ensureOwnerWallet(supabase: any, owner_type: 'merchant' | 'earner
     ln_address_hash: owner.pending_ln_address_hash || null,
     blink_api_key_encrypted: owner.pending_blink_api_key_encrypted,
     wallet_status: 'pending',
-  }).select('*').single()
+  }, { onConflict: 'user_id,community_id,wallet_currency' }).select('*').single()
   if (error) throw error
 
   if (owner_type === 'merchant') {
@@ -496,14 +493,6 @@ Deno.serve(async (req) => {
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    // Get the community admin id (used as user_id placeholder for the wallet record so existing RLS still works)
-    const { data: community } = await supabase
-      .from('communities')
-      .select('admin_id')
-      .eq('id', owner.community_id)
-      .maybeSingle()
-    const adminId = community?.admin_id || owner.community_id
-
     if (body.action === 'connect') {
       const encrypted = await encryptApiKey(body.api_key)
       const lnHash = body.ln_address ? await sha256Hex(body.ln_address) : null
@@ -524,37 +513,22 @@ Deno.serve(async (req) => {
         })
       }
 
-      const existing = await findOwnerWallet(supabase, body.owner_type, owner.id)
-
-      let walletRow: any
-      if (existing) {
-        const { data, error } = await supabase.from('wallets').update({
-          blink_wallet_id: blinkWalletId,
-          blink_api_key_encrypted: encrypted,
-          ln_address_hash: lnHash,
-          wallet_status: 'connected',
-          balance_sats: balance,
-          last_synced_at: new Date().toISOString(),
-        }).eq('id', existing.id).select('*').maybeSingle()
-        if (error) throw error
-        walletRow = data
-      } else {
-        const { data, error } = await supabase.from('wallets').insert({
-          community_id: owner.community_id,
-          user_id: adminId,
-          blink_wallet_id: blinkWalletId,
-          wallet_currency: 'BTC',
-          balance_sats: balance,
-          owner_type: body.owner_type,
-          owner_id: owner.id,
-          ln_address_hash: lnHash,
-          blink_api_key_encrypted: encrypted,
-          wallet_status: 'connected',
-          last_synced_at: new Date().toISOString(),
-        }).select('*').maybeSingle()
-        if (error) throw error
-        walletRow = data
-      }
+      // UPSERT on (user_id, community_id, wallet_currency) — owner.id as user_id
+      // ensures the unique constraint never collides between two owners.
+      const { data: walletRow, error: upsertErr } = await supabase.from('wallets').upsert({
+        community_id: owner.community_id,
+        user_id: owner.id,
+        blink_wallet_id: blinkWalletId,
+        wallet_currency: 'BTC',
+        balance_sats: balance,
+        owner_type: body.owner_type,
+        owner_id: owner.id,
+        ln_address_hash: lnHash,
+        blink_api_key_encrypted: encrypted,
+        wallet_status: 'connected',
+        last_synced_at: new Date().toISOString(),
+      }, { onConflict: 'user_id,community_id,wallet_currency' }).select('*').single()
+      if (upsertErr) throw upsertErr
 
       // Link merchant/earner row
       if (body.owner_type === 'merchant') {
