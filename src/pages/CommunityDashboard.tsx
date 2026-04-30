@@ -14,7 +14,6 @@ import SatsMovementPanel from '@/components/SatsMovementPanel';
 import BlinkWalletSettings from '@/components/BlinkWalletSettings';
 import VerifiedCircularityBlock from '@/components/VerifiedCircularityBlock';
 import EconomyGrowthPanel from '@/components/EconomyGrowthPanel';
-import StatCard from '@/components/StatCard';
 import EconomyLogo from '@/components/EconomyLogo';
 import { TierBadge, TIER_CHECKLIST, getTierMeta, type FbceTier } from '@/components/TierBadge';
 import { Button } from '@/components/ui/button';
