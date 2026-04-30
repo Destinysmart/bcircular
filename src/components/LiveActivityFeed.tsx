@@ -10,9 +10,10 @@ const LiveActivityFeed = ({ communityId }: LiveActivityFeedProps) => {
   const { data: recentTx } = useQuery({
     queryKey: ['recent-blink-tx', communityId],
     queryFn: async () => {
+      // Privacy: never select memo — free-text field can leak names/identities.
       const { data, error } = await supabase
         .from('blink_transactions')
-        .select('id, direction, settlement_amount, is_internal, memo, blink_created_at, wallet_id')
+        .select('id, direction, settlement_amount, is_internal, blink_created_at')
         .eq('community_id', communityId)
         .order('blink_created_at', { ascending: false })
         .limit(20);
