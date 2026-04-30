@@ -58,6 +58,7 @@ const JoinAsEarner = () => {
     if (!community || !role || !frequency) return;
     setSubmitting(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
       const earner = await submitEarner(
         community.id,
         {
@@ -65,7 +66,7 @@ const JoinAsEarner = () => {
           earning_method: role,
           earning_frequency: frequency as any,
         },
-        undefined
+        user?.id
       );
 
       // If wallet info provided, save as pending
