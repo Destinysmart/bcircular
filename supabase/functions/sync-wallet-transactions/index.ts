@@ -417,13 +417,20 @@ Deno.serve(async (req) => {
     }
 
     if (body.action === 'dashboard') {
-      const wallet = await findOwnerWallet(supabase, resolvedOwnerType!, owner.id)
+      const [{ data: community }, wallet] = await Promise.all([
+        supabase.from('communities').select('name, slug, city, country').eq('id', owner.community_id).maybeSingle(),
+        findOwnerWallet(supabase, resolvedOwnerType!, owner.id),
+      ])
       return new Response(JSON.stringify({
         success: true,
         owner_type: resolvedOwnerType,
         owner: {
           id: owner.id,
           community_id: owner.community_id,
+          community_name: community?.name || '',
+          community_slug: community?.slug || '',
+          community_city: community?.city || '',
+          community_country: community?.country || '',
           name: owner.name,
         },
         wallet: wallet ? {
