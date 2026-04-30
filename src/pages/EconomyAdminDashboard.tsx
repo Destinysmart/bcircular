@@ -150,7 +150,7 @@ const EconomyAdminDashboard = () => {
     setUploading(true);
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${community.id}-${type}-${Date.now()}.${fileExt}`;
+      const fileName = `${community.id}/${type}-${Date.now()}.${fileExt}`;
       const bucket = isLogo ? 'economy-logos' : 'economy-banners';
       const column = isLogo ? 'logo_url' : 'banner_url';
       const { error } = await supabase.storage.from(bucket).upload(fileName, file, { upsert: true });
