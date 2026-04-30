@@ -42,31 +42,53 @@ function timeAgo(iso: string | null) {
 
 export default function ConnectedWalletsManager({ communityId }: Props) {
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [resultById, setResultById] = useState<Record<string, { type: 'success' | 'error'; message: string }>>({});
 
   const { data, refetch, isLoading } = useQuery({
     queryKey: ['connected-wallets', communityId],
     queryFn: () => fetchOwnersWithWallets(communityId),
   });
 
-  const { data: metrics } = useQuery({
+  const { data: metrics, refetch: refetchMetrics } = useQuery({
     queryKey: ['economy-wallet-metrics', communityId],
     queryFn: () => fetchEconomyWalletMetrics(communityId),
   });
 
   function copyLink(ownerType: 'merchant' | 'earner', code: string) {
-    const url = `${appUrl()}/${ownerType}/connect?code=${code}`;
+    const url = `${appUrl()}/connect?code=${code}`;
     navigator.clipboard.writeText(url);
     toast({ title: 'Connect link copied', description: 'Share via WhatsApp, email, etc.' });
   }
 
-  async function syncOne(ownerType: 'merchant' | 'earner', code: string, id: string) {
+  async function syncOne(ownerType: 'merchant' | 'earner', code: string, id: string, walletId?: string) {
     setBusyId(id);
     try {
-      const res = await walletApi.sync(ownerType, code);
-      toast({ title: 'Sync complete', description: `${res.synced} txns, ${res.internal} circular.` });
-      refetch();
+      const res = walletId
+        ? await walletApi.syncWallet(communityId, walletId)
+        : await walletApi.sync(ownerType, code);
+      const message = `Synced ${res.synced ?? 0} transactions${typeof res.internal === 'number' ? ` (${res.internal} circular)` : ''}`;
+      setResultById(prev => ({ ...prev, [id]: { type: 'success', message } }));
+      toast({ title: 'Sync complete', description: message });
+      await refetch();
+      await refetchMetrics();
     } catch (err: any) {
-      toast({ title: 'Sync failed', description: err.message, variant: 'destructive' });
+      const message = err.message || 'Sync failed';
+      setResultById(prev => ({ ...prev, [id]: { type: 'error', message } }));
+      toast({ title: 'Sync failed', description: message, variant: 'destructive' });
+    } finally { setBusyId(null); }
+  }
+
+  async function testOne(id: string, walletId: string) {
+    setBusyId(id);
+    try {
+      const res = await walletApi.testConnection(communityId, walletId);
+      const message = res.message || 'Connection successful';
+      setResultById(prev => ({ ...prev, [id]: { type: 'success', message } }));
+      toast({ title: 'Connection test passed', description: message });
+    } catch (err: any) {
+      const message = err.message || 'Connection test failed';
+      setResultById(prev => ({ ...prev, [id]: { type: 'error', message } }));
+      toast({ title: 'Connection test failed', description: message, variant: 'destructive' });
     } finally { setBusyId(null); }
   }
 
