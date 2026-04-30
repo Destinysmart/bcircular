@@ -172,6 +172,28 @@ async function findOwnerWallet(supabase: any, owner_type: string, owner_id: stri
   return data
 }
 
+async function requireEconomyAdmin(req: Request, supabase: any, communityId: string): Promise<string | null> {
+  const authHeader = req.headers.get('Authorization')
+  if (!authHeader?.startsWith('Bearer ')) return 'Unauthorized'
+  const userClient = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_ANON_KEY')!,
+    { global: { headers: { Authorization: authHeader } } },
+  )
+  const token = authHeader.replace('Bearer ', '')
+  const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(token)
+  const userId = claimsData?.claims?.sub as string | undefined
+  if (claimsErr || !userId) return 'Unauthorized'
+
+  const [{ data: community }, { data: adminRow }, { data: roleRow }] = await Promise.all([
+    supabase.from('communities').select('admin_id').eq('id', communityId).maybeSingle(),
+    supabase.from('community_admins').select('id').eq('community_id', communityId).eq('user_id', userId).maybeSingle(),
+    supabase.from('user_roles').select('role').eq('user_id', userId).eq('role', 'admin').maybeSingle(),
+  ])
+  if (community?.admin_id === userId || adminRow || roleRow) return null
+  return 'Forbidden'
+}
+
 // ── Metric recompute ──────────────────────────────────────────────────────
 async function recomputeMetrics(supabase: any, community_id: string) {
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
