@@ -61,6 +61,7 @@ export type Database = {
           counterparty_wallet_id: string | null
           created_at: string
           direction: string
+          flow_type: string | null
           id: string
           is_internal: boolean
           memo: string | null
@@ -78,6 +79,7 @@ export type Database = {
           counterparty_wallet_id?: string | null
           created_at?: string
           direction: string
+          flow_type?: string | null
           id?: string
           is_internal?: boolean
           memo?: string | null
@@ -95,6 +97,7 @@ export type Database = {
           counterparty_wallet_id?: string | null
           created_at?: string
           direction?: string
+          flow_type?: string | null
           id?: string
           is_internal?: boolean
           memo?: string | null
@@ -504,6 +507,7 @@ export type Database = {
           circular_volume_sats: number
           community_id: string
           id: string
+          offramp_volume_sats: number
           period_end: string
           period_start: string
           real_circularity_rate: number
@@ -519,6 +523,7 @@ export type Database = {
           circular_volume_sats?: number
           community_id: string
           id?: string
+          offramp_volume_sats?: number
           period_end: string
           period_start: string
           real_circularity_rate?: number
@@ -534,6 +539,7 @@ export type Database = {
           circular_volume_sats?: number
           community_id?: string
           id?: string
+          offramp_volume_sats?: number
           period_end?: string
           period_start?: string
           real_circularity_rate?: number
@@ -605,6 +611,7 @@ export type Database = {
           address: string | null
           approved_at: string | null
           btcmap_id: string | null
+          btcmap_node_id: string | null
           category: string
           claim_token_hash: string | null
           claimed_at: string | null
@@ -630,6 +637,7 @@ export type Database = {
           address?: string | null
           approved_at?: string | null
           btcmap_id?: string | null
+          btcmap_node_id?: string | null
           category?: string
           claim_token_hash?: string | null
           claimed_at?: string | null
@@ -655,6 +663,7 @@ export type Database = {
           address?: string | null
           approved_at?: string | null
           btcmap_id?: string | null
+          btcmap_node_id?: string | null
           category?: string
           claim_token_hash?: string | null
           claimed_at?: string | null
