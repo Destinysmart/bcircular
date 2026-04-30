@@ -460,20 +460,21 @@ Deno.serve(async (req) => {
         status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
-    if ((owner as any)._not_approved) {
-      return new Response(JSON.stringify({ error: 'This submission has not been approved by validators yet.' }), {
-        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
+    const isPending = !!(owner as any)._not_approved
 
     if (body.action === 'dashboard') {
-      const [{ data: community }, wallet] = await Promise.all([
-        supabase.from('communities').select('name, slug, city, country').eq('id', owner.community_id).maybeSingle(),
-        ensureOwnerWallet(supabase, resolvedOwnerType!, owner),
-      ])
+      const { data: community } = await supabase
+        .from('communities').select('name, slug, city, country')
+        .eq('id', owner.community_id).maybeSingle()
+      // Only resolve a real wallet for approved owners; pending owners
+      // surface as wallet_status='pending' (or null) so the UI can show
+      // a "waiting for validator approval" state instead of 404'ing.
+      const wallet = isPending ? null : await ensureOwnerWallet(supabase, resolvedOwnerType!, owner)
+      const hasPendingKey = !!(owner as any).pending_blink_api_key_encrypted
       return new Response(JSON.stringify({
         success: true,
         owner_type: resolvedOwnerType,
+        approval_status: isPending ? 'pending' : 'approved',
         owner: {
           id: owner.id,
           community_id: owner.community_id,
@@ -489,8 +490,16 @@ Deno.serve(async (req) => {
           last_synced_at: wallet.last_synced_at,
           balance_sats: wallet.balance_sats,
           ln_address_hash: wallet.ln_address_hash,
-        } : null,
+        } : (isPending && hasPendingKey ? {
+          id: '', wallet_status: 'pending', last_synced_at: null, balance_sats: 0, ln_address_hash: null,
+        } : null),
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
+    if (isPending) {
+      return new Response(JSON.stringify({ error: 'This submission has not been approved by validators yet.' }), {
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
     }
 
     if (body.action === 'connect') {
