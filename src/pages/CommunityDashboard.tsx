@@ -1,6 +1,6 @@
 
 import { useParams, Link } from 'react-router-dom';
-import { Share2, Store, Users, Zap, ChevronDown, Info, ExternalLink, Shield, Wallet, Scale, Calendar } from 'lucide-react';
+import { Share2, Store, Zap, ChevronDown, Info, ExternalLink, Shield, Scale, Calendar } from 'lucide-react';
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
@@ -13,7 +13,7 @@ import LiveActivityFeed from '@/components/LiveActivityFeed';
 import SatsMovementPanel from '@/components/SatsMovementPanel';
 import BlinkWalletSettings from '@/components/BlinkWalletSettings';
 import VerifiedCircularityBlock from '@/components/VerifiedCircularityBlock';
-import StatCard from '@/components/StatCard';
+import EconomyGrowthPanel from '@/components/EconomyGrowthPanel';
 import EconomyLogo from '@/components/EconomyLogo';
 import { TierBadge, TIER_CHECKLIST, getTierMeta, type FbceTier } from '@/components/TierBadge';
 import { Button } from '@/components/ui/button';
@@ -334,15 +334,15 @@ const CommunityDashboard = () => {
           </div>
         </div>
 
-        {/* Secondary stats */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-10">
-          <StatCard label="Earners" value={displayEarners} icon={<Users className="h-5 w-5 text-score-green" />} />
-          <StatCard label="Wallets" value={walletCount ?? 0} icon={<Wallet className="h-5 w-5 text-primary" />} />
-          <StatCard
-            label="Blink txns synced"
-            value={hasBlinkData ? (blinkTxStats || 0).toLocaleString() : '—'}
-            icon={<Zap className="h-5 w-5 text-chart-4" />}
-            subtitle={hasBlinkData ? 'Auto-synced via Blink' : undefined}
+        {/* Rich growth panel: expanded merchants/earners cards, circular flow, activity, contribute, score breakdown */}
+        <div className="mb-10">
+          <EconomyGrowthPanel
+            communityId={communityId!}
+            slug={slug!}
+            merchants={merchants || []}
+            earners={earners || []}
+            walletCount={walletCount ?? 0}
+            pillars={pillars}
           />
         </div>
 

@@ -101,7 +101,8 @@ const SubmitPage = () => {
   const { slug } = useParams();
   const { user } = useAuth();
   const { toast } = useToast();
-  const [tab, setTab] = useState<Tab>('merchant');
+  const initialTab: Tab = (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('tab') === 'earner') ? 'earner' : 'merchant';
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [submitted, setSubmitted] = useState(false);
   const [submittedWithWallet, setSubmittedWithWallet] = useState(false);
   const [loading, setLoading] = useState(false);
