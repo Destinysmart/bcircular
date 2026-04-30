@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { submitMerchant, submitEarner, fetchCommunityBySlug } from '@/lib/api';
@@ -110,9 +109,7 @@ const SubmitPage = () => {
   // Merchant form
   const [mName, setMName] = useState('');
   const [mCategory, setMCategory] = useState('');
-  const [mAddress, setMAddress] = useState('');
-  const [mPayments, setMPayments] = useState<string[]>([]);
-  const [mWebsite, setMWebsite] = useState('');
+  const [mBtcmapNodeId, setMBtcmapNodeId] = useState('');
   const [mApiKey, setMApiKey] = useState('');
   const [mLnAddress, setMLnAddress] = useState('');
 
@@ -128,9 +125,6 @@ const SubmitPage = () => {
     queryFn: () => fetchCommunityBySlug(slug!),
     enabled: !!slug,
   });
-
-  const togglePayment = (method: string) =>
-    setMPayments(prev => (prev.includes(method) ? prev.filter(m => m !== method) : [...prev, method]));
 
   const savePendingWallet = async (
     owner_type: 'merchant' | 'earner',
@@ -165,10 +159,9 @@ const SubmitPage = () => {
           {
             name: mName,
             category: mCategory,
-            address: mAddress,
-            payment_methods: mPayments,
-            website: mWebsite || undefined,
-          },
+            payment_methods: [],
+            btcmap_node_id: mBtcmapNodeId.trim() || undefined,
+          } as any,
           user?.id,
         );
         if (mApiKey.trim()) {
@@ -201,7 +194,7 @@ const SubmitPage = () => {
   const resetAll = () => {
     setSubmitted(false);
     setSubmittedWithWallet(false);
-    setMName(''); setMCategory(''); setMAddress(''); setMPayments([]); setMWebsite(''); setMApiKey(''); setMLnAddress('');
+    setMName(''); setMCategory(''); setMBtcmapNodeId(''); setMApiKey(''); setMLnAddress('');
     setERole(''); setEDesc(''); setEFrequency(''); setEApiKey(''); setELnAddress('');
   };
 
@@ -267,19 +260,29 @@ const SubmitPage = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div><Label>Address</Label><Input placeholder="Street address or landmark" value={mAddress} onChange={e => setMAddress(e.target.value)} /></div>
             <div>
-              <Label className="mb-2 block">Payment methods accepted</Label>
-              <div className="grid grid-cols-2 gap-3">
-                {['lightning', 'onchain', 'blink', 'lnurlp'].map(m => (
-                  <label key={m} className="flex items-center gap-2 text-sm">
-                    <Checkbox checked={mPayments.includes(m)} onCheckedChange={() => togglePayment(m)} />{' '}
-                    {m === 'lnurlp' ? 'LNURL-pay' : m.charAt(0).toUpperCase() + m.slice(1)}
-                  </label>
-                ))}
+              <Label>BTCMap ID <span className="text-muted-foreground font-normal">(optional, recommended)</span></Label>
+              <Input
+                placeholder="e.g. node/12345678"
+                value={mBtcmapNodeId}
+                onChange={e => setMBtcmapNodeId(e.target.value)}
+                className="mt-1.5"
+                maxLength={64}
+              />
+              <div className="flex items-center justify-between mt-1.5">
+                <p className="text-[11px] text-muted-foreground">
+                  Find your business at btcmap.org and paste the ID from the URL. Verifies your listing independently.
+                </p>
+                <a
+                  href="https://btcmap.org"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] text-score-amber hover:underline whitespace-nowrap ml-3"
+                >
+                  Search BTCMap →
+                </a>
               </div>
             </div>
-            <div><Label>Website (optional)</Label><Input placeholder="https://" value={mWebsite} onChange={e => setMWebsite(e.target.value)} /></div>
 
             <WalletTrackingBlock
               apiKey={mApiKey}
