@@ -69,15 +69,15 @@ const JoinAsEarner = () => {
         user?.id
       );
 
-      // If wallet info provided, save as pending
-      if (lnAddress.trim() || blinkKey.trim()) {
+      // Wallet save requires an API key (ln address alone is not enough)
+      if (blinkKey.trim()) {
         try {
           await supabase.functions.invoke('save-pending-wallet', {
             body: {
               owner_type: 'earner',
               owner_id: earner.id,
+              api_key: blinkKey.trim(),
               ln_address: lnAddress.trim() || null,
-              blink_api_key: blinkKey.trim() || null,
             },
           });
         } catch (err) {
