@@ -309,14 +309,19 @@ async function performSync(supabase: any, walletRow: any) {
   }
 
   // Build set of community LN-address hashes + Blink wallet IDs for circular detection
+  // Hash pool unifies merchants AND earners — any registered wallet in the economy.
   const { data: connWallets } = await supabase
     .from('wallets')
-    .select('blink_wallet_id, ln_address_hash')
+    .select('id, blink_wallet_id, ln_address_hash, owner_type')
     .eq('community_id', walletRow.community_id)
     .eq('wallet_status', 'connected')
 
   const economyBlinkIds = new Set((connWallets || []).map((w: any) => w.blink_wallet_id).filter(Boolean))
   const economyHashes = new Set((connWallets || []).map((w: any) => w.ln_address_hash).filter(Boolean))
+
+  console.log(
+    `[sync] community ${walletRow.community_id} hash pool size: ${economyHashes.size} (${economyBlinkIds.size} blink ids, ${(connWallets || []).length} connected wallets)`,
+  )
 
   // Fetch transactions (cap pages)
   let synced = 0, internal = 0
