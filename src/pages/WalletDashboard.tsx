@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Zap, RefreshCcw, Loader2, ArrowDown, ArrowUp, Recycle } from 'lucide-react';
+import { Zap, RefreshCcw, Loader2, ArrowDown, ArrowUp, Recycle, Clock, ShieldCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -46,6 +46,7 @@ export default function WalletDashboard({ ownerType }: Props) {
       if (!res?.owner) return null;
       return {
         owner_type: res.owner_type as WalletOwnerType,
+        approval_status: (res.approval_status as 'pending' | 'approved') ?? 'approved',
         owner: {
           ...res.owner,
           wallet: res.wallet,
@@ -57,6 +58,8 @@ export default function WalletDashboard({ ownerType }: Props) {
   });
   const owner = ownerQ.data?.owner;
   const detectedType = ownerQ.data?.owner_type;
+  const approvalStatus = ownerQ.data?.approval_status ?? 'approved';
+  const isPending = approvalStatus === 'pending';
   const walletId = owner?.wallet?.id;
 
   const txQ = useQuery({
@@ -124,6 +127,7 @@ export default function WalletDashboard({ ownerType }: Props) {
 
   const status = owner.wallet?.wallet_status;
   const connected = status === 'connected';
+  const walletPending = status === 'pending';
   const stats = statsQ.data;
   const connectHref = `/connect?code=${code}`;
 
@@ -141,16 +145,22 @@ export default function WalletDashboard({ ownerType }: Props) {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap items-center gap-3">
-              <Badge variant={connected ? 'default' : 'secondary'} className={connected ? 'bg-score-green text-background' : ''}>
-                {connected ? '● Connected' : '○ Not connected'}
-              </Badge>
-              <span className="text-sm text-muted-foreground">Last synced {timeAgo(owner.wallet?.last_synced_at || null)}</span>
-              {connected && (
+              {isPending ? (
+                <Badge variant="secondary" className="gap-1.5"><Clock className="h-3 w-3" /> Pending validator approval</Badge>
+              ) : (
+                <Badge variant={connected ? 'default' : 'secondary'} className={connected ? 'bg-score-green text-background' : ''}>
+                  {connected ? '● Connected' : '○ Not connected'}
+                </Badge>
+              )}
+              {!isPending && (
+                <span className="text-sm text-muted-foreground">Last synced {timeAgo(owner.wallet?.last_synced_at || null)}</span>
+              )}
+              {!isPending && connected && (
                 <Button size="sm" variant="outline" onClick={handleSync} disabled={syncing}>
                   {syncing ? <Loader2 className="h-3 w-3 mr-2 animate-spin" /> : <RefreshCcw className="h-3 w-3 mr-2" />} Sync now
                 </Button>
               )}
-              {!connected && (
+              {!isPending && !connected && (
                 <Link to={connectHref}>
                   <Button size="sm" className="bg-score-amber text-background hover:bg-score-amber/90">Connect wallet</Button>
                 </Link>
@@ -158,6 +168,35 @@ export default function WalletDashboard({ ownerType }: Props) {
             </div>
           </CardContent>
         </Card>
+
+        {isPending && (
+          <Card className="border-score-amber/30 bg-score-amber/5">
+            <CardHeader>
+              <div className="flex items-center gap-2 text-score-amber"><ShieldCheck className="h-5 w-5" /></div>
+              <CardTitle className="text-lg">Waiting for validators</CardTitle>
+              <CardDescription>
+                Your submission is queued for {owner.community_name}'s validators.
+                {walletPending && ' Your wallet API key is saved and will activate automatically once approved.'}
+                {!walletPending && ' You can still connect a wallet now — it will activate after approval.'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-3">
+                {!walletPending && (
+                  <Link to={connectHref}>
+                    <Button size="sm" variant="outline">Connect wallet</Button>
+                  </Link>
+                )}
+                <Link to={`/c/${owner.community_slug}`}>
+                  <Button size="sm" variant="ghost">Back to {owner.community_name}</Button>
+                </Link>
+              </div>
+              <p className="text-xs text-muted-foreground mt-4">
+                Bookmark this page — refreshing it after approval will unlock your dashboard.
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {connected && (
           <>
