@@ -352,7 +352,7 @@ async function performSync(supabase: any, walletRow: any) {
       if (!isInternal && paymentHashSha) {
         const { data: pair } = await supabase
           .from('blink_transactions')
-          .select('wallet_id')
+          .select('wallet_id, direction')
           .eq('community_id', walletRow.community_id)
           .eq('payment_hash_sha256', paymentHashSha)
           .neq('wallet_id', walletRow.id)
@@ -361,10 +361,12 @@ async function performSync(supabase: any, walletRow: any) {
         if (pair) {
           isInternal = true
           counterpartyDbWalletId = pair.wallet_id
-          // Mark the paired record internal too
+          // Mark the paired record internal too — and reclassify its flow_type
+          const pairedFlow = pair.direction === 'RECEIVE' ? 'circular_receive' : 'circular_spend'
           await supabase.from('blink_transactions').update({
             is_internal: true,
             counterparty_wallet_id: walletRow.id,
+            flow_type: pairedFlow,
           }).eq('community_id', walletRow.community_id)
             .eq('payment_hash_sha256', paymentHashSha)
             .eq('wallet_id', pair.wallet_id)
@@ -372,6 +374,15 @@ async function performSync(supabase: any, walletRow: any) {
       }
 
       if (isInternal) internal++
+
+      // Classify flow_type:
+      //   circular_receive  → counterparty inside economy, money received
+      //   circular_spend    → counterparty inside economy, money sent
+      //   inflow_external   → counterparty NOT in economy, money received (external customer)
+      //   offramp_or_external → counterparty NOT in economy, money sent (offramp / outside spend)
+      const flowType = isInternal
+        ? (node.direction === 'RECEIVE' ? 'circular_receive' : 'circular_spend')
+        : (node.direction === 'RECEIVE' ? 'inflow_external' : 'offramp_or_external')
 
       const { error: txErr } = await supabase.from('blink_transactions').upsert({
         community_id: walletRow.community_id,
@@ -384,6 +395,7 @@ async function performSync(supabase: any, walletRow: any) {
         is_internal: isInternal,
         counterparty_wallet_id: counterpartyDbWalletId,
         payment_hash_sha256: paymentHashSha,
+        flow_type: flowType,
         memo: node.memo || null,
         blink_created_at: new Date(node.createdAt * 1000).toISOString(),
       }, { onConflict: 'blink_tx_id,wallet_id' })
