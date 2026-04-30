@@ -76,9 +76,6 @@ const LiveActivityFeed = ({ communityId }: LiveActivityFeedProps) => {
                 <span className={`text-xs font-medium ${tx.is_internal ? 'text-primary' : tx.direction === 'RECEIVE' ? 'text-score-green' : 'text-destructive'}`}>
                   {getLabel(tx.direction, tx.is_internal)}
                 </span>
-                {tx.memo && (
-                  <span className="text-xs text-muted-foreground truncate max-w-[120px]">{tx.memo}</span>
-                )}
               </div>
             </div>
             <span className="font-mono text-sm font-medium text-foreground">
