@@ -268,14 +268,17 @@ export async function fetchAllCommunitiesWithStats() {
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const daysSoFar = now.getDate();
 
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
   const results = await Promise.all(
     (communities || []).map(async (c) => {
-      const [merchantsRes, merchantSourcesRes, earnersRes, txRes, scoreRes, proofRes, monthlyTxRes, monthlyBlinkRes] = await Promise.all([
+      const [merchantsRes, merchantSourcesRes, earnersRes, txRes, scoreRes, prevScoreRes, proofRes, monthlyTxRes, monthlyBlinkRes] = await Promise.all([
         supabase.from('merchants').select('id', { count: 'exact', head: true }).eq('community_id', c.id).eq('status', 'approved'),
         supabase.from('merchants').select('source').eq('community_id', c.id).eq('status', 'approved'),
         supabase.from('earners').select('id', { count: 'exact', head: true }).eq('community_id', c.id).eq('status', 'approved'),
         supabase.from('transactions').select('amount_sats, is_circular').eq('community_id', c.id).eq('status', 'approved'),
         supabase.from('circularity_scores').select('*').eq('community_id', c.id).order('calculated_at', { ascending: false }).limit(1).maybeSingle(),
+        supabase.from('circularity_scores').select('score').eq('community_id', c.id).lt('calculated_at', sevenDaysAgo).order('calculated_at', { ascending: false }).limit(1).maybeSingle(),
         (supabase as any).from('proofs').select('id', { count: 'exact', head: true }).eq('community_id', c.id).eq('status', 'approved'),
         supabase.from('transactions').select('created_at').eq('community_id', c.id).eq('status', 'approved').gte('created_at', startOfMonth.toISOString()),
         supabase.from('blink_transactions').select('blink_created_at').eq('community_id', c.id).gte('blink_created_at', startOfMonth.toISOString()),
@@ -299,6 +302,10 @@ export async function fetchAllCommunitiesWithStats() {
       const monthlyTransactions = monthlyDates.length;
       const activityRate = daysSoFar > 0 ? Math.round((activeDays / daysSoFar) * 100) : 0;
 
+      const currentScore = scoreRes.data?.score || 0;
+      const previousScore = prevScoreRes.data?.score ?? currentScore;
+      const weeklyChange = currentScore - previousScore;
+
       return {
         ...c,
         merchants: merchantsRes.count || 0,
@@ -308,8 +315,8 @@ export async function fetchAllCommunitiesWithStats() {
         satsTotal: totalSats,
         retentionScore: Number(scoreRes.data?.retention_score || 0),
         growthScore: Number(scoreRes.data?.growth_score || 0),
-        score: scoreRes.data?.score || 0,
-        weeklyChange: 0,
+        score: currentScore,
+        weeklyChange,
         totalApproved,
         proofCount: proofRes.count || 0,
         dataSource,
