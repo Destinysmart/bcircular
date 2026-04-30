@@ -370,7 +370,41 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     )
 
-    const owner = await lookupOwner(supabase, body.owner_type, body.code)
+    if (body.action === 'sync_wallet') {
+      const authError = await requireEconomyAdmin(req, supabase, body.community_id)
+      if (authError) {
+        return new Response(JSON.stringify({ error: authError }), {
+          status: authError === 'Unauthorized' ? 401 : 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      const { data: wallet, error: walletError } = await supabase
+        .from('wallets')
+        .select('*')
+        .eq('id', body.wallet_id)
+        .eq('community_id', body.community_id)
+        .maybeSingle()
+      if (walletError) throw walletError
+      if (!wallet?.blink_api_key_encrypted) {
+        return new Response(JSON.stringify({ error: 'Wallet not connected' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      const result = await performSync(supabase, wallet)
+      return new Response(JSON.stringify({ success: true, ...result }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    const ownerTypes = body.action === 'dashboard' && !body.owner_type
+      ? (body.code.startsWith('ear_') ? ['earner', 'merchant'] : ['merchant', 'earner']) as const
+      : [body.owner_type] as const
+    let owner: any = null
+    let resolvedOwnerType: 'merchant' | 'earner' | undefined
+    for (const ownerType of ownerTypes) {
+      if (!ownerType) continue
+      owner = await lookupOwner(supabase, ownerType, body.code)
+      if (owner) { resolvedOwnerType = ownerType; break }
+    }
     if (!owner) {
       return new Response(JSON.stringify({ error: 'Invalid code' }), {
         status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -380,6 +414,26 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'This submission has not been approved by validators yet.' }), {
         status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
+    }
+
+    if (body.action === 'dashboard') {
+      const wallet = await findOwnerWallet(supabase, resolvedOwnerType!, owner.id)
+      return new Response(JSON.stringify({
+        success: true,
+        owner_type: resolvedOwnerType,
+        owner: {
+          id: owner.id,
+          community_id: owner.community_id,
+          name: owner.name,
+        },
+        wallet: wallet ? {
+          id: wallet.id,
+          wallet_status: wallet.wallet_status,
+          last_synced_at: wallet.last_synced_at,
+          balance_sats: wallet.balance_sats,
+          ln_address_hash: wallet.ln_address_hash,
+        } : null,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
     // Get the community admin id (used as user_id placeholder for the wallet record so existing RLS still works)
@@ -528,7 +582,7 @@ Deno.serve(async (req) => {
     })
   } catch (err: any) {
     console.error('sync-wallet-transactions error:', err?.message || err)
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+    return new Response(JSON.stringify({ error: err?.message || 'Internal server error' }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
