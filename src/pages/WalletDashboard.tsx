@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Zap, RefreshCcw, Loader2, ArrowDown, ArrowUp, Recycle } from 'lucide-react';
+import { Zap, RefreshCcw, Loader2, ArrowDown, ArrowUp, Recycle, Clock, ShieldCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
