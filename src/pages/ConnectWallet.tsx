@@ -226,6 +226,7 @@ export default function ConnectWallet({ ownerType }: Props) {
               )}
             </Button>
           </form>
+          )}
         </CardContent>
       </Card>
     </div>
