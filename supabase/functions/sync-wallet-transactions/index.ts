@@ -142,7 +142,7 @@ async function lookupOwner(supabase: any, owner_type: 'merchant' | 'earner', cod
   if (owner_type === 'merchant') {
     const { data, error } = await supabase
       .from('merchants')
-      .select('id, community_id, status, name')
+      .select('id, community_id, status, name, pending_blink_api_key_encrypted, pending_ln_address_hash')
       .eq('merchant_code', code)
       .maybeSingle()
     if (error) throw error
@@ -152,7 +152,7 @@ async function lookupOwner(supabase: any, owner_type: 'merchant' | 'earner', cod
   } else {
     const { data, error } = await supabase
       .from('earners')
-      .select('id, community_id, status, description')
+      .select('id, community_id, status, description, pending_blink_api_key_encrypted, pending_ln_address_hash')
       .eq('earner_code', code)
       .maybeSingle()
     if (error) throw error
@@ -169,6 +169,59 @@ async function findOwnerWallet(supabase: any, owner_type: string, owner_id: stri
     .eq('owner_type', owner_type)
     .eq('owner_id', owner_id)
     .maybeSingle()
+  return data
+}
+
+async function ensureOwnerWallet(supabase: any, owner_type: 'merchant' | 'earner', owner: any) {
+  const existing = await findOwnerWallet(supabase, owner_type, owner.id)
+  if (existing) return existing
+  if (!owner.pending_blink_api_key_encrypted) return null
+
+  const { data: community } = await supabase
+    .from('communities')
+    .select('admin_id')
+    .eq('id', owner.community_id)
+    .maybeSingle()
+  const { data, error } = await supabase.from('wallets').insert({
+    community_id: owner.community_id,
+    user_id: community?.admin_id || owner.community_id,
+    blink_wallet_id: '',
+    wallet_currency: 'BTC',
+    balance_sats: 0,
+    owner_type,
+    owner_id: owner.id,
+    ln_address_hash: owner.pending_ln_address_hash || null,
+    blink_api_key_encrypted: owner.pending_blink_api_key_encrypted,
+    wallet_status: 'pending',
+  }).select('*').single()
+  if (error) throw error
+
+  if (owner_type === 'merchant') {
+    await supabase.from('merchants').update({
+      wallet_id: data.id,
+      has_wallet_pending: false,
+      pending_blink_api_key_encrypted: null,
+      pending_ln_address_hash: null,
+    }).eq('id', owner.id)
+  } else {
+    const { data: earnerWallet } = await supabase.from('earner_wallets').select('id').eq('earner_id', owner.id).maybeSingle()
+    if (earnerWallet) {
+      await supabase.from('earner_wallets').update({ wallet_id: data.id, claimed_at: new Date().toISOString() }).eq('id', earnerWallet.id)
+    } else {
+      await supabase.from('earner_wallets').insert({
+        earner_id: owner.id,
+        community_id: owner.community_id,
+        wallet_id: data.id,
+        claimed_at: new Date().toISOString(),
+      })
+    }
+    await supabase.from('earners').update({
+      has_wallet_pending: false,
+      pending_blink_api_key_encrypted: null,
+      pending_ln_address_hash: null,
+    }).eq('id', owner.id)
+  }
+
   return data
 }
 
