@@ -10,9 +10,10 @@ const LiveActivityFeed = ({ communityId }: LiveActivityFeedProps) => {
   const { data: recentTx } = useQuery({
     queryKey: ['recent-blink-tx', communityId],
     queryFn: async () => {
+      // Privacy: never select memo — free-text field can leak names/identities.
       const { data, error } = await supabase
         .from('blink_transactions')
-        .select('id, direction, settlement_amount, is_internal, memo, blink_created_at, wallet_id')
+        .select('id, direction, settlement_amount, is_internal, blink_created_at')
         .eq('community_id', communityId)
         .order('blink_created_at', { ascending: false })
         .limit(20);
@@ -75,9 +76,6 @@ const LiveActivityFeed = ({ communityId }: LiveActivityFeedProps) => {
                 <span className={`text-xs font-medium ${tx.is_internal ? 'text-primary' : tx.direction === 'RECEIVE' ? 'text-score-green' : 'text-destructive'}`}>
                   {getLabel(tx.direction, tx.is_internal)}
                 </span>
-                {tx.memo && (
-                  <span className="text-xs text-muted-foreground truncate max-w-[120px]">{tx.memo}</span>
-                )}
               </div>
             </div>
             <span className="font-mono text-sm font-medium text-foreground">
