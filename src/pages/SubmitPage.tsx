@@ -64,8 +64,11 @@ const WalletTrackingBlock = ({
     <div>
       <Label className="text-xs">Blink API Key (read-only)</Label>
       <Input
+        name="blink_api_key"
         type="password"
-        autoComplete="off"
+        autoComplete="new-password"
+        data-lpignore="true"
+        data-1p-ignore="true"
         placeholder="Paste your read-only API key here"
         value={apiKey}
         onChange={e => setApiKey(e.target.value)}
@@ -263,6 +266,11 @@ const SubmitPage = () => {
             <div>
               <Label>BTCMap ID <span className="text-muted-foreground font-normal">(optional, recommended)</span></Label>
               <Input
+                name="btcmap_node_id"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
                 placeholder="e.g. node/12345678"
                 value={mBtcmapNodeId}
                 onChange={e => setMBtcmapNodeId(e.target.value)}
