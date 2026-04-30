@@ -472,7 +472,7 @@ Deno.serve(async (req) => {
     if (body.action === 'dashboard') {
       const [{ data: community }, wallet] = await Promise.all([
         supabase.from('communities').select('name, slug, city, country').eq('id', owner.community_id).maybeSingle(),
-        findOwnerWallet(supabase, resolvedOwnerType!, owner.id),
+        ensureOwnerWallet(supabase, resolvedOwnerType!, owner),
       ])
       return new Response(JSON.stringify({
         success: true,
@@ -584,7 +584,7 @@ Deno.serve(async (req) => {
     }
 
     if (body.action === 'sync') {
-      const wallet = await findOwnerWallet(supabase, body.owner_type, owner.id)
+      const wallet = await ensureOwnerWallet(supabase, body.owner_type, owner)
       if (!wallet?.blink_api_key_encrypted) {
         return new Response(JSON.stringify({ error: 'Wallet not connected' }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
