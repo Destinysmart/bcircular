@@ -395,9 +395,9 @@ Deno.serve(async (req) => {
       })
     }
 
-    const ownerTypes = body.action === 'dashboard' && !body.owner_type
-      ? (body.code.startsWith('ear_') ? ['earner', 'merchant'] : ['merchant', 'earner']) as const
-      : [body.owner_type] as const
+    const ownerTypes: Array<'merchant' | 'earner'> = body.action === 'dashboard' && !body.owner_type
+      ? (body.code.startsWith('ear_') ? ['earner', 'merchant'] : ['merchant', 'earner'])
+      : [body.owner_type as 'merchant' | 'earner']
     let owner: any = null
     let resolvedOwnerType: 'merchant' | 'earner' | undefined
     for (const ownerType of ownerTypes) {
