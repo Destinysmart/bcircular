@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Download, Share2, ExternalLink, Store, Users, Zap, Shield, ArrowLeft } from 'lucide-react';
+import { Download, Share2, ExternalLink, Store, Users, Zap, Shield, ArrowLeft, Printer, BadgeCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import ScoreRing from '@/components/ScoreRing';
@@ -155,15 +155,21 @@ const ProofOfCircularity = () => {
       <Navbar />
       <div className="container py-8 max-w-3xl">
         {/* Back link */}
-        <Link to={`/c/${slug}`} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6">
+        <Link to={`/c/${slug}`} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6 no-print" data-no-print="true">
           <ArrowLeft className="h-3.5 w-3.5" /> Back to dashboard
         </Link>
 
         {/* Report Header */}
         <div className="rounded-xl border border-border bg-card p-8 mb-6" id="report-content">
-          <div className="flex items-center gap-2 mb-6">
-            <Shield className="h-5 w-5 text-primary" />
-            <span className="text-xs uppercase tracking-widest text-primary font-semibold">Proof of Circularity</span>
+          <div className="flex items-center justify-between gap-2 mb-6">
+            <div className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-primary" />
+              <span className="text-xs uppercase tracking-widest text-primary font-semibold">Proof of Circularity</span>
+            </div>
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-xs text-primary">
+              <BadgeCheck className="h-3.5 w-3.5" />
+              <span className="font-medium">Verified by Bitcoin Circular</span>
+            </div>
           </div>
 
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-8">
@@ -283,10 +289,14 @@ const ProofOfCircularity = () => {
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3 justify-center">
+        <div className="flex flex-wrap gap-3 justify-center no-print" data-no-print="true">
           <Button onClick={handleExportPDF} disabled={exporting} className="gap-1.5">
             <Download className="h-4 w-4" />
             {exporting ? 'Generating PDF...' : 'Download PDF'}
+          </Button>
+          <Button variant="outline" onClick={() => window.print()} className="gap-1.5">
+            <Printer className="h-4 w-4" />
+            Print
           </Button>
           <Button variant="outline" onClick={handleShare} className="gap-1.5">
             <Share2 className="h-4 w-4" />

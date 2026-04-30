@@ -181,3 +181,35 @@ html.light .leaflet-container { background-color: #e5e7eb; }
     color: hsl(var(--score-green));
   }
 }
+
+/* Print styles for /c/:slug/report — hide chrome, ensure clean A4 layout */
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+  html, body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  nav,
+  header,
+  footer,
+  .no-print,
+  [data-no-print="true"] {
+    display: none !important;
+  }
+  #report-content {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    page-break-inside: avoid;
+  }
+  #report-content section {
+    page-break-inside: avoid;
+  }
+  a {
+    color: #000 !important;
+    text-decoration: none !important;
+  }
+}
