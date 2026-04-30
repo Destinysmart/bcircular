@@ -149,18 +149,34 @@ const EconomyAdminDashboard = () => {
     const setUploading = isLogo ? setUploadingLogo : setUploadingBanner;
     setUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${community.id}/${type}-${Date.now()}.${fileExt}`;
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) throw new Error('Not authenticated');
+      const fileExt = file.name.split('.').pop()?.toLowerCase();
       const bucket = isLogo ? 'economy-logos' : 'economy-banners';
       const column = isLogo ? 'logo_url' : 'banner_url';
-      const { error } = await supabase.storage.from(bucket).upload(fileName, file, { upsert: true });
-      if (error) throw error;
-      const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(fileName);
-      await supabase.from('communities').update({ [column]: publicUrl } as any).eq('id', community.id);
+      const filePath = `${community.id}/${authUser.id}/${Date.now()}.${fileExt}`;
+      const { error } = await supabase.storage.from(bucket).upload(filePath, file, { upsert: true, cacheControl: '3600' });
+      if (error) {
+        console.error('Upload error:', error);
+        throw error;
+      }
+      const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(filePath);
+      const { error: updateError } = await supabase.from('communities').update({ [column]: publicUrl } as any).eq('id', community.id);
+      if (updateError) throw updateError;
       queryClient.invalidateQueries({ queryKey: ['community-by-id', id] });
-      toast({ title: isLogo ? 'Logo updated ✓' : 'Banner updated ✓' });
+      toast({ title: 'Uploaded successfully ✓' });
     } catch (err: any) {
-      toast({ title: 'Upload failed', description: err.message, variant: 'destructive' });
+      const message = err?.message || 'Unknown upload error';
+      console.error('Full upload error:', err);
+      if (message.includes('row-level security')) {
+        toast({ title: 'Permission error — please refresh and try again', variant: 'destructive' });
+      } else if (message.includes('file size')) {
+        toast({ title: 'File too large — max 2MB for logo, 5MB for banner', variant: 'destructive' });
+      } else if (message.includes('mime type')) {
+        toast({ title: 'File type not supported — use JPG, PNG, or WebP', variant: 'destructive' });
+      } else {
+        toast({ title: `Upload failed: ${message}`, variant: 'destructive' });
+      }
     } finally {
       setUploading(false);
     }
