@@ -84,7 +84,7 @@ export async function fetchOwnerByCode(
   if (owner_type === 'merchant') {
     const { data, error } = await (supabase as any)
       .from('merchants')
-      .select('id, community_id, name, status, wallet_id, communities:community_id(name, slug, city, country)')
+      .select('id, community_id, name, status, wallet_id, has_wallet_pending, communities:community_id(name, slug, city, country)')
       .eq('merchant_code', code)
       .maybeSingle();
     if (error || !data) return null;
@@ -97,6 +97,11 @@ export async function fetchOwnerByCode(
       .eq('owner_id', data.id)
       .maybeSingle();
     wallet = w;
+    // No wallet row yet but a pending API key was saved during submission —
+    // surface as "pending" so the UI doesn't ask for the key again.
+    if (!wallet && data.has_wallet_pending) {
+      wallet = { id: '', wallet_status: 'pending', last_synced_at: null, balance_sats: 0, ln_address_hash: null };
+    }
     return {
       id: data.id,
       community_id: data.community_id,
@@ -110,17 +115,20 @@ export async function fetchOwnerByCode(
   } else {
     const { data, error } = await (supabase as any)
       .from('earners')
-      .select('id, community_id, description, status, communities:community_id(name, slug, city, country)')
+      .select('id, community_id, description, status, has_wallet_pending, communities:community_id(name, slug, city, country)')
       .eq('earner_code', code)
       .maybeSingle();
     if (error || !data) return null;
     if (data.status !== 'approved') return null;
-    const { data: w } = await (supabase as any)
+    let { data: w } = await (supabase as any)
       .from('wallets')
       .select('id, wallet_status, last_synced_at, balance_sats, ln_address_hash')
       .eq('owner_type', 'earner')
       .eq('owner_id', data.id)
       .maybeSingle();
+    if (!w && data.has_wallet_pending) {
+      w = { id: '', wallet_status: 'pending', last_synced_at: null, balance_sats: 0, ln_address_hash: null };
+    }
     return {
       id: data.id,
       community_id: data.community_id,
