@@ -272,11 +272,13 @@ export async function fetchWalletDailySeries(walletId: string) {
   });
 }
 
-/** This wallet's share of the economy's circular volume (last 30 days). */
-export async function fetchWalletContribution(walletId: string, communityId: string) {
-  const since = new Date();
-  since.setDate(since.getDate() - 30);
-  const sinceIso = since.toISOString();
+/** This wallet's share of the economy's circular volume since the given date. */
+export async function fetchWalletContribution(walletId: string, communityId: string, sinceIso?: string) {
+  if (!sinceIso) {
+    const since = new Date();
+    since.setDate(since.getDate() - 30);
+    sinceIso = since.toISOString();
+  }
 
   const [{ data: mine }, { data: economy }, { count: walletCount }] = await Promise.all([
     (supabase as any)
