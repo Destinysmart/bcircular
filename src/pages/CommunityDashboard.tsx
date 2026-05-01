@@ -1,6 +1,6 @@
 
 import { useParams, Link } from 'react-router-dom';
-import { Share2, Store, Zap, ChevronDown, Info, ExternalLink, Shield, Scale, Calendar } from 'lucide-react';
+import { Share2, Store, Zap, ChevronDown, Info, ExternalLink, Shield, Scale } from 'lucide-react';
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
