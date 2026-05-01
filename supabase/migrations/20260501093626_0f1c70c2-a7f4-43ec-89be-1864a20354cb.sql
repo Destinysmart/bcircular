@@ -1,0 +1,1 @@
+DELETE FROM economy_alerts WHERE alert_key = 'no_earners' AND community_id IN (SELECT id FROM communities WHERE EXISTS (SELECT 1 FROM earners WHERE earners.community_id = communities.id AND earners.status = 'approved'));
