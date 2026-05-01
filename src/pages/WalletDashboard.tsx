@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -12,11 +12,41 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 import {
-  fetchWalletTransactions, fetchWalletMonthlyStats,
-  fetchWalletDailySeries, fetchWalletContribution,
+  fetchWalletTransactionsRange, computeStatsFromTx, computeDailySeriesFromTx,
+  fetchWalletContribution,
   walletApi, type WalletOwnerType,
 } from '@/lib/walletApi';
+
+type TimeRange = '3M' | '6M' | '1Y' | 'All';
+
+const RANGE_TX_LIMIT: Record<TimeRange, number> = { '3M': 20, '6M': 50, '1Y': 100, 'All': 200 };
+const RANGE_TITLE: Record<TimeRange, string> = {
+  '3M': '3-month sats flow',
+  '6M': '6-month sats flow',
+  '1Y': '12-month sats flow',
+  'All': 'All-time sats flow',
+};
+const RANGE_NOTE: Record<TimeRange, string> = {
+  '3M': 'Showing last 3 months · Toggle to see more history',
+  '6M': 'Showing last 6 months',
+  '1Y': 'Showing last 12 months',
+  'All': 'Showing all tracked transactions',
+};
+const RANGE_LABEL: Record<TimeRange, string> = {
+  '3M': '3 months', '6M': '6 months', '1Y': '12 months', 'All': 'all time',
+};
+
+function getStartDate(range: TimeRange): Date {
+  const now = new Date();
+  switch (range) {
+    case '3M': return new Date(now.setMonth(now.getMonth() - 3));
+    case '6M': return new Date(now.setMonth(now.getMonth() - 6));
+    case '1Y': return new Date(now.setFullYear(now.getFullYear() - 1));
+    case 'All': return new Date('2020-01-01');
+  }
+}
 
 interface Props {
   /** When omitted, the page detects merchant vs earner from the code prefix. */
@@ -80,27 +110,24 @@ export default function WalletDashboard({ ownerType }: Props) {
   const walletId = owner?.wallet?.id;
   const communityId = owner?.community_id;
 
-  const txQ = useQuery({
-    queryKey: ['wallet-tx', walletId],
-    queryFn: () => fetchWalletTransactions(walletId!, 20),
+  const [timeRange, setTimeRange] = useState<TimeRange>('3M');
+  const sinceIso = useMemo(() => getStartDate(timeRange).toISOString(), [timeRange]);
+
+  // One range-aware fetch powers the chart, stat cards, transactions, and insight.
+  const rangeTxQ = useQuery({
+    queryKey: ['wallet-tx-range', walletId, sinceIso],
+    queryFn: () => fetchWalletTransactionsRange(walletId!, sinceIso),
     enabled: !!walletId,
   });
 
-  const statsQ = useQuery({
-    queryKey: ['wallet-stats', walletId],
-    queryFn: () => fetchWalletMonthlyStats(walletId!),
-    enabled: !!walletId,
-  });
-
-  const seriesQ = useQuery({
-    queryKey: ['wallet-series', walletId],
-    queryFn: () => fetchWalletDailySeries(walletId!),
-    enabled: !!walletId,
-  });
+  const stats = useMemo(() => computeStatsFromTx(rangeTxQ.data || []), [rangeTxQ.data]);
+  const series = useMemo(() => computeDailySeriesFromTx(rangeTxQ.data || [], sinceIso), [rangeTxQ.data, sinceIso]);
+  const txLimit = RANGE_TX_LIMIT[timeRange];
+  const recentTx = useMemo(() => (rangeTxQ.data || []).slice(0, txLimit), [rangeTxQ.data, txLimit]);
 
   const contribQ = useQuery({
-    queryKey: ['wallet-contrib', walletId, communityId],
-    queryFn: () => fetchWalletContribution(walletId!, communityId!),
+    queryKey: ['wallet-contrib', walletId, communityId, sinceIso],
+    queryFn: () => fetchWalletContribution(walletId!, communityId!, sinceIso),
     enabled: !!walletId && !!communityId,
   });
 
@@ -112,9 +139,7 @@ export default function WalletDashboard({ ownerType }: Props) {
       toast({ title: 'Sync complete', description: `${res.synced} transactions, ${res.internal} circular.` });
       await Promise.all([
         qc.invalidateQueries({ queryKey: ['wallet-owner-lookup'] }),
-        qc.invalidateQueries({ queryKey: ['wallet-tx', walletId] }),
-        qc.invalidateQueries({ queryKey: ['wallet-stats', walletId] }),
-        qc.invalidateQueries({ queryKey: ['wallet-series', walletId] }),
+        qc.invalidateQueries({ queryKey: ['wallet-tx-range', walletId] }),
         qc.invalidateQueries({ queryKey: ['wallet-contrib', walletId, communityId] }),
       ]);
     } catch (err: any) {
@@ -143,7 +168,7 @@ export default function WalletDashboard({ ownerType }: Props) {
   }
 
   function downloadData() {
-    const rows = txQ.data || [];
+    const rows = rangeTxQ.data || [];
     const csv = ['direction,amount_sats,is_circular,settled_at',
       ...rows.map((t: any) => `${t.direction},${t.settlement_amount},${t.is_internal},${t.blink_created_at}`)].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -163,9 +188,7 @@ export default function WalletDashboard({ ownerType }: Props) {
   // surface it as connected (don't ask for a key they already gave us).
   const connected = status === 'connected' || status === 'pending';
   const walletPending = status === 'pending';
-  const stats = statsQ.data;
   const contrib = contribQ.data;
-  const series = seriesQ.data || [];
   const connectHref = `/connect?code=${code}`;
 
   return (
@@ -237,68 +260,94 @@ export default function WalletDashboard({ ownerType }: Props) {
 
         {connected && (
           <>
-            {/* SECTION A — 30-day sats flow chart */}
+            {/* SECTION A — Sats flow chart with time range toggle */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">30-day sats flow</CardTitle>
-                <CardDescription>Daily received vs sent — circular flow overlay</CardDescription>
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div>
+                    <CardTitle className="text-base">{RANGE_TITLE[timeRange]}</CardTitle>
+                    <CardDescription>Daily received vs spent · 🔄 = circular flow (economy)</CardDescription>
+                  </div>
+                  <div className="inline-flex items-center gap-1">
+                    {(['3M', '6M', '1Y', 'All'] as TimeRange[]).map((r) => {
+                      const active = r === timeRange;
+                      return (
+                        <button
+                          key={r}
+                          type="button"
+                          onClick={() => setTimeRange(r)}
+                          className={cn(
+                            'px-2.5 py-1 rounded-md text-[12px] border transition-all duration-150',
+                            active
+                              ? 'bg-[#F7931A] text-[#0A0F1E] border-[#F7931A] font-semibold'
+                              : 'bg-transparent text-muted-foreground border-border hover:bg-muted hover:text-foreground',
+                          )}
+                        >
+                          {r}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
-                {seriesQ.isLoading ? (
+                {rangeTxQ.isLoading ? (
                   <div className="h-[220px] flex items-center justify-center">
                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                   </div>
                 ) : (
-                  <>
-                    <ResponsiveContainer width="100%" height={220}>
-                      <ComposedChart data={series} margin={{ top: 10, right: 8, left: -8, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                        <XAxis
-                          dataKey="date"
-                          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                          tickLine={false}
-                          axisLine={false}
-                          interval={6}
-                        />
-                        <YAxis
-                          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                          tickLine={false}
-                          axisLine={false}
-                          tickFormatter={(v) => v >= 1000 ? `${(v/1000).toFixed(1)}k` : `${v}`}
-                          width={48}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            background: 'hsl(var(--popover))',
-                            border: '1px solid hsl(var(--border))',
-                            borderRadius: 8,
-                            color: 'hsl(var(--popover-foreground))',
-                            fontSize: 12,
-                          }}
-                          formatter={(value: any, name: any) => [`${Number(value).toLocaleString()} sats`, name]}
-                        />
-                        <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} iconType="circle" />
-                        <Bar dataKey="received" fill="hsl(var(--score-green))" opacity={0.85} radius={[2,2,0,0]} name="Received" />
-                        <Bar dataKey="sent" fill="hsl(var(--destructive))" opacity={0.7} radius={[2,2,0,0]} name="Sent" />
-                        <Line dataKey="circular" stroke="hsl(var(--score-amber))" strokeWidth={2} dot={false} name="Circular" />
-                      </ComposedChart>
-                    </ResponsiveContainer>
-                  </>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <ComposedChart data={series} margin={{ top: 10, right: 8, left: -8, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                      <XAxis
+                        dataKey="date"
+                        tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                        tickLine={false}
+                        axisLine={false}
+                        interval={Math.max(0, Math.floor(series.length / 8))}
+                      />
+                      <YAxis
+                        tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(v) => v >= 1000 ? `${(v/1000).toFixed(1)}k` : `${v}`}
+                        width={48}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          background: 'hsl(var(--popover))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: 8,
+                          color: 'hsl(var(--popover-foreground))',
+                          fontSize: 12,
+                        }}
+                        formatter={(value: any, name: any) => [`${Number(value).toLocaleString()} sats`, name]}
+                      />
+                      <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} iconType="circle" />
+                      <Bar dataKey="received" fill="hsl(var(--score-green))" opacity={0.85} radius={[2,2,0,0]} name="Received" />
+                      <Bar dataKey="sent" fill="hsl(var(--destructive))" opacity={0.7} radius={[2,2,0,0]} name="Sent" />
+                      <Line dataKey="circular" stroke="hsl(var(--score-amber))" strokeWidth={2} dot={false} name="Circular" />
+                    </ComposedChart>
+                  </ResponsiveContainer>
                 )}
+                <div className="mt-3 flex items-center justify-between gap-3 flex-wrap text-[11px] text-muted-foreground">
+                  <span>{RANGE_NOTE[timeRange]}</span>
+                  <span>Verified via Blink read-only API</span>
+                </div>
               </CardContent>
             </Card>
 
-            {/* SECTION B — Summary stats */}
+            {/* SECTION B — Summary stats (recalculated for selected range) */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <SummaryStat
                 icon={<ArrowDown className="h-4 w-4 text-score-green" />}
-                label="Received (30d)"
+                label={`Received (${timeRange})`}
                 value={(stats?.received ?? 0).toLocaleString()}
                 suffix="sats"
               />
               <SummaryStat
                 icon={<ArrowUp className="h-4 w-4 text-destructive" />}
-                label="Sent (30d)"
+                label={`Sent (${timeRange})`}
                 value={(stats?.sent ?? 0).toLocaleString()}
                 suffix="sats"
               />
@@ -328,14 +377,21 @@ export default function WalletDashboard({ ownerType }: Props) {
             {/* SECTION C — Recent transactions */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Recent transactions</CardTitle>
-                <CardDescription>🔄 marks transactions within your economy</CardDescription>
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div>
+                    <CardTitle className="text-base">Recent transactions</CardTitle>
+                    <CardDescription>🔄 marks transactions within your economy</CardDescription>
+                  </div>
+                  <span className="text-[11px] text-muted-foreground">
+                    Showing {Math.min(recentTx.length, txLimit)} most recent
+                  </span>
+                </div>
               </CardHeader>
               <CardContent className="p-0">
-                {txQ.isLoading && <div className="p-6 flex justify-center"><Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /></div>}
-                {!txQ.isLoading && (txQ.data?.length ?? 0) === 0 && <div className="p-6 text-sm text-muted-foreground text-center">No transactions yet.</div>}
+                {rangeTxQ.isLoading && <div className="p-6 flex justify-center"><Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /></div>}
+                {!rangeTxQ.isLoading && recentTx.length === 0 && <div className="p-6 text-sm text-muted-foreground text-center">No transactions in this range.</div>}
                 <ul className="divide-y divide-border">
-                  {(txQ.data || []).map((t: any) => {
+                  {recentTx.map((t: any) => {
                     const isReceive = t.direction === 'RECEIVE';
                     return (
                       <li key={t.id} className="px-6 py-3 flex items-center justify-between text-sm">
@@ -361,11 +417,13 @@ export default function WalletDashboard({ ownerType }: Props) {
               <Card>
                 <CardHeader>
                   <div className="flex items-center gap-2"><TrendingUp className="h-4 w-4 text-score-amber" /></div>
-                  <CardTitle className="text-base">Your contribution to {owner.community_name}</CardTitle>
+                  <CardTitle className="text-base">
+                    Your contribution to {owner.community_name} — {RANGE_LABEL[timeRange]}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm space-y-2">
                   <ContribRow label="Connected wallets in this economy" value={`${contrib.connectedWalletCount}`} />
-                  <ContribRow label="Your circular transactions (30d)" value={`${contrib.myCircularCount}`} />
+                  <ContribRow label={`Your circular transactions (${timeRange})`} value={`${contrib.myCircularCount}`} />
                   <ContribRow label="Economy circular rate" value={`${contrib.economyCircularRate}%`} />
                   <ContribRow
                     label="Your share of economy circular volume"
