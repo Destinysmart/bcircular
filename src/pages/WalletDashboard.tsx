@@ -158,7 +158,10 @@ export default function WalletDashboard({ ownerType }: Props) {
   if (!owner || !detectedType) return <div className="min-h-screen flex items-center justify-center p-6"><Card className="max-w-md w-full"><CardHeader><CardTitle>Not found</CardTitle><CardDescription>Invalid code or unapproved submission.</CardDescription></CardHeader></Card></div>;
 
   const status = owner.wallet?.wallet_status;
-  const connected = status === 'connected';
+  // 'pending' here means a key was captured during signup but the row hasn't
+  // been activated yet — the user already provided everything needed, so
+  // surface it as connected (don't ask for a key they already gave us).
+  const connected = status === 'connected' || status === 'pending';
   const walletPending = status === 'pending';
   const stats = statsQ.data;
   const contrib = contribQ.data;

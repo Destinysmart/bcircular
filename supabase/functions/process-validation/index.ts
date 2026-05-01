@@ -130,7 +130,7 @@ Deno.serve(async (req) => {
             owner_id: submission.id,
             ln_address_hash: submission.pending_ln_address_hash || null,
             blink_api_key_encrypted: submission.pending_blink_api_key_encrypted,
-            wallet_status: 'pending',
+            wallet_status: 'connected',
           }
 
           if (walletId) {
