@@ -142,15 +142,72 @@ export async function fetchOwnerByCode(
   }
 }
 
-export async function fetchWalletTransactions(walletId: string, limit = 20) {
-  const { data, error } = await (supabase as any)
+export async function fetchWalletTransactions(walletId: string, limit = 20, sinceIso?: string) {
+  let q = (supabase as any)
     .from('blink_transactions')
     .select('id, direction, settlement_amount, is_internal, blink_created_at')
     .eq('wallet_id', walletId)
     .order('blink_created_at', { ascending: false })
     .limit(limit);
+  if (sinceIso) q = q.gte('blink_created_at', sinceIso);
+  const { data, error } = await q;
   if (error) throw error;
   return data || [];
+}
+
+/** Fetch all transactions in a window — used to derive stats + daily series. */
+export async function fetchWalletTransactionsRange(walletId: string, sinceIso: string) {
+  const { data, error } = await (supabase as any)
+    .from('blink_transactions')
+    .select('id, direction, settlement_amount, is_internal, blink_created_at')
+    .eq('wallet_id', walletId)
+    .gte('blink_created_at', sinceIso)
+    .order('blink_created_at', { ascending: false })
+    .limit(10000);
+  if (error) throw error;
+  return data || [];
+}
+
+export function computeStatsFromTx(list: any[]) {
+  let received = 0, sent = 0, circular = 0;
+  const activeDaysSet = new Set<string>();
+  for (const t of list) {
+    const amt = Number(t.settlement_amount) || 0;
+    if (t.direction === 'RECEIVE') received += amt; else sent += amt;
+    if (t.is_internal) circular += amt;
+    activeDaysSet.add(new Date(t.blink_created_at).toDateString());
+  }
+  const total = received + sent;
+  const rate = total > 0 ? Math.round((circular / total) * 100) : 0;
+  return { received, sent, circular, rate, count: list.length, activeDays: activeDaysSet.size };
+}
+
+export function computeDailySeriesFromTx(list: any[], sinceIso: string) {
+  const since = new Date(sinceIso);
+  since.setHours(0, 0, 0, 0);
+  const days = Math.max(1, Math.ceil((Date.now() - since.getTime()) / 86400000) + 1);
+  const buckets = new Map<string, { received: number; sent: number; circular: number }>();
+  for (let i = 0; i < days; i++) {
+    const d = new Date(since); d.setDate(since.getDate() + i);
+    buckets.set(d.toDateString(), { received: 0, sent: 0, circular: 0 });
+  }
+  for (const t of list) {
+    const key = new Date(t.blink_created_at).toDateString();
+    const slot = buckets.get(key);
+    if (!slot) continue;
+    const amt = Number(t.settlement_amount) || 0;
+    if (t.direction === 'RECEIVE') slot.received += amt; else slot.sent += amt;
+    if (t.is_internal) slot.circular += amt;
+  }
+  return Array.from(buckets.entries()).map(([k, v]) => {
+    const d = new Date(k);
+    return {
+      date: d.toLocaleDateString('en', { month: 'short', day: 'numeric' }),
+      received: v.received,
+      sent: v.sent,
+      circular: v.circular,
+    };
+  });
 }
 
 export async function fetchWalletMonthlyStats(walletId: string) {
