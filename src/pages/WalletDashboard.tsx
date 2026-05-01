@@ -168,7 +168,7 @@ export default function WalletDashboard({ ownerType }: Props) {
   }
 
   function downloadData() {
-    const rows = txQ.data || [];
+    const rows = rangeTxQ.data || [];
     const csv = ['direction,amount_sats,is_circular,settled_at',
       ...rows.map((t: any) => `${t.direction},${t.settlement_amount},${t.is_internal},${t.blink_created_at}`)].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -188,9 +188,7 @@ export default function WalletDashboard({ ownerType }: Props) {
   // surface it as connected (don't ask for a key they already gave us).
   const connected = status === 'connected' || status === 'pending';
   const walletPending = status === 'pending';
-  const stats = statsQ.data;
   const contrib = contribQ.data;
-  const series = seriesQ.data || [];
   const connectHref = `/connect?code=${code}`;
 
   return (
