@@ -1,12 +1,24 @@
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
+
+type TimeRange = '3M' | '6M' | '1Y' | 'All';
 
 interface Props {
   communityId: string;
 }
+
+const RANGE_MONTHS: Record<TimeRange, number> = { '3M': 3, '6M': 6, '1Y': 12, 'All': 72 };
+const RANGE_NOTE: Record<TimeRange, string> = {
+  '3M': 'Showing last 3 months · Toggle to see more',
+  '6M': 'Showing last 6 months',
+  '1Y': 'Showing last 12 months',
+  'All': 'Showing all data since April 2026',
+};
 
 interface MonthRow {
   key: string;
