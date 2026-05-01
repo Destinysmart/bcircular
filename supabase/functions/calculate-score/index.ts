@@ -172,18 +172,28 @@ Deno.serve(async (req) => {
       }
 
       // ── Pillar 3: Earner Penetration (20%) ──
+      // Authoritative live count of approved earners (defensive against stale array fetches)
+      const { count: liveEarnerCount } = await supabase
+        .from('earners')
+        .select('*', { count: 'exact', head: true })
+        .eq('community_id', communityId)
+        .eq('status', 'approved')
+      const finalEarnerCount = liveEarnerCount || 0
+      console.log('[calculate-score] Earner count for community', communityId, ':', finalEarnerCount)
+
       // Also count connected wallets as earners if they've received sats
-      let effectiveEarners = e.length
+      let effectiveEarners = finalEarnerCount
       if (hasBlinkData) {
-        // Unique wallets that received sats internally = active earners
         const activeReceivers = new Set(
           blinkTx
             .filter((t: any) => t.direction === 'RECEIVE' && t.is_internal)
             .map((t: any) => t.wallet_id)
         )
-        effectiveEarners = Math.max(e.length, activeReceivers.size)
+        effectiveEarners = Math.max(finalEarnerCount, activeReceivers.size)
       }
-      const earnerScore = Math.min((effectiveEarners / pop) * 500, 100)
+      const rawEarnerScore = Math.min((effectiveEarners / Math.max(pop, 100)) * 500, 100)
+      // Floor: if any earners exist, never score below 10
+      const earnerScore = effectiveEarners > 0 ? Math.max(rawEarnerScore, 10) : 0
 
       // ── Pillar 4: Transaction Velocity (15%) ──
       // Velocity = how actively participants transact
