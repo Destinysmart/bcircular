@@ -392,9 +392,24 @@ const CommunityDashboard = () => {
         </div>
 
         {/* Intelligence Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+        <div className="mb-10">
           <SatsMovementPanel communityId={communityId!} />
-          <LiveActivityFeed communityId={communityId!} />
+        </div>
+
+        {/* Recent activity — collapsed by default */}
+        <div className="mb-10">
+          <Collapsible>
+            <CollapsibleTrigger className="w-full flex items-center justify-between gap-2 rounded-2xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground hover:bg-secondary/40 transition-colors group">
+              <span className="inline-flex items-center gap-2">
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                Recent Activity
+              </span>
+              <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Last 20 events</span>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-3">
+              <LiveActivityFeed communityId={communityId!} />
+            </CollapsibleContent>
+          </Collapsible>
         </div>
 
         {/* Sats Flow Graph */}
