@@ -260,54 +260,80 @@ export default function WalletDashboard({ ownerType }: Props) {
 
         {connected && (
           <>
-            {/* SECTION A — 30-day sats flow chart */}
+            {/* SECTION A — Sats flow chart with time range toggle */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">30-day sats flow</CardTitle>
-                <CardDescription>Daily received vs sent — circular flow overlay</CardDescription>
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div>
+                    <CardTitle className="text-base">{RANGE_TITLE[timeRange]}</CardTitle>
+                    <CardDescription>Daily received vs spent · 🔄 = circular flow (economy)</CardDescription>
+                  </div>
+                  <div className="inline-flex items-center gap-1">
+                    {(['3M', '6M', '1Y', 'All'] as TimeRange[]).map((r) => {
+                      const active = r === timeRange;
+                      return (
+                        <button
+                          key={r}
+                          type="button"
+                          onClick={() => setTimeRange(r)}
+                          className={cn(
+                            'px-2.5 py-1 rounded-md text-[12px] border transition-all duration-150',
+                            active
+                              ? 'bg-[#F7931A] text-[#0A0F1E] border-[#F7931A] font-semibold'
+                              : 'bg-transparent text-muted-foreground border-border hover:bg-muted hover:text-foreground',
+                          )}
+                        >
+                          {r}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
-                {seriesQ.isLoading ? (
+                {rangeTxQ.isLoading ? (
                   <div className="h-[220px] flex items-center justify-center">
                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                   </div>
                 ) : (
-                  <>
-                    <ResponsiveContainer width="100%" height={220}>
-                      <ComposedChart data={series} margin={{ top: 10, right: 8, left: -8, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                        <XAxis
-                          dataKey="date"
-                          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                          tickLine={false}
-                          axisLine={false}
-                          interval={6}
-                        />
-                        <YAxis
-                          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                          tickLine={false}
-                          axisLine={false}
-                          tickFormatter={(v) => v >= 1000 ? `${(v/1000).toFixed(1)}k` : `${v}`}
-                          width={48}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            background: 'hsl(var(--popover))',
-                            border: '1px solid hsl(var(--border))',
-                            borderRadius: 8,
-                            color: 'hsl(var(--popover-foreground))',
-                            fontSize: 12,
-                          }}
-                          formatter={(value: any, name: any) => [`${Number(value).toLocaleString()} sats`, name]}
-                        />
-                        <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} iconType="circle" />
-                        <Bar dataKey="received" fill="hsl(var(--score-green))" opacity={0.85} radius={[2,2,0,0]} name="Received" />
-                        <Bar dataKey="sent" fill="hsl(var(--destructive))" opacity={0.7} radius={[2,2,0,0]} name="Sent" />
-                        <Line dataKey="circular" stroke="hsl(var(--score-amber))" strokeWidth={2} dot={false} name="Circular" />
-                      </ComposedChart>
-                    </ResponsiveContainer>
-                  </>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <ComposedChart data={series} margin={{ top: 10, right: 8, left: -8, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                      <XAxis
+                        dataKey="date"
+                        tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                        tickLine={false}
+                        axisLine={false}
+                        interval={Math.max(0, Math.floor(series.length / 8))}
+                      />
+                      <YAxis
+                        tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(v) => v >= 1000 ? `${(v/1000).toFixed(1)}k` : `${v}`}
+                        width={48}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          background: 'hsl(var(--popover))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: 8,
+                          color: 'hsl(var(--popover-foreground))',
+                          fontSize: 12,
+                        }}
+                        formatter={(value: any, name: any) => [`${Number(value).toLocaleString()} sats`, name]}
+                      />
+                      <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} iconType="circle" />
+                      <Bar dataKey="received" fill="hsl(var(--score-green))" opacity={0.85} radius={[2,2,0,0]} name="Received" />
+                      <Bar dataKey="sent" fill="hsl(var(--destructive))" opacity={0.7} radius={[2,2,0,0]} name="Sent" />
+                      <Line dataKey="circular" stroke="hsl(var(--score-amber))" strokeWidth={2} dot={false} name="Circular" />
+                    </ComposedChart>
+                  </ResponsiveContainer>
                 )}
+                <div className="mt-3 flex items-center justify-between gap-3 flex-wrap text-[11px] text-muted-foreground">
+                  <span>{RANGE_NOTE[timeRange]}</span>
+                  <span>Verified via Blink read-only API</span>
+                </div>
               </CardContent>
             </Card>
 
