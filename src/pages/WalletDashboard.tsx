@@ -110,27 +110,24 @@ export default function WalletDashboard({ ownerType }: Props) {
   const walletId = owner?.wallet?.id;
   const communityId = owner?.community_id;
 
-  const txQ = useQuery({
-    queryKey: ['wallet-tx', walletId],
-    queryFn: () => fetchWalletTransactions(walletId!, 20),
+  const [timeRange, setTimeRange] = useState<TimeRange>('3M');
+  const sinceIso = useMemo(() => getStartDate(timeRange).toISOString(), [timeRange]);
+
+  // One range-aware fetch powers the chart, stat cards, transactions, and insight.
+  const rangeTxQ = useQuery({
+    queryKey: ['wallet-tx-range', walletId, sinceIso],
+    queryFn: () => fetchWalletTransactionsRange(walletId!, sinceIso),
     enabled: !!walletId,
   });
 
-  const statsQ = useQuery({
-    queryKey: ['wallet-stats', walletId],
-    queryFn: () => fetchWalletMonthlyStats(walletId!),
-    enabled: !!walletId,
-  });
-
-  const seriesQ = useQuery({
-    queryKey: ['wallet-series', walletId],
-    queryFn: () => fetchWalletDailySeries(walletId!),
-    enabled: !!walletId,
-  });
+  const stats = useMemo(() => computeStatsFromTx(rangeTxQ.data || []), [rangeTxQ.data]);
+  const series = useMemo(() => computeDailySeriesFromTx(rangeTxQ.data || [], sinceIso), [rangeTxQ.data, sinceIso]);
+  const txLimit = RANGE_TX_LIMIT[timeRange];
+  const recentTx = useMemo(() => (rangeTxQ.data || []).slice(0, txLimit), [rangeTxQ.data, txLimit]);
 
   const contribQ = useQuery({
-    queryKey: ['wallet-contrib', walletId, communityId],
-    queryFn: () => fetchWalletContribution(walletId!, communityId!),
+    queryKey: ['wallet-contrib', walletId, communityId, sinceIso],
+    queryFn: () => fetchWalletContribution(walletId!, communityId!, sinceIso),
     enabled: !!walletId && !!communityId,
   });
 
