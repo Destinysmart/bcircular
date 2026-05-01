@@ -58,7 +58,11 @@ const JoinAsEarner = () => {
     if (!community || !role || !frequency) return;
     setSubmitting(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      // Only attach submitted_by when we have a live session whose JWT will
+      // actually be sent to PostgREST. Otherwise auth.uid() is NULL server-side
+      // and the RLS check (submitted_by = auth.uid()) fails.
+      const { data: { session } } = await supabase.auth.getSession();
+      const submitterId = session?.user?.id;
       const earner = await submitEarner(
         community.id,
         {
@@ -66,7 +70,7 @@ const JoinAsEarner = () => {
           earning_method: role,
           earning_frequency: frequency as any,
         },
-        user?.id
+        submitterId
       );
 
       // Wallet save requires an API key (ln address alone is not enough)
