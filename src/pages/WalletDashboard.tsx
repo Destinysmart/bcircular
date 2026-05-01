@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -12,11 +12,41 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 import {
-  fetchWalletTransactions, fetchWalletMonthlyStats,
-  fetchWalletDailySeries, fetchWalletContribution,
+  fetchWalletTransactionsRange, computeStatsFromTx, computeDailySeriesFromTx,
+  fetchWalletContribution,
   walletApi, type WalletOwnerType,
 } from '@/lib/walletApi';
+
+type TimeRange = '3M' | '6M' | '1Y' | 'All';
+
+const RANGE_TX_LIMIT: Record<TimeRange, number> = { '3M': 20, '6M': 50, '1Y': 100, 'All': 200 };
+const RANGE_TITLE: Record<TimeRange, string> = {
+  '3M': '3-month sats flow',
+  '6M': '6-month sats flow',
+  '1Y': '12-month sats flow',
+  'All': 'All-time sats flow',
+};
+const RANGE_NOTE: Record<TimeRange, string> = {
+  '3M': 'Showing last 3 months · Toggle to see more history',
+  '6M': 'Showing last 6 months',
+  '1Y': 'Showing last 12 months',
+  'All': 'Showing all tracked transactions',
+};
+const RANGE_LABEL: Record<TimeRange, string> = {
+  '3M': '3 months', '6M': '6 months', '1Y': '12 months', 'All': 'all time',
+};
+
+function getStartDate(range: TimeRange): Date {
+  const now = new Date();
+  switch (range) {
+    case '3M': return new Date(now.setMonth(now.getMonth() - 3));
+    case '6M': return new Date(now.setMonth(now.getMonth() - 6));
+    case '1Y': return new Date(now.setFullYear(now.getFullYear() - 1));
+    case 'All': return new Date('2020-01-01');
+  }
+}
 
 interface Props {
   /** When omitted, the page detects merchant vs earner from the code prefix. */
