@@ -1,8 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Store, Users, ArrowRight, CheckCircle2, AlertCircle, XCircle, Sparkles } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { fetchEconomyWalletMetrics } from '@/lib/walletApi';
 import MerchantGrowthChart from '@/components/charts/MerchantGrowthChart';
 import EarnerGrowthChart from '@/components/charts/EarnerGrowthChart';
 import CircularFlowGauge from '@/components/charts/CircularFlowGauge';
@@ -16,16 +13,6 @@ interface Props {
   pillars: { label: string; value: number }[];
 }
 
-const timeAgo = (dateStr: string) => {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const m = Math.floor(diff / 60000);
-  if (m < 1) return 'just now';
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  return `${Math.floor(h / 24)}d ago`;
-};
-
 const PILLAR_FIX: Record<string, { action: string; href: (slug: string) => string } | null> = {
   'Merchant saturation': { action: 'Add merchants →', href: (s) => `/c/${s}/submit` },
   'Earner penetration': { action: 'Add earners →', href: (s) => `/c/${s}/submit?tab=earner` },
@@ -34,64 +21,8 @@ const PILLAR_FIX: Record<string, { action: string; href: (slug: string) => strin
   'Growth': { action: 'Add new submissions →', href: (s) => `/c/${s}/submit` },
 };
 
-export default function EconomyGrowthPanel({ communityId, slug, merchants, earners, walletCount, pillars }: Props) {
-  const { data: walletMetrics } = useQuery({
-    queryKey: ['economy-wallet-metrics', communityId],
-    queryFn: () => fetchEconomyWalletMetrics(communityId),
-  });
-
-  const { data: activity } = useQuery({
-    queryKey: ['economy-activity', communityId],
-    queryFn: async () => {
-      const [mRes, eRes, txRes] = await Promise.all([
-        supabase.from('merchants').select('id, name, status, approved_at, created_at, source')
-          .eq('community_id', communityId).eq('status', 'approved')
-          .order('approved_at', { ascending: false, nullsFirst: false }).limit(10),
-        supabase.from('earners').select('id, earning_method, status, created_at')
-          .eq('community_id', communityId).eq('status', 'approved')
-          .order('created_at', { ascending: false }).limit(10),
-        supabase.from('blink_transactions').select('id, settlement_amount, blink_created_at, is_internal')
-          .eq('community_id', communityId)
-          .order('blink_created_at', { ascending: false }).limit(10),
-      ]);
-      type Item = { id: string; ts: string; kind: 'merchant'|'earner'|'tx'; label: string; sub?: string };
-      const items: Item[] = [];
-      for (const m of mRes.data || []) {
-        items.push({
-          id: `m-${m.id}`,
-          ts: (m as any).approved_at || m.created_at,
-          kind: 'merchant',
-          label: m.source === 'btcmap' ? 'Merchant added (BTCMap)' : 'New merchant approved',
-          sub: m.name,
-        });
-      }
-      for (const e of eRes.data || []) {
-        items.push({
-          id: `e-${e.id}`,
-          ts: e.created_at,
-          kind: 'earner',
-          label: 'New earner joined',
-          sub: (e as any).earning_method || 'Earner',
-        });
-      }
-      for (const t of txRes.data || []) {
-        items.push({
-          id: `t-${t.id}`,
-          ts: t.blink_created_at,
-          kind: 'tx',
-          label: t.is_internal ? 'Circular sats transacted' : 'Sats transacted',
-          sub: `⚡ ${Number(t.settlement_amount).toLocaleString()} sats`,
-        });
-      }
-      return items
-        .filter(i => i.ts)
-        .sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime())
-        .slice(0, 10);
-    },
-  });
-
+export default function EconomyGrowthPanel({ communityId, slug, merchants, walletCount, pillars }: Props) {
   const btcmapCount = merchants.filter(m => m.source === 'btcmap').length;
-  const selfCount = merchants.length - btcmapCount;
 
   // Top merchant categories (top 3)
   const catCounts = new Map<string, number>();
@@ -103,20 +34,6 @@ export default function EconomyGrowthPanel({ communityId, slug, merchants, earne
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3)
     .map(([c]) => c.charAt(0).toUpperCase() + c.slice(1));
-
-  // Earner role breakdown
-  const roleCounts = new Map<string, number>();
-  for (const e of earners) {
-    const r = (e.earning_method || 'Other').toString();
-    roleCounts.set(r, (roleCounts.get(r) || 0) + 1);
-  }
-  const topRoles = Array.from(roleCounts.entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3)
-    .map(([r]) => r.charAt(0).toUpperCase() + r.slice(1));
-
-  const circRate = walletMetrics ? Number(walletMetrics.real_circularity_rate) : 0;
-  const hasWalletData = walletCount > 0 && walletMetrics && Number(walletMetrics.total_transaction_count || 0) > 0;
 
   return (
     <div className="space-y-6">
