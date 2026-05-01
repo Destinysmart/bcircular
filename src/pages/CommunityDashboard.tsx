@@ -1,6 +1,6 @@
 
 import { useParams, Link } from 'react-router-dom';
-import { Share2, Store, Zap, ChevronDown, Info, ExternalLink, Shield, Scale, Calendar } from 'lucide-react';
+import { Share2, Store, Zap, ChevronDown, Info, ExternalLink, Shield, Scale } from 'lucide-react';
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
@@ -15,6 +15,8 @@ import BlinkWalletSettings from '@/components/BlinkWalletSettings';
 import VerifiedCircularityBlock from '@/components/VerifiedCircularityBlock';
 import CircularFlowSpotlight from '@/components/CircularFlowSpotlight';
 import EconomyGrowthPanel from '@/components/EconomyGrowthPanel';
+import TransactionActivityChart from '@/components/charts/TransactionActivityChart';
+import EcosystemGrowthChart from '@/components/charts/EcosystemGrowthChart';
 import EconomyLogo from '@/components/EconomyLogo';
 import { TierBadge, TIER_CHECKLIST, getTierMeta, type FbceTier } from '@/components/TierBadge';
 import { Button } from '@/components/ui/button';
@@ -297,48 +299,11 @@ const CommunityDashboard = () => {
           <VerifiedCircularityBlock communityId={community.id} />
         </div>
 
-        {/* PRIMARY METRICS — transaction-first */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <div className="rounded-2xl border border-score-amber/30 bg-card p-6">
-            <div className="flex items-center gap-2 mb-3">
-              <Zap className="h-5 w-5 text-score-amber" />
-              <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Transactions</span>
-            </div>
-            <div className="font-mono text-4xl font-extrabold text-foreground tabular-nums">
-              {(monthlyMetrics?.monthlyTransactions ?? 0).toLocaleString()}
-            </div>
-            <div className="text-xs text-muted-foreground mt-1">this month</div>
-          </div>
-
-          <div className="rounded-2xl border border-border bg-card p-6">
-            <div className="flex items-center gap-2 mb-3">
-              <Calendar className="w-4 h-4 text-muted-foreground" />
-              <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Activity rate</span>
-            </div>
-            <div className="font-mono text-4xl font-extrabold text-foreground tabular-nums">
-              {monthlyMetrics?.activityRate ?? 0}%
-            </div>
-            <div className="text-xs text-muted-foreground mt-1">
-              {monthlyMetrics?.activeDays ?? 0} of {monthlyMetrics?.daysInMonth ?? 30} days active
-            </div>
-            <div className="h-1.5 rounded-full bg-muted overflow-hidden mt-3">
-              <div className="h-full bg-score-amber transition-all" style={{ width: `${Math.min(100, monthlyMetrics?.activityRate ?? 0)}%` }} />
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-border bg-card p-6">
-            <div className="flex items-center gap-2 mb-3">
-              <Store className="h-5 w-5 text-score-amber" />
-              <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Merchants</span>
-            </div>
-            <div className="font-mono text-4xl font-extrabold text-foreground tabular-nums">
-              {displayMerchants.toLocaleString()}
-            </div>
-            <div className="text-xs text-muted-foreground mt-1">
-              {btcmapCount > 0 ? `${btcmapCount} BTCMap verified` : 'accepting Bitcoin'}
-            </div>
-          </div>
+        {/* Transaction Activity — daily bar chart for last 30 days */}
+        <div className="mb-8">
+          <TransactionActivityChart communityId={community.id} />
         </div>
+
 
         {/* Rich growth panel: expanded merchants/earners cards, circular flow, activity, contribute, score breakdown */}
         <div className="mb-10">
@@ -350,6 +315,11 @@ const CommunityDashboard = () => {
             walletCount={walletCount ?? 0}
             pillars={pillars}
           />
+        </div>
+
+        {/* Combined ecosystem growth chart — funder-friendly overview */}
+        <div className="mb-10">
+          <EcosystemGrowthChart communityId={community.id} />
         </div>
 
         {/* FBCE Classification (only shown if set) */}
@@ -422,9 +392,24 @@ const CommunityDashboard = () => {
         </div>
 
         {/* Intelligence Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+        <div className="mb-10">
           <SatsMovementPanel communityId={communityId!} />
-          <LiveActivityFeed communityId={communityId!} />
+        </div>
+
+        {/* Recent activity — collapsed by default */}
+        <div className="mb-10">
+          <Collapsible>
+            <CollapsibleTrigger className="w-full flex items-center justify-between gap-2 rounded-2xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground hover:bg-secondary/40 transition-colors group">
+              <span className="inline-flex items-center gap-2">
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                Recent Activity
+              </span>
+              <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Last 20 events</span>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-3">
+              <LiveActivityFeed communityId={communityId!} />
+            </CollapsibleContent>
+          </Collapsible>
         </div>
 
         {/* Sats Flow Graph */}
