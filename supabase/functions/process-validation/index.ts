@@ -109,11 +109,6 @@ Deno.serve(async (req) => {
 
       if (submission) {
         if ((submission_type === 'merchant' || submission_type === 'earner') && submission.pending_blink_api_key_encrypted) {
-          const { data: communityRow } = await supabase
-            .from('communities')
-            .select('admin_id')
-            .eq('id', submission.community_id)
-            .maybeSingle()
           const { data: existingWallet } = await supabase
             .from('wallets')
             .select('id, blink_wallet_id')
