@@ -139,9 +139,7 @@ export default function WalletDashboard({ ownerType }: Props) {
       toast({ title: 'Sync complete', description: `${res.synced} transactions, ${res.internal} circular.` });
       await Promise.all([
         qc.invalidateQueries({ queryKey: ['wallet-owner-lookup'] }),
-        qc.invalidateQueries({ queryKey: ['wallet-tx', walletId] }),
-        qc.invalidateQueries({ queryKey: ['wallet-stats', walletId] }),
-        qc.invalidateQueries({ queryKey: ['wallet-series', walletId] }),
+        qc.invalidateQueries({ queryKey: ['wallet-tx-range', walletId] }),
         qc.invalidateQueries({ queryKey: ['wallet-contrib', walletId, communityId] }),
       ]);
     } catch (err: any) {
