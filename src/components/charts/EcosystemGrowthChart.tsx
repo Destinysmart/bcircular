@@ -1,12 +1,24 @@
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
+
+type TimeRange = '3M' | '6M' | '1Y' | 'All';
 
 interface Props {
   communityId: string;
 }
+
+const RANGE_MONTHS: Record<TimeRange, number> = { '3M': 3, '6M': 6, '1Y': 12, 'All': 72 };
+const RANGE_NOTE: Record<TimeRange, string> = {
+  '3M': 'Showing last 3 months · Toggle to see more',
+  '6M': 'Showing last 6 months',
+  '1Y': 'Showing last 12 months',
+  'All': 'Showing all data since April 2026',
+};
 
 interface MonthRow {
   key: string;
@@ -17,6 +29,8 @@ interface MonthRow {
 }
 
 const EcosystemGrowthChart = ({ communityId }: Props) => {
+  const [timeRange, setTimeRange] = useState<TimeRange>('3M');
+
   const { data, isLoading } = useQuery({
     queryKey: ['ecosystem-growth-12m', communityId],
     queryFn: async () => {
@@ -89,14 +103,40 @@ const EcosystemGrowthChart = ({ communityId }: Props) => {
     enabled: !!communityId,
   });
 
+  const filteredData = useMemo(() => {
+    if (!data) return [];
+    const months = RANGE_MONTHS[timeRange];
+    return data.slice(Math.max(0, data.length - months));
+  }, [data, timeRange]);
+
   return (
     <div className="rounded-2xl border border-border bg-card p-5">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
         <div>
           <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-primary" /> Economy Growth Over Time
           </h3>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Last 12 months · merchants & earners (cumulative), transactions (monthly)</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5">Merchants & earners (cumulative), transactions (monthly)</p>
+        </div>
+        <div className="inline-flex items-center gap-1">
+          {(['3M', '6M', '1Y', 'All'] as TimeRange[]).map((r) => {
+            const active = r === timeRange;
+            return (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setTimeRange(r)}
+                className={cn(
+                  'px-2.5 py-1 rounded-md text-[12px] border transition-all duration-150',
+                  active
+                    ? 'bg-[#F7931A] text-[#0A0F1E] border-[#F7931A] font-semibold'
+                    : 'bg-transparent text-muted-foreground border-border hover:bg-muted hover:text-foreground',
+                )}
+              >
+                {r}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -104,7 +144,7 @@ const EcosystemGrowthChart = ({ communityId }: Props) => {
         <Skeleton className="h-[280px] w-full" />
       ) : (
         <ResponsiveContainer width="100%" height={280}>
-          <LineChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+          <LineChart data={filteredData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} vertical={false} />
             <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} />
             <YAxis yAxisId="left" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} width={32} allowDecimals={false} />
@@ -126,6 +166,11 @@ const EcosystemGrowthChart = ({ communityId }: Props) => {
           </LineChart>
         </ResponsiveContainer>
       )}
+
+      <div className="mt-3 flex items-center justify-between gap-3 flex-wrap text-[11px] text-muted-foreground">
+        <span>{RANGE_NOTE[timeRange]}</span>
+        <span>History grows as the economy becomes more active.</span>
+      </div>
     </div>
   );
 };
