@@ -158,13 +158,11 @@ export default function WalletDashboard({ ownerType }: Props) {
   if (!owner || !detectedType) return <div className="min-h-screen flex items-center justify-center p-6"><Card className="max-w-md w-full"><CardHeader><CardTitle>Not found</CardTitle><CardDescription>Invalid code or unapproved submission.</CardDescription></CardHeader></Card></div>;
 
   const status = owner.wallet?.wallet_status;
-  // A wallet is effectively connected as soon as a Blink API key is on file —
-  // 'pending' status just means the row was created during signup before the
-  // first sync. Treat 'has key' as connected so the dashboard doesn't ask the
-  // user to re-enter a key they already provided.
-  const hasKeyOnFile = !!owner.wallet?.blink_api_key_encrypted;
-  const connected = status === 'connected' || hasKeyOnFile;
-  const walletPending = status === 'pending' && !hasKeyOnFile;
+  // 'pending' here means a key was captured during signup but the row hasn't
+  // been activated yet — the user already provided everything needed, so
+  // surface it as connected (don't ask for a key they already gave us).
+  const connected = status === 'connected' || status === 'pending';
+  const walletPending = false;
   const stats = statsQ.data;
   const contrib = contribQ.data;
   const series = seriesQ.data || [];
