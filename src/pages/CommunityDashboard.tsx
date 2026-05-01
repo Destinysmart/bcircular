@@ -281,7 +281,7 @@ const CommunityDashboard = () => {
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" size="sm" className="gap-1.5 rounded-full"><Share2 className="h-3.5 w-3.5" /> Share</Button>
               <Link to={`/c/${slug}/join-as-earner`}><Button size="sm" className="gap-1.5 rounded-full bg-score-amber text-background hover:bg-score-amber/90"><Zap className="h-3.5 w-3.5" /> Join as earner</Button></Link>
-              <a href={`/c/${slug}/submit`}><Button variant="outline" size="sm" className="gap-1.5 rounded-full"><Store className="h-3.5 w-3.5" /> Add merchant / earner</Button></a>
+              <a href={`/c/${slug}/submit`}><Button variant="outline" size="sm" className="gap-1.5 rounded-full"><Store className="h-3.5 w-3.5" /> Add merchant</Button></a>
               <Link to={`/c/${slug}/report`}><Button variant="outline" size="sm" className="gap-1.5 rounded-full"><Shield className="h-3.5 w-3.5" /> Generate report</Button></Link>
               <Link to={`/c/${slug}/proofs`}><Button variant="outline" size="sm" className="gap-1.5 rounded-full"><Shield className="h-3.5 w-3.5" /> Proofs</Button></Link>
             </div>
