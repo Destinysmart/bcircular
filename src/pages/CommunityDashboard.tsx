@@ -315,6 +315,7 @@ const CommunityDashboard = () => {
             walletCount={walletCount ?? 0}
             pillars={pillars}
           />
+        </div>
 
         {/* Combined ecosystem growth chart — funder-friendly overview */}
         <div className="mb-10">
