@@ -315,6 +315,10 @@ const CommunityDashboard = () => {
             walletCount={walletCount ?? 0}
             pillars={pillars}
           />
+
+        {/* Combined ecosystem growth chart — funder-friendly overview */}
+        <div className="mb-10">
+          <EcosystemGrowthChart communityId={community.id} />
         </div>
 
         {/* FBCE Classification (only shown if set) */}
