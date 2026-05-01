@@ -120,81 +120,19 @@ export default function EconomyGrowthPanel({ communityId, slug, merchants, earne
 
   return (
     <div className="space-y-6">
-      {/* Expanded stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Merchants card */}
-        <div className="rounded-2xl border border-border bg-card p-5">
-          <div className="flex items-center gap-2 mb-3 text-muted-foreground text-[11px] uppercase tracking-wider">
-            <Store className="h-4 w-4 text-score-amber" /> Merchants
-          </div>
-          <div className="font-mono text-3xl font-bold tabular-nums">{merchants.length.toLocaleString()}</div>
-          <div className="my-3 h-px bg-border" />
-          <ul className="space-y-1 text-xs text-muted-foreground">
-            <li className="flex items-center gap-1.5"><Zap className="h-3 w-3 text-score-amber" /> {btcmapCount} BTCMap verified</li>
-            <li className="flex items-center gap-1.5">✍️ {selfCount} self-reported</li>
-            <li className="flex items-center gap-1.5">💳 {walletCount} wallet{walletCount === 1 ? '' : 's'} connected</li>
-          </ul>
-          {topCategories.length > 0 && (
-            <div className="mt-3 text-[11px] text-muted-foreground">
-              <span className="uppercase tracking-wider">Top categories:</span>{' '}
-              <span className="text-foreground">{topCategories.join(' · ')}</span>
-            </div>
-          )}
-        </div>
+      {/* Visual chart cards: Merchants · Earners · Circular Flow */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <MerchantGrowthChart communityId={communityId} />
+        <EarnerGrowthChart communityId={communityId} slug={slug} />
+        <CircularFlowGauge communityId={communityId} walletCount={walletCount} />
+      </div>
 
-        {/* Earners card */}
-        <div className="rounded-2xl border border-border bg-card p-5">
-          <div className="flex items-center gap-2 mb-3 text-muted-foreground text-[11px] uppercase tracking-wider">
-            <Users className="h-4 w-4 text-score-green" /> Earners
-          </div>
-          <div className="font-mono text-3xl font-bold tabular-nums">{earners.length.toLocaleString()}</div>
-          <div className="my-3 h-px bg-border" />
-          <p className="text-xs text-muted-foreground">People earning Bitcoin in this economy</p>
-          {earners.length === 0 ? (
-            <Link to={`/c/${slug}/submit?tab=earner`} className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-score-amber hover:underline">
-              Be the first earner <ArrowRight className="h-3 w-3" />
-            </Link>
-          ) : (
-            topRoles.length > 0 && (
-              <div className="mt-3 text-[11px] text-muted-foreground">
-                <span className="uppercase tracking-wider">Roles:</span>{' '}
-                <span className="text-foreground">{topRoles.join(' · ')}</span>
-              </div>
-            )
-          )}
-        </div>
-
-        {/* Circular flow card */}
-        <div className="rounded-2xl border border-border bg-card p-5">
-          <div className="flex items-center gap-2 mb-3 text-muted-foreground text-[11px] uppercase tracking-wider">
-            <Repeat className="h-4 w-4 text-primary" /> Circular flow
-          </div>
-          {hasWalletData ? (
-            <>
-              <div className="font-mono text-3xl font-bold tabular-nums text-primary">{circRate.toFixed(0)}%</div>
-              <div className="my-3 h-2 rounded-full bg-muted overflow-hidden">
-                <div className="h-full bg-score-amber transition-all" style={{ width: `${Math.min(100, circRate)}%` }} />
-              </div>
-              <p className="text-xs text-muted-foreground">of sats stayed local (last 30 days)</p>
-            </>
-          ) : (
-            <>
-              <div className="font-mono text-3xl font-bold tabular-nums text-muted-foreground">—</div>
-              <div className="my-3 h-px bg-border" />
-              <p className="text-xs text-muted-foreground">Connect wallets to measure real circularity.</p>
-              <Link to="/methodology" className="mt-2 inline-block text-[11px] text-primary hover:underline">Methodology →</Link>
-            </>
-          )}
-        </div>
-
-        {/* Wallets connected card */}
-        <div className="rounded-2xl border border-border bg-card p-5">
-          <div className="flex items-center gap-2 mb-3 text-muted-foreground text-[11px] uppercase tracking-wider">
-            <Sparkles className="h-4 w-4 text-chart-4" /> Wallets
-          </div>
-          <div className="font-mono text-3xl font-bold tabular-nums">{walletCount.toLocaleString()}</div>
-          <div className="my-3 h-px bg-border" />
-          <p className="text-xs text-muted-foreground">Connected Blink wallets feeding live data</p>
+      {/* Wallets connected — kept as a simple inline summary */}
+      <div className="rounded-2xl border border-border bg-card p-4 flex items-center gap-3">
+        <Sparkles className="h-4 w-4 text-chart-4" />
+        <div className="flex-1">
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Wallets connected</div>
+          <div className="text-sm text-foreground"><span className="font-mono font-semibold">{walletCount.toLocaleString()}</span> Blink wallet{walletCount === 1 ? '' : 's'} feeding live data{btcmapCount > 0 ? ` · ${btcmapCount} BTCMap-verified merchant${btcmapCount === 1 ? '' : 's'}` : ''}{topCategories.length > 0 ? ` · ${topCategories.join(', ')}` : ''}</div>
         </div>
       </div>
 
