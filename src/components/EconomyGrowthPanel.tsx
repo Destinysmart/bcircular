@@ -1,8 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Store, Users, Repeat, ArrowRight, CheckCircle2, AlertCircle, XCircle, Zap, Sparkles } from 'lucide-react';
+import { Store, Users, ArrowRight, CheckCircle2, AlertCircle, XCircle, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchEconomyWalletMetrics } from '@/lib/walletApi';
+import MerchantGrowthChart from '@/components/charts/MerchantGrowthChart';
+import EarnerGrowthChart from '@/components/charts/EarnerGrowthChart';
+import CircularFlowGauge from '@/components/charts/CircularFlowGauge';
 
 interface Props {
   communityId: string;
