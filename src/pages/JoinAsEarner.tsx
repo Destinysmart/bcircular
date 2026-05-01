@@ -107,9 +107,22 @@ const JoinAsEarner = () => {
     toast({ title: 'Copied to clipboard' });
   };
 
-  const handleWhatsApp = () => {
-    const text = encodeURIComponent(`I just joined ${community?.name} on Bitcoin Circular ⚡ My dashboard: ${dashboardUrl}`);
-    window.open(`https://wa.me/?text=${text}`, '_blank');
+  const handleWhatsApp = async () => {
+    const message = `I just joined ${community?.name} on Bitcoin Circular ⚡ My dashboard: ${dashboardUrl}`;
+    // Prefer native share sheet (works on mobile + modern desktop, opens WhatsApp directly)
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Bitcoin Circular', text: message, url: dashboardUrl });
+        return;
+      } catch (err: any) {
+        if (err?.name === 'AbortError') return;
+      }
+    }
+    const text = encodeURIComponent(message);
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    // wa.me works reliably on mobile; web.whatsapp.com is the desktop endpoint
+    const url = isMobile ? `https://wa.me/?text=${text}` : `https://web.whatsapp.com/send?text=${text}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   if (isLoading) {
