@@ -15,6 +15,8 @@ import BlinkWalletSettings from '@/components/BlinkWalletSettings';
 import VerifiedCircularityBlock from '@/components/VerifiedCircularityBlock';
 import CircularFlowSpotlight from '@/components/CircularFlowSpotlight';
 import EconomyGrowthPanel from '@/components/EconomyGrowthPanel';
+import TransactionActivityChart from '@/components/charts/TransactionActivityChart';
+import EcosystemGrowthChart from '@/components/charts/EcosystemGrowthChart';
 import EconomyLogo from '@/components/EconomyLogo';
 import { TierBadge, TIER_CHECKLIST, getTierMeta, type FbceTier } from '@/components/TierBadge';
 import { Button } from '@/components/ui/button';
