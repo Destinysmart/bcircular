@@ -337,17 +337,17 @@ export default function WalletDashboard({ ownerType }: Props) {
               </CardContent>
             </Card>
 
-            {/* SECTION B — Summary stats */}
+            {/* SECTION B — Summary stats (recalculated for selected range) */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <SummaryStat
                 icon={<ArrowDown className="h-4 w-4 text-score-green" />}
-                label="Received (30d)"
+                label={`Received (${timeRange})`}
                 value={(stats?.received ?? 0).toLocaleString()}
                 suffix="sats"
               />
               <SummaryStat
                 icon={<ArrowUp className="h-4 w-4 text-destructive" />}
-                label="Sent (30d)"
+                label={`Sent (${timeRange})`}
                 value={(stats?.sent ?? 0).toLocaleString()}
                 suffix="sats"
               />
@@ -377,14 +377,21 @@ export default function WalletDashboard({ ownerType }: Props) {
             {/* SECTION C — Recent transactions */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Recent transactions</CardTitle>
-                <CardDescription>🔄 marks transactions within your economy</CardDescription>
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div>
+                    <CardTitle className="text-base">Recent transactions</CardTitle>
+                    <CardDescription>🔄 marks transactions within your economy</CardDescription>
+                  </div>
+                  <span className="text-[11px] text-muted-foreground">
+                    Showing {Math.min(recentTx.length, txLimit)} most recent
+                  </span>
+                </div>
               </CardHeader>
               <CardContent className="p-0">
-                {txQ.isLoading && <div className="p-6 flex justify-center"><Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /></div>}
-                {!txQ.isLoading && (txQ.data?.length ?? 0) === 0 && <div className="p-6 text-sm text-muted-foreground text-center">No transactions yet.</div>}
+                {rangeTxQ.isLoading && <div className="p-6 flex justify-center"><Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /></div>}
+                {!rangeTxQ.isLoading && recentTx.length === 0 && <div className="p-6 text-sm text-muted-foreground text-center">No transactions in this range.</div>}
                 <ul className="divide-y divide-border">
-                  {(txQ.data || []).map((t: any) => {
+                  {recentTx.map((t: any) => {
                     const isReceive = t.direction === 'RECEIVE';
                     return (
                       <li key={t.id} className="px-6 py-3 flex items-center justify-between text-sm">
@@ -410,11 +417,13 @@ export default function WalletDashboard({ ownerType }: Props) {
               <Card>
                 <CardHeader>
                   <div className="flex items-center gap-2"><TrendingUp className="h-4 w-4 text-score-amber" /></div>
-                  <CardTitle className="text-base">Your contribution to {owner.community_name}</CardTitle>
+                  <CardTitle className="text-base">
+                    Your contribution to {owner.community_name} — {RANGE_LABEL[timeRange]}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm space-y-2">
                   <ContribRow label="Connected wallets in this economy" value={`${contrib.connectedWalletCount}`} />
-                  <ContribRow label="Your circular transactions (30d)" value={`${contrib.myCircularCount}`} />
+                  <ContribRow label={`Your circular transactions (${timeRange})`} value={`${contrib.myCircularCount}`} />
                   <ContribRow label="Economy circular rate" value={`${contrib.economyCircularRate}%`} />
                   <ContribRow
                     label="Your share of economy circular volume"
