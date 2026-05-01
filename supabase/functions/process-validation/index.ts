@@ -121,10 +121,13 @@ Deno.serve(async (req) => {
             .eq('owner_id', submission.id)
             .maybeSingle()
 
+          // Use owner_id as user_id to avoid colliding on the
+          // (user_id, community_id, wallet_currency) unique constraint —
+          // each merchant/earner needs its own wallet row.
           let walletId = existingWallet?.id
           const walletPayload = {
             community_id: submission.community_id,
-            user_id: communityRow?.admin_id || submission.community_id,
+            user_id: submission.id,
             blink_wallet_id: existingWallet?.blink_wallet_id || '',
             wallet_currency: 'BTC',
             balance_sats: 0,
