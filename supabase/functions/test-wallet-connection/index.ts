@@ -82,6 +82,10 @@ async function blinkGraphQL(apiKey: string) {
   return walletId
 }
 
+function isBlinkUnauthorized(message: string) {
+  return /Blink API error 401|Authorization Required|unauthor/i.test(message)
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
@@ -122,7 +126,27 @@ Deno.serve(async (req) => {
     }
 
     const apiKey = await decryptApiKey(wallet.blink_api_key_encrypted)
-    const accountId = await blinkGraphQL(apiKey)
+    let accountId: string
+    try {
+      accountId = await blinkGraphQL(apiKey)
+    } catch (blinkErr: any) {
+      const message = String(blinkErr?.message || blinkErr)
+      if (isBlinkUnauthorized(message)) {
+        await supabase
+          .from('wallets')
+          .update({ wallet_status: 'auth_error', last_synced_at: new Date().toISOString() })
+          .eq('id', wallet.id)
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Blink rejected the stored API key (401). Ask the wallet owner to re-connect with a fresh read-only key.',
+          code: 'blink_unauthorized',
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      throw blinkErr
+    }
     const message = `Connection successful — wallet ID: ${accountId}`
 
     return new Response(JSON.stringify({ success: true, message, wallet_id: accountId }), {
