@@ -45,15 +45,6 @@ const Leaderboard = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
 
-  if (!authLoading && !user) {
-    return (
-      <AuthGate
-        title="Unlock the full leaderboard"
-        message="Sign up to access the full leaderboard, compare economies, and track your Bitcoin circular economy."
-      />
-    );
-  }
-
   const [search, setSearch] = useState('');
   const [region, setRegion] = useState('All');
   const [country, setCountry] = useState('All');
