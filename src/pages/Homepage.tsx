@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useMemo, useState } from 'react';
-import { ArrowRight, Store, Zap, Globe, Sparkles, TrendingUp, Star, Repeat, BarChart3, MapPin, CheckCircle2, ShieldCheck, Bitcoin, Radio, BadgeCheck, Trophy, Users, HandCoins, Microscope, Wallet } from 'lucide-react';
+import { ArrowRight, Store, Zap, Globe, Sparkles, TrendingUp, Star, Repeat, BarChart3, MapPin, CheckCircle2, ShieldCheck, Bitcoin } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
@@ -153,16 +153,16 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
             >
               <motion.div variants={fadeUp} custom={0} className="inline-flex items-center gap-2 rounded-full border border-score-amber/40 bg-score-amber/10 px-3 py-1 text-[11px] font-mono uppercase tracking-wider text-score-amber mb-6">
                 <Sparkles className="h-3 w-3" />
-                Bitcoin adoption intelligence
+                Bitcoin Circular Economy
               </motion.div>
               <motion.h1 variants={fadeUp} custom={1} className={`${compactHero ? 'text-2xl sm:text-3xl md:text-4xl mb-3' : 'text-3xl sm:text-5xl md:text-6xl mb-4 md:mb-5'} font-extrabold tracking-tight leading-[1.1] text-foreground`}>
-                Is Bitcoin actually
+                See where Bitcoin
                 <br />
-                <span className="text-score-amber">working as money?</span>
+                <span className="text-score-amber">actually circulates.</span>
               </motion.h1>
               {!compactHero && (
                 <motion.p variants={fadeUp} custom={2} className="text-base md:text-lg text-muted-foreground max-w-lg leading-relaxed mb-6 md:mb-8">
-                  Bitcoin Circular is the intelligence platform that <span className="text-foreground font-medium">measures, proves, and ranks</span> how Bitcoin moves as real money in communities worldwide. Verified data. No funds held. Ever.
+                  Track, measure and compare Bitcoin circular economies worldwide. Real data from real communities. No funds held. Ever.
                 </motion.p>
               )}
               {!compactHero && (
@@ -172,9 +172,9 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
                       Explore Economies <ArrowRight className="h-4 w-4" />
                     </Button>
                   </Link>
-                  <Link to="/methodology" className="w-full sm:w-auto">
+                  <Link to="/leaderboard" className="w-full sm:w-auto">
                     <Button variant="outline" size="lg" className="w-full sm:w-auto rounded-full px-6 h-12 border-foreground/20 hover:bg-foreground/5">
-                      See how it works
+                      View Leaderboard
                     </Button>
                   </Link>
                 </motion.div>
@@ -235,76 +235,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
 
       {topSlot}
 
-      {/* MEASURE · PROVE · RANK — landing page only */}
-      {!topSlot && !compactHero && (
-      <section className="border-b border-border bg-card/30">
-        <div className="container py-14">
-          <div className="text-center mb-10 max-w-2xl mx-auto">
-            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-4">
-              The platform
-            </div>
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
-              Measure. Prove. Rank.
-            </h2>
-            <p className="text-sm text-muted-foreground mt-2">
-              The world's first intelligence platform for Bitcoin circular economies.
-            </p>
-          </div>
-          <motion.div
-            variants={stagger}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-40px' }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto"
-          >
-            {[
-              {
-                icon: <Radio className="h-5 w-5" />,
-                eyebrow: 'Measure',
-                title: 'Real data, not stories',
-                desc: 'Live merchant data from BTCMap, real transactions from Blink wallets, classified by the FBCE international standard.',
-                cta: 'Explore economies',
-                to: '/leaderboard',
-              },
-              {
-                icon: <BadgeCheck className="h-5 w-5" />,
-                eyebrow: 'Prove',
-                title: 'Public, verified dashboards',
-                desc: 'Every economy gets a circularity score, transaction history, and shareable proof reports — verified by independent validators.',
-                cta: 'See the methodology',
-                to: '/methodology',
-              },
-              {
-                icon: <Trophy className="h-5 w-5" />,
-                eyebrow: 'Rank',
-                title: 'A global leaderboard',
-                desc: 'Compare every Bitcoin circular economy worldwide. See what is working, what is growing, and what to improve.',
-                cta: 'Compare economies',
-                to: '/compare',
-              },
-            ].map((c, i) => (
-              <motion.div key={c.eyebrow} variants={fadeUp} custom={i}>
-                <Link
-                  to={c.to}
-                  className="group block h-full rounded-2xl border border-border bg-card p-6 transition-all duration-200 hover:-translate-y-0.5 hover:border-score-amber/50 hover:shadow-[0_8px_32px_-12px_hsl(var(--score-amber)/0.25)]"
-                >
-                  <div className="h-10 w-10 rounded-xl bg-score-amber/10 border border-score-amber/30 text-score-amber flex items-center justify-center mb-4">
-                    {c.icon}
-                  </div>
-                  <div className="text-[10px] font-mono uppercase tracking-wider text-score-amber mb-1.5">{c.eyebrow}</div>
-                  <div className="font-semibold text-base mb-2">{c.title}</div>
-                  <p className="text-sm text-muted-foreground leading-relaxed mb-4">{c.desc}</p>
-                  <div className="inline-flex items-center gap-1 text-xs text-muted-foreground group-hover:text-score-amber transition-colors">
-                    {c.cta} <ArrowRight className="h-3 w-3" />
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-      )}
-
+      {/* (Map + Activity moved below the Discover grid) */}
 
       {/* FILTER PILLS */}
       {!gated && (
@@ -338,7 +269,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
         <div className="flex items-end justify-between mb-8">
           <div>
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Discover circular economies</h2>
-            <p className="text-sm text-muted-foreground mt-1">Real merchants. Real sats. Verified by validators.</p>
+            <p className="text-sm text-muted-foreground mt-1">Real merchants. Real sats. Verified data.</p>
           </div>
           <Link to="/leaderboard" className="hidden sm:inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
             View all <ArrowRight className="h-3.5 w-3.5" />
@@ -533,38 +464,6 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
       {/* GLOBAL ECONOMIES MAP */}
       {!gated && list.length > 0 && <GlobalEconomiesMap economies={list as any} />}
 
-      {/* WHO IT'S FOR — landing page only */}
-      {!topSlot && !compactHero && (
-      <section className="border-t border-border">
-        <div className="container py-14">
-          <div className="text-center mb-8 max-w-2xl mx-auto">
-            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-3">
-              Who it's for
-            </div>
-            <h2 className="text-xl md:text-2xl font-bold tracking-tight">
-              Built for the people building Bitcoin's real economy.
-            </h2>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-5xl mx-auto">
-            {[
-              { icon: <Users className="h-4 w-4" />, who: 'Economy leaders', why: 'Prove impact. Win funding.' },
-              { icon: <HandCoins className="h-4 w-4" />, who: 'Funders & grantmakers', why: 'Verified data before grants.' },
-              { icon: <Microscope className="h-4 w-4" />, who: 'Researchers', why: 'Open methodology, open data.' },
-              { icon: <Wallet className="h-4 w-4" />, who: 'Wallets like Blink', why: 'Proof their wallet powers real money.' },
-            ].map(a => (
-              <div key={a.who} className="rounded-xl border border-border bg-card p-4">
-                <div className="h-8 w-8 rounded-lg bg-muted text-muted-foreground flex items-center justify-center mb-3">
-                  {a.icon}
-                </div>
-                <div className="text-sm font-semibold text-foreground">{a.who}</div>
-                <div className="text-xs text-muted-foreground mt-0.5">{a.why}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-      )}
-
       {/* WHAT IS CIRCULARITY */}
       <section className="border-t border-border bg-card/40">
         <div className="container py-16">
@@ -623,7 +522,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
                 Is your Bitcoin community missing?
               </h2>
               <p className="text-sm md:text-base text-muted-foreground mb-6 leading-relaxed">
-                Get a verified circularity score, a public dashboard, and a place on the global leaderboard. Free. Non-custodial. Always.
+                Join the global network of circular economies. Track your sats flow and prove real adoption.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link to="/register" className="w-full sm:w-auto">
