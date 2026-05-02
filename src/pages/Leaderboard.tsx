@@ -8,6 +8,8 @@ import EconomyLogo from '@/components/EconomyLogo';
 import { TierBadge } from '@/components/TierBadge';
 import { fetchAllCommunitiesWithStats } from '@/lib/api';
 import { getFlagEmoji, getScoreColor, getScoreBgColor } from '@/lib/mock-data';
+import { getCoverage } from '@/lib/coverage';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
