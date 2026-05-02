@@ -531,6 +531,36 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
       {/* GLOBAL ECONOMIES MAP */}
       {!gated && list.length > 0 && <GlobalEconomiesMap economies={list as any} />}
 
+      {/* WHO IT'S FOR */}
+      <section className="border-t border-border">
+        <div className="container py-14">
+          <div className="text-center mb-8 max-w-2xl mx-auto">
+            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-3">
+              Who it's for
+            </div>
+            <h2 className="text-xl md:text-2xl font-bold tracking-tight">
+              Built for the people building Bitcoin's real economy.
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-5xl mx-auto">
+            {[
+              { icon: <Users className="h-4 w-4" />, who: 'Economy leaders', why: 'Prove impact. Win funding.' },
+              { icon: <HandCoins className="h-4 w-4" />, who: 'Funders & grantmakers', why: 'Verified data before grants.' },
+              { icon: <Microscope className="h-4 w-4" />, who: 'Researchers', why: 'Open methodology, open data.' },
+              { icon: <Wallet className="h-4 w-4" />, who: 'Wallets like Blink', why: 'Proof their wallet powers real money.' },
+            ].map(a => (
+              <div key={a.who} className="rounded-xl border border-border bg-card p-4">
+                <div className="h-8 w-8 rounded-lg bg-muted text-muted-foreground flex items-center justify-center mb-3">
+                  {a.icon}
+                </div>
+                <div className="text-sm font-semibold text-foreground">{a.who}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">{a.why}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* WHAT IS CIRCULARITY */}
       <section className="border-t border-border bg-card/40">
         <div className="container py-16">
