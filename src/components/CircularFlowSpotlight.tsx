@@ -52,25 +52,8 @@ export default function CircularFlowSpotlight({ communityId, slug }: Props) {
   // State 1: no wallets — handled by WalletCoverageIndicator above; render nothing here
   if (data.walletCount === 0) return null;
 
-  // State 2: wallets connected but no circular txns yet
-  if (data.internalCount === 0) {
-    return (
-      <div className="rounded-2xl border border-score-amber/30 bg-card p-6">
-        <div className="flex items-center gap-2 mb-2 text-xs uppercase tracking-wide font-semibold text-score-amber">
-          <Zap className="h-4 w-4" fill="currentColor" /> Verified circular flow
-        </div>
-        <div className="text-base text-foreground mb-1">⚡ {data.walletCount} wallet{data.walletCount === 1 ? '' : 's'} connected — monitoring for circular flows.</div>
-        <p className="text-sm text-muted-foreground">
-          Circular transactions will appear here as they are detected between registered community members.
-        </p>
-        <div className="mt-3">
-          <Link to={`/c/${slug}/join-as-earner`} className="text-xs text-score-amber hover:underline font-medium">
-            Add more earners to increase circular detection →
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  // State 2: wallets connected but no circular txns yet — handled by WalletCoverageIndicator above
+  if (data.internalCount === 0) return null;
 
   // State 3: circular detected
   return (
