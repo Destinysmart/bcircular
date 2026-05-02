@@ -252,6 +252,18 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: linkErr.message }, 500)
     }
 
+    // Fire-and-forget: sync this merchant's own wallet (uses the merchant's API key)
+    // and also kick the economy-wide sync so circular pairing picks up the new wallet.
+    const { data: merchantRow } = await supabase
+      .from('merchants')
+      .select('merchant_code')
+      .eq('id', merchant.id)
+      .maybeSingle()
+    if (merchantRow?.merchant_code) {
+      supabase.functions.invoke('sync-wallet-transactions', {
+        body: { action: 'sync', owner_type: 'merchant', code: merchantRow.merchant_code },
+      }).catch(() => {})
+    }
     supabase.functions.invoke('sync-blink-transactions', {
       body: { community_id: merchant.community_id },
     }).catch(() => {})
