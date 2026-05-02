@@ -23,6 +23,8 @@ import { TierBadge, TIER_CHECKLIST, getTierMeta, type FbceTier } from '@/compone
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SetupChecklist from '@/components/SetupChecklist';
 import EconomyAlerts from '@/components/EconomyAlerts';
+import { getCoverage } from '@/lib/coverage';
+import { Link } from 'react-router-dom';
 
 const EconomyAdminDashboard = () => {
   const { id } = useParams();
