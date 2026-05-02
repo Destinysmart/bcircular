@@ -1,21 +1,39 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Copy, RefreshCcw, Loader2, Zap } from 'lucide-react';
+import { Copy, RefreshCcw, Loader2, Zap, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { walletApi, fetchEconomyWalletMetrics } from '@/lib/walletApi';
 import { toast } from '@/hooks/use-toast';
 
 interface Props { communityId: string }
 
+type OwnerType = 'merchant' | 'earner';
+type RowOwner = {
+  id: string;
+  label: string;
+  code: string;
+  ownerType: OwnerType;
+  wallet: any | null;
+};
+
 function appUrl() {
   return typeof window !== 'undefined' ? window.location.origin : '';
 }
 
 async function fetchOwnersWithWallets(communityId: string) {
-  // Approved merchants with their wallet (if any)
   const [{ data: merchants }, { data: earners }, { data: wallets }] = await Promise.all([
     (supabase as any).from('merchants').select('id, name, merchant_code, status').eq('community_id', communityId).eq('status', 'approved'),
     (supabase as any).from('earners').select('id, description, earner_code, status').eq('community_id', communityId).eq('status', 'approved'),
@@ -43,6 +61,8 @@ function timeAgo(iso: string | null) {
 export default function ConnectedWalletsManager({ communityId }: Props) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [resultById, setResultById] = useState<Record<string, { type: 'success' | 'error'; message: string }>>({});
+  const [disconnectTarget, setDisconnectTarget] = useState<RowOwner | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<RowOwner | null>(null);
 
   const { data, refetch, isLoading } = useQuery({
     queryKey: ['connected-wallets', communityId],
@@ -54,13 +74,13 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
     queryFn: () => fetchEconomyWalletMetrics(communityId),
   });
 
-  function copyLink(ownerType: 'merchant' | 'earner', code: string) {
+  function copyLink(ownerType: OwnerType, code: string) {
     const url = `${appUrl()}/connect?code=${code}`;
     navigator.clipboard.writeText(url);
     toast({ title: 'Connect link copied', description: 'Share via WhatsApp, email, etc.' });
   }
 
-  async function syncOne(ownerType: 'merchant' | 'earner', code: string, id: string, walletId?: string) {
+  async function syncOne(ownerType: OwnerType, code: string, id: string, walletId?: string) {
     setBusyId(id);
     try {
       const res = walletId
@@ -92,21 +112,128 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
     } finally { setBusyId(null); }
   }
 
-  async function disconnectOne(ownerType: 'merchant' | 'earner', code: string, id: string) {
-    if (!confirm('Disconnect this wallet?')) return;
-    setBusyId(id);
+  async function confirmDisconnect() {
+    const target = disconnectTarget;
+    if (!target?.wallet?.id) { setDisconnectTarget(null); return; }
+    setBusyId(target.id);
     try {
-      await walletApi.disconnect(ownerType, code);
-      toast({ title: 'Disconnected' });
-      refetch();
+      const { error } = await (supabase as any)
+        .from('wallets')
+        .update({
+          wallet_status: 'pending',
+          blink_api_key_encrypted: null,
+          ln_address_hash: null,
+          last_synced_at: null,
+        })
+        .eq('id', target.wallet.id);
+      if (error) throw error;
+      toast({ title: 'Wallet disconnected' });
+      await refetch();
+      await refetchMetrics();
     } catch (err: any) {
-      toast({ title: 'Failed', description: err.message, variant: 'destructive' });
-    } finally { setBusyId(null); }
+      toast({ title: 'Failed to disconnect', description: err.message, variant: 'destructive' });
+    } finally {
+      setBusyId(null);
+      setDisconnectTarget(null);
+    }
+  }
+
+  async function confirmDelete() {
+    const target = deleteTarget;
+    if (!target) return;
+    setBusyId(target.id);
+    try {
+      if (target.wallet?.id) {
+        await (supabase as any).from('blink_transactions').delete().eq('wallet_id', target.wallet.id);
+        const { error: wErr } = await (supabase as any).from('wallets').delete().eq('id', target.wallet.id);
+        if (wErr) throw wErr;
+      }
+      const ownerTable = target.ownerType === 'earner' ? 'earners' : 'merchants';
+      const { error: oErr } = await (supabase as any).from(ownerTable).delete().eq('id', target.id);
+      if (oErr) throw oErr;
+      toast({ title: 'Entry deleted permanently' });
+      await refetch();
+      await refetchMetrics();
+    } catch (err: any) {
+      toast({ title: 'Failed to delete', description: err.message, variant: 'destructive' });
+    } finally {
+      setBusyId(null);
+      setDeleteTarget(null);
+    }
   }
 
   const merchants = data?.merchants || [];
   const earners = data?.earners || [];
   const connectedCount = (metrics?.active_merchant_wallets ?? 0) + (metrics?.active_earner_wallets ?? 0);
+
+  function renderRow(row: RowOwner) {
+    const conn = row.wallet?.wallet_status === 'connected';
+    const authErr = row.wallet?.wallet_status === 'auth_error';
+    const hasWallet = !!row.wallet?.id;
+    const rowResult = resultById[row.id];
+    return (
+      <li key={row.id} className="rounded-md border p-3 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="font-medium truncate">{row.label}</div>
+            <div className="text-xs text-muted-foreground">
+              <code>{row.code}</code> ·{' '}
+              <Badge variant={conn ? 'default' : authErr ? 'destructive' : 'secondary'} className={conn ? 'bg-score-green text-background' : ''}>
+                {conn ? '● Connected' : authErr ? '⚠ Re-connect required' : hasWallet ? '○ Saved, not synced' : '○ Pending'}
+              </Badge>{' '}
+              {hasWallet && `· last sync ${timeAgo(row.wallet.last_synced_at)}`}
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" onClick={() => copyLink(row.ownerType, row.code)}>
+              <Copy className="h-3 w-3 mr-1" /> Copy link
+            </Button>
+            {hasWallet && !authErr && (
+              <Button size="sm" variant="outline" onClick={() => testOne(row.id, row.wallet.id)} disabled={busyId === row.id}>
+                {busyId === row.id ? <Loader2 className="h-3 w-3 animate-spin" /> : null} Test connection
+              </Button>
+            )}
+            {hasWallet && !authErr && (
+              <Button size="sm" variant="outline" onClick={() => syncOne(row.ownerType, row.code, row.id, row.wallet.id)} disabled={busyId === row.id}>
+                {busyId === row.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCcw className="h-3 w-3" />} Sync now
+              </Button>
+            )}
+            {(conn || authErr) && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                onClick={() => setDisconnectTarget(row)}
+                disabled={busyId === row.id}
+              >
+                Disconnect
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              onClick={() => setDeleteTarget(row)}
+              disabled={busyId === row.id}
+              title="Delete this entry"
+            >
+              <Trash2 className="h-3 w-3 mr-1" /> Delete
+            </Button>
+          </div>
+        </div>
+        {authErr && (
+          <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+            Blink rejected this wallet's API key. Disconnect, then ask the {row.ownerType} to re-connect with a fresh key.
+          </div>
+        )}
+        {rowResult && (
+          <div className={`rounded-md border px-3 py-2 text-xs ${rowResult.type === 'success' ? 'border-score-green/40 bg-score-green/10 text-foreground' : 'border-destructive/40 bg-destructive/10 text-destructive'}`}>
+            {rowResult.message}
+          </div>
+        )}
+      </li>
+    );
+  }
 
   return (
     <Card>
@@ -130,30 +257,7 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
           <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Merchant wallets ({merchants.length})</h3>
           {merchants.length === 0 && <p className="text-sm text-muted-foreground">No approved merchants yet.</p>}
           <ul className="space-y-2">
-            {merchants.map((m: any) => {
-              const conn = m.wallet?.wallet_status === 'connected';
-              const authErr = m.wallet?.wallet_status === 'auth_error';
-              const hasWallet = !!m.wallet?.id;
-              const rowResult = resultById[m.id];
-              return (
-                <li key={m.id} className="rounded-md border p-3 space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="min-w-0">
-                    <div className="font-medium truncate">{m.name}</div>
-                      <div className="text-xs text-muted-foreground"><code>{m.merchant_code}</code> · <Badge variant={conn ? 'default' : authErr ? 'destructive' : 'secondary'} className={conn ? 'bg-score-green text-background' : ''}>{conn ? '● Connected' : authErr ? '⚠ Re-connect required' : hasWallet ? '○ Saved, not synced' : '○ Pending'}</Badge> {hasWallet && `· last sync ${timeAgo(m.wallet.last_synced_at)}`}</div>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                    <Button size="sm" variant="outline" onClick={() => copyLink('merchant', m.merchant_code)}><Copy className="h-3 w-3 mr-1" /> Copy link</Button>
-                      {hasWallet && !authErr && <Button size="sm" variant="outline" onClick={() => testOne(m.id, m.wallet.id)} disabled={busyId === m.id}>{busyId === m.id ? <Loader2 className="h-3 w-3 animate-spin" /> : null} Test connection</Button>}
-                      {hasWallet && !authErr && <Button size="sm" variant="outline" onClick={() => syncOne('merchant', m.merchant_code, m.id, m.wallet.id)} disabled={busyId === m.id}>{busyId === m.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCcw className="h-3 w-3" />} Sync now</Button>}
-                      {(conn || authErr) && <Button size="sm" variant="ghost" className="text-destructive" onClick={() => disconnectOne('merchant', m.merchant_code, m.id)} disabled={busyId === m.id}>Disconnect</Button>}
-                    </div>
-                  </div>
-                  {authErr && <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">Blink rejected this wallet's API key. Disconnect, then ask the merchant to re-connect with a fresh key.</div>}
-                  {rowResult && <div className={`rounded-md border px-3 py-2 text-xs ${rowResult.type === 'success' ? 'border-score-green/40 bg-score-green/10 text-foreground' : 'border-destructive/40 bg-destructive/10 text-destructive'}`}>{rowResult.message}</div>}
-                </li>
-              );
-            })}
+            {merchants.map((m: any) => renderRow({ id: m.id, label: m.name, code: m.merchant_code, ownerType: 'merchant', wallet: m.wallet }))}
           </ul>
         </section>
 
@@ -161,33 +265,51 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
           <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Earner wallets ({earners.length})</h3>
           {earners.length === 0 && <p className="text-sm text-muted-foreground">No approved earners yet.</p>}
           <ul className="space-y-2">
-            {earners.map((e: any) => {
-              const conn = e.wallet?.wallet_status === 'connected';
-              const authErr = e.wallet?.wallet_status === 'auth_error';
-              const hasWallet = !!e.wallet?.id;
-              const rowResult = resultById[e.id];
-              return (
-                <li key={e.id} className="rounded-md border p-3 space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="min-w-0">
-                    <div className="font-medium truncate">{e.description}</div>
-                      <div className="text-xs text-muted-foreground"><code>{e.earner_code}</code> · <Badge variant={conn ? 'default' : authErr ? 'destructive' : 'secondary'} className={conn ? 'bg-score-green text-background' : ''}>{conn ? '● Connected' : authErr ? '⚠ Re-connect required' : hasWallet ? '○ Saved, not synced' : '○ Pending'}</Badge> {hasWallet && `· last sync ${timeAgo(e.wallet.last_synced_at)}`}</div>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                    <Button size="sm" variant="outline" onClick={() => copyLink('earner', e.earner_code)}><Copy className="h-3 w-3 mr-1" /> Copy link</Button>
-                      {hasWallet && !authErr && <Button size="sm" variant="outline" onClick={() => testOne(e.id, e.wallet.id)} disabled={busyId === e.id}>{busyId === e.id ? <Loader2 className="h-3 w-3 animate-spin" /> : null} Test connection</Button>}
-                      {hasWallet && !authErr && <Button size="sm" variant="outline" onClick={() => syncOne('earner', e.earner_code, e.id, e.wallet.id)} disabled={busyId === e.id}>{busyId === e.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCcw className="h-3 w-3" />} Sync now</Button>}
-                      {(conn || authErr) && <Button size="sm" variant="ghost" className="text-destructive" onClick={() => disconnectOne('earner', e.earner_code, e.id)} disabled={busyId === e.id}>Disconnect</Button>}
-                    </div>
-                  </div>
-                  {authErr && <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">Blink rejected this wallet's API key. Disconnect, then ask the earner to re-connect with a fresh key.</div>}
-                  {rowResult && <div className={`rounded-md border px-3 py-2 text-xs ${rowResult.type === 'success' ? 'border-score-green/40 bg-score-green/10 text-foreground' : 'border-destructive/40 bg-destructive/10 text-destructive'}`}>{rowResult.message}</div>}
-                </li>
-              );
-            })}
+            {earners.map((e: any) => renderRow({ id: e.id, label: e.description, code: e.earner_code, ownerType: 'earner', wallet: e.wallet }))}
           </ul>
         </section>
       </CardContent>
+
+      <AlertDialog open={!!disconnectTarget} onOpenChange={(o) => !o && setDisconnectTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Disconnect this wallet?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-1 text-sm">
+                <div>Their transaction data will stop syncing.</div>
+                <div>Their {disconnectTarget?.ownerType ?? 'earner'} code remains active.</div>
+                <div>This cannot be undone.</div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDisconnect} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Disconnect
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this entry permanently?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-1 text-sm">
+                <div>This removes the {deleteTarget?.ownerType ?? 'entry'} record and all their synced transaction data.</div>
+                <div>This cannot be undone.</div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete permanently
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
