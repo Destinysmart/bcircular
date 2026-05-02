@@ -19,6 +19,7 @@ const MerchantClaim = () => {
   const tokenFromUrl = searchParams.get('token') || '';
   const [token, setToken] = useState(tokenFromUrl);
   const [walletId, setWalletId] = useState('');
+  const [apiKey, setApiKey] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
