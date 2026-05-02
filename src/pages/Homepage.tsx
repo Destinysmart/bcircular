@@ -153,16 +153,16 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
             >
               <motion.div variants={fadeUp} custom={0} className="inline-flex items-center gap-2 rounded-full border border-score-amber/40 bg-score-amber/10 px-3 py-1 text-[11px] font-mono uppercase tracking-wider text-score-amber mb-6">
                 <Sparkles className="h-3 w-3" />
-                Bitcoin Circular Economy
+                Bitcoin adoption intelligence
               </motion.div>
               <motion.h1 variants={fadeUp} custom={1} className={`${compactHero ? 'text-2xl sm:text-3xl md:text-4xl mb-3' : 'text-3xl sm:text-5xl md:text-6xl mb-4 md:mb-5'} font-extrabold tracking-tight leading-[1.1] text-foreground`}>
-                See where Bitcoin
+                Is Bitcoin actually
                 <br />
-                <span className="text-score-amber">actually circulates.</span>
+                <span className="text-score-amber">working as money?</span>
               </motion.h1>
               {!compactHero && (
                 <motion.p variants={fadeUp} custom={2} className="text-base md:text-lg text-muted-foreground max-w-lg leading-relaxed mb-6 md:mb-8">
-                  Track, measure and compare Bitcoin circular economies worldwide. Real data from real communities. No funds held. Ever.
+                  Bitcoin Circular is the intelligence platform that <span className="text-foreground font-medium">measures, proves, and ranks</span> how Bitcoin moves as real money in communities worldwide. Verified data. No funds held. Ever.
                 </motion.p>
               )}
               {!compactHero && (
@@ -172,9 +172,9 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
                       Explore Economies <ArrowRight className="h-4 w-4" />
                     </Button>
                   </Link>
-                  <Link to="/leaderboard" className="w-full sm:w-auto">
+                  <Link to="/methodology" className="w-full sm:w-auto">
                     <Button variant="outline" size="lg" className="w-full sm:w-auto rounded-full px-6 h-12 border-foreground/20 hover:bg-foreground/5">
-                      View Leaderboard
+                      See how it works
                     </Button>
                   </Link>
                 </motion.div>
