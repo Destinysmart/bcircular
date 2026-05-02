@@ -123,10 +123,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "blink_transactions_counterparty_wallet_id_fkey"
+            columns: ["counterparty_wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "blink_transactions_wallet_id_fkey"
             columns: ["wallet_id"]
             isOneToOne: false
             referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blink_transactions_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets_public"
             referencedColumns: ["id"]
           },
         ]
@@ -700,6 +714,13 @@ export type Database = {
             referencedRelation: "wallets"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "merchants_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
@@ -1027,6 +1048,38 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      wallets_public: {
+        Row: {
+          community_id: string | null
+          created_at: string | null
+          id: string | null
+          owner_type: string | null
+          wallet_status: string | null
+        }
+        Insert: {
+          community_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          owner_type?: string | null
+          wallet_status?: string | null
+        }
+        Update: {
+          community_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          owner_type?: string | null
+          wallet_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallets_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
