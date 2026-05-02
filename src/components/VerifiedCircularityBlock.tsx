@@ -25,8 +25,8 @@ async function fetchFlowAggregate(communityId: string): Promise<FlowAggregate> {
       .select('direction, settlement_amount, is_internal, flow_type')
       .eq('community_id', communityId)
       .gte('blink_created_at', thirtyDaysAgo),
-    supabase
-      .from('wallets')
+    (supabase as any)
+      .from('wallets_public')
       .select('owner_type')
       .eq('community_id', communityId)
       .eq('wallet_status', 'connected'),

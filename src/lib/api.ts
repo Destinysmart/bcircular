@@ -284,7 +284,7 @@ export async function fetchAllCommunitiesWithStats() {
         (supabase as any).from('proofs').select('id', { count: 'exact', head: true }).eq('community_id', c.id).eq('status', 'approved'),
         supabase.from('transactions').select('created_at').eq('community_id', c.id).eq('status', 'approved').gte('created_at', startOfMonth.toISOString()),
         supabase.from('blink_transactions').select('blink_created_at').eq('community_id', c.id).gte('blink_created_at', startOfMonth.toISOString()),
-        supabase.from('wallets').select('id', { count: 'exact', head: true }).eq('community_id', c.id),
+        (supabase as any).from('wallets_public').select('id', { count: 'exact', head: true }).eq('community_id', c.id),
       ]);
       const circularSats = (txRes.data || []).filter(t => t.is_circular).reduce((s, t) => s + Number(t.amount_sats), 0);
       const totalSats = (txRes.data || []).reduce((s, t) => s + Number(t.amount_sats), 0);
