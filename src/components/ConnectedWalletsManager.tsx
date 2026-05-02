@@ -25,6 +25,7 @@ type RowOwner = {
   id: string;
   label: string;
   code: string;
+  anonLabel: string;
   ownerType: OwnerType;
   wallet: any | null;
 };
