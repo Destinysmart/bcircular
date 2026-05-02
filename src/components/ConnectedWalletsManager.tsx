@@ -222,7 +222,11 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
 
   const merchants = data?.merchants || [];
   const earners = data?.earners || [];
-  const connectedCount = (metrics?.active_merchant_wallets ?? 0) + (metrics?.active_earner_wallets ?? 0);
+  // Live count of merchant/earner wallets that are actually connected — same
+  // source the public economy page uses, so the two pages can never disagree.
+  const connectedMerchantCount = merchants.filter((m: any) => m.wallet?.wallet_status === 'connected').length;
+  const connectedEarnerCount = earners.filter((e: any) => e.wallet?.wallet_status === 'connected').length;
+  const connectedCount = connectedMerchantCount + connectedEarnerCount;
 
   function renderRow(row: RowOwner) {
     const conn = row.wallet?.wallet_status === 'connected';
