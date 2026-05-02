@@ -132,6 +132,7 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
           <ul className="space-y-2">
             {merchants.map((m: any) => {
               const conn = m.wallet?.wallet_status === 'connected';
+              const authErr = m.wallet?.wallet_status === 'auth_error';
               const hasWallet = !!m.wallet?.id;
               const rowResult = resultById[m.id];
               return (
@@ -139,15 +140,16 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="min-w-0">
                     <div className="font-medium truncate">{m.name}</div>
-                      <div className="text-xs text-muted-foreground"><code>{m.merchant_code}</code> · <Badge variant={conn ? 'default' : 'secondary'} className={conn ? 'bg-score-green text-background' : ''}>{conn ? '● Connected' : hasWallet ? '○ Saved, not synced' : '○ Pending'}</Badge> {hasWallet && `· last sync ${timeAgo(m.wallet.last_synced_at)}`}</div>
+                      <div className="text-xs text-muted-foreground"><code>{m.merchant_code}</code> · <Badge variant={conn ? 'default' : authErr ? 'destructive' : 'secondary'} className={conn ? 'bg-score-green text-background' : ''}>{conn ? '● Connected' : authErr ? '⚠ Re-connect required' : hasWallet ? '○ Saved, not synced' : '○ Pending'}</Badge> {hasWallet && `· last sync ${timeAgo(m.wallet.last_synced_at)}`}</div>
                     </div>
                     <div className="flex flex-wrap gap-2">
                     <Button size="sm" variant="outline" onClick={() => copyLink('merchant', m.merchant_code)}><Copy className="h-3 w-3 mr-1" /> Copy link</Button>
-                      {hasWallet && <Button size="sm" variant="outline" onClick={() => testOne(m.id, m.wallet.id)} disabled={busyId === m.id}>{busyId === m.id ? <Loader2 className="h-3 w-3 animate-spin" /> : null} Test connection</Button>}
-                      {hasWallet && <Button size="sm" variant="outline" onClick={() => syncOne('merchant', m.merchant_code, m.id, m.wallet.id)} disabled={busyId === m.id}>{busyId === m.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCcw className="h-3 w-3" />} Sync now</Button>}
-                      {conn && <Button size="sm" variant="ghost" className="text-destructive" onClick={() => disconnectOne('merchant', m.merchant_code, m.id)} disabled={busyId === m.id}>Disconnect</Button>}
+                      {hasWallet && !authErr && <Button size="sm" variant="outline" onClick={() => testOne(m.id, m.wallet.id)} disabled={busyId === m.id}>{busyId === m.id ? <Loader2 className="h-3 w-3 animate-spin" /> : null} Test connection</Button>}
+                      {hasWallet && !authErr && <Button size="sm" variant="outline" onClick={() => syncOne('merchant', m.merchant_code, m.id, m.wallet.id)} disabled={busyId === m.id}>{busyId === m.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCcw className="h-3 w-3" />} Sync now</Button>}
+                      {(conn || authErr) && <Button size="sm" variant="ghost" className="text-destructive" onClick={() => disconnectOne('merchant', m.merchant_code, m.id)} disabled={busyId === m.id}>Disconnect</Button>}
                     </div>
                   </div>
+                  {authErr && <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">Blink rejected this wallet's API key. Disconnect, then ask the merchant to re-connect with a fresh key.</div>}
                   {rowResult && <div className={`rounded-md border px-3 py-2 text-xs ${rowResult.type === 'success' ? 'border-score-green/40 bg-score-green/10 text-foreground' : 'border-destructive/40 bg-destructive/10 text-destructive'}`}>{rowResult.message}</div>}
                 </li>
               );
