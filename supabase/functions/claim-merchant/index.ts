@@ -108,6 +108,11 @@ Deno.serve(async (req) => {
     if (merchant.status !== 'approved') {
       return jsonResponse({ error: 'This merchant has not been approved yet. Ask your economy admin to approve it first.' }, 400)
     }
+    if (merchant.wallet_id && merchant.claimed_at) {
+      return jsonResponse({
+        error: 'This merchant wallet is already connected. Use your dashboard link to view your data.',
+      }, 400)
+    }
     if (!merchant.claim_token_hash) {
       return jsonResponse({
         error: 'This claim link has already been used or has expired. Contact your economy admin for a new link.',
