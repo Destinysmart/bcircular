@@ -262,24 +262,73 @@ const BlinkWalletSettings = ({ communityId, isAdmin }: BlinkWalletSettingsProps)
           </div>
           {txStats && (
             <div className="space-y-4">
-              {/* Row 1 — Economy Wallet Activity */}
-              <div className="rounded-md border border-border bg-background/40 p-4">
-                <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium mb-3">
-                  Economy Wallet Activity
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-2xl font-bold tabular-nums">{txStats.total.toLocaleString()}</div>
-                    <div className="text-xs text-muted-foreground">Total Transactions · Economy Wallet</div>
+              {/* Row 1 — Wallet Activity by Role */}
+              <div className="grid grid-cols-1 gap-3">
+                {/* Economy Coordination Wallet */}
+                <div
+                  className="rounded-md border border-border bg-background/40 p-4 border-l-4"
+                  style={{ borderLeftColor: '#F7931A' }}
+                >
+                  <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium mb-2">
+                    Economy Coordination Wallet
                   </div>
-                  <div>
-                    <div className="text-2xl font-bold tabular-nums">{(txStats.totalSats).toLocaleString()}</div>
-                    <div className="text-xs text-muted-foreground">Total Sats · Economy Wallet</div>
+                  <div className="text-base font-semibold tabular-nums">
+                    {txStats.groups.economy.txns.toLocaleString()} transactions ·{' '}
+                    {txStats.groups.economy.sats.toLocaleString()} sats
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1 italic">
+                    Main economy coordination wallet
                   </div>
                 </div>
-                <div className="text-xs text-muted-foreground mt-3 italic">
-                  All activity on the main economy coordination wallet
+
+                {/* Earner Wallets */}
+                <div
+                  className="rounded-md border border-border bg-background/40 p-4 border-l-4"
+                  style={{ borderLeftColor: '#3B82F6' }}
+                >
+                  <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium mb-2">
+                    Earner Wallets
+                  </div>
+                  {txStats.groupCounts.earner > 0 ? (
+                    <div className="text-base font-semibold tabular-nums">
+                      {txStats.groups.earner.txns.toLocaleString()} transactions ·{' '}
+                      {txStats.groups.earner.sats.toLocaleString()} sats ·{' '}
+                      {txStats.groupCounts.earner} earner{txStats.groupCounts.earner === 1 ? '' : 's'} connected
+                    </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground italic">
+                      No earner wallets connected yet
+                    </div>
+                  )}
                 </div>
+
+                {/* Merchant Wallets */}
+                <div
+                  className="rounded-md border border-border bg-background/40 p-4 border-l-4"
+                  style={{ borderLeftColor: '#10B981' }}
+                >
+                  <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium mb-2">
+                    Merchant Wallets
+                  </div>
+                  {txStats.groupCounts.merchant > 0 ? (
+                    <div className="text-base font-semibold tabular-nums">
+                      {txStats.groups.merchant.txns.toLocaleString()} transactions ·{' '}
+                      {txStats.groups.merchant.sats.toLocaleString()} sats ·{' '}
+                      {txStats.groupCounts.merchant} merchant{txStats.groupCounts.merchant === 1 ? '' : 's'} connected
+                    </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground italic">
+                      No merchant wallets connected yet — generate claim links above to invite merchants
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Combined summary */}
+              <div className="text-xs text-muted-foreground border-t border-border pt-3">
+                Total: {txStats.total.toLocaleString()} transactions ·{' '}
+                {txStats.totalSats.toLocaleString()} sats across {txStats.totalWallets} wallet
+                {txStats.totalWallets === 1 ? '' : 's'}
               </div>
 
               {/* Row 2 — Circular Detection */}
