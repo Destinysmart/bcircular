@@ -40,9 +40,12 @@ const SatsFlowGraph = ({ communityId }: SatsFlowGraphProps) => {
   const { data: wallets } = useQuery({
     queryKey: ['wallets-flow', communityId],
     queryFn: async () => {
+      // Privacy: never expose blink_wallet_id, ln_address_hash, or any other
+      // wallet identifier to the public. Only fetch what we need to render
+      // anonymous nodes ("Earner 1", "Merchant 1", …).
       const { data, error } = await supabase
         .from('wallets')
-        .select('id, blink_wallet_id, balance_sats')
+        .select('id, owner_type, balance_sats')
         .eq('community_id', communityId);
       if (error) throw error;
       return data;
@@ -59,11 +62,17 @@ const SatsFlowGraph = ({ communityId }: SatsFlowGraphProps) => {
     const nodeMap = new Map<string, FlowNode>();
     const linkMap = new Map<string, FlowLink>();
 
-    // Add wallet nodes
-    wallets.forEach(w => {
+    // Add wallet nodes with anonymous labels — never expose wallet IDs or hashes.
+    // Group by owner_type so each wallet becomes "Earner 1", "Merchant 2", etc.
+    const counters: Record<string, number> = { earner: 0, merchant: 0, other: 0 };
+    const sortedWallets = [...wallets].sort((a, b) => a.id.localeCompare(b.id));
+    sortedWallets.forEach(w => {
+      const type = (w.owner_type as string) || 'other';
+      counters[type] = (counters[type] || 0) + 1;
+      const typeLabel = type === 'earner' ? 'Earner' : type === 'merchant' ? 'Merchant' : 'Wallet';
       nodeMap.set(w.id, {
         id: w.id,
-        label: w.blink_wallet_id.slice(0, 6),
+        label: `${typeLabel} ${counters[type]}`,
         satsVolume: w.balance_sats,
         txCount: 0,
       });
