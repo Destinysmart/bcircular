@@ -137,6 +137,28 @@ async function blinkGraphQL(apiKey: string, query: string, variables?: Record<st
   return json.data
 }
 
+function isBlinkUnauthorized(message: string) {
+  return /Blink API error 401|Authorization Required|unauthor/i.test(message)
+}
+
+async function markWalletAuthError(supabase: any, walletId: string) {
+  await supabase
+    .from('wallets')
+    .update({ wallet_status: 'auth_error', last_synced_at: new Date().toISOString() })
+    .eq('id', walletId)
+}
+
+function authErrorResponse(status = 200) {
+  return new Response(
+    JSON.stringify({
+      success: false,
+      error: 'Blink rejected the stored API key (401). Ask the wallet owner to re-connect with a fresh read-only key.',
+      code: 'blink_unauthorized',
+    }),
+    { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+  )
+}
+
 // ── Owner lookup (by code) ────────────────────────────────────────────────
 async function lookupOwner(supabase: any, owner_type: 'merchant' | 'earner', code: string) {
   if (owner_type === 'merchant') {
