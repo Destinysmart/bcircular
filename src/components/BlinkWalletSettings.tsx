@@ -52,20 +52,76 @@ const BlinkWalletSettings = ({ communityId, isAdmin }: BlinkWalletSettingsProps)
     },
   });
 
-  // Fetch blink transaction stats
+  // Fetch blink transaction stats grouped by wallet owner_type
   const { data: txStats } = useQuery({
     queryKey: ['blink-tx-stats', communityId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('blink_transactions')
-        .select('direction, settlement_amount, is_internal')
-        .eq('community_id', communityId);
-      if (error) throw error;
-      const total = data?.length || 0;
-      const internal = data?.filter(t => t.is_internal).length || 0;
-      const totalSats = data?.reduce((s, t) => s + Number(t.settlement_amount), 0) || 0;
-      const internalSats = data?.filter(t => t.is_internal).reduce((s, t) => s + Number(t.settlement_amount), 0) || 0;
-      return { total, internal, totalSats, internalSats };
+      const [{ data: txns, error: txErr }, { data: wals, error: wErr }] = await Promise.all([
+        supabase
+          .from('blink_transactions')
+          .select('wallet_id, settlement_amount, is_internal')
+          .eq('community_id', communityId),
+        supabase
+          .from('wallets')
+          .select('id, owner_type, owner_id')
+          .eq('community_id', communityId),
+      ]);
+      if (txErr) throw txErr;
+      if (wErr) throw wErr;
+
+      const ownerByWallet = new Map<string, string | null>();
+      const groupCounts = { economy: 0, earner: 0, merchant: 0 };
+      const uniqueOwners = { economy: new Set<string>(), earner: new Set<string>(), merchant: new Set<string>() };
+      for (const w of wals || []) {
+        ownerByWallet.set(w.id, w.owner_type);
+        if (w.owner_type === 'economy' || w.owner_type === 'earner' || w.owner_type === 'merchant') {
+          groupCounts[w.owner_type as 'economy' | 'earner' | 'merchant'] += 1;
+          if (w.owner_id) uniqueOwners[w.owner_type as 'economy' | 'earner' | 'merchant'].add(w.owner_id);
+        } else {
+          console.warn('[BlinkWalletSettings] Wallet missing owner_type, excluded:', w.id);
+        }
+      }
+
+      const groups = {
+        economy: { txns: 0, sats: 0 },
+        earner: { txns: 0, sats: 0 },
+        merchant: { txns: 0, sats: 0 },
+      };
+      let total = 0;
+      let totalSats = 0;
+      let internal = 0;
+      let internalSats = 0;
+      for (const t of txns || []) {
+        const sats = Number(t.settlement_amount) || 0;
+        total += 1;
+        totalSats += sats;
+        if (t.is_internal) {
+          internal += 1;
+          internalSats += sats;
+        }
+        const ot = ownerByWallet.get(t.wallet_id);
+        if (ot === 'economy' || ot === 'earner' || ot === 'merchant') {
+          groups[ot].txns += 1;
+          groups[ot].sats += sats;
+        }
+      }
+
+      const totalWallets =
+        groupCounts.economy + groupCounts.earner + groupCounts.merchant;
+
+      return {
+        total,
+        internal,
+        totalSats,
+        internalSats,
+        groups,
+        groupCounts,
+        ownerCounts: {
+          earner: uniqueOwners.earner.size,
+          merchant: uniqueOwners.merchant.size,
+        },
+        totalWallets,
+      };
     },
   });
 
@@ -206,24 +262,73 @@ const BlinkWalletSettings = ({ communityId, isAdmin }: BlinkWalletSettingsProps)
           </div>
           {txStats && (
             <div className="space-y-4">
-              {/* Row 1 — Economy Wallet Activity */}
-              <div className="rounded-md border border-border bg-background/40 p-4">
-                <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium mb-3">
-                  Economy Wallet Activity
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-2xl font-bold tabular-nums">{txStats.total.toLocaleString()}</div>
-                    <div className="text-xs text-muted-foreground">Total Transactions · Economy Wallet</div>
+              {/* Row 1 — Wallet Activity by Role */}
+              <div className="grid grid-cols-1 gap-3">
+                {/* Economy Coordination Wallet */}
+                <div
+                  className="rounded-md border border-border bg-background/40 p-4 border-l-4"
+                  style={{ borderLeftColor: '#F7931A' }}
+                >
+                  <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium mb-2">
+                    Economy Coordination Wallet
                   </div>
-                  <div>
-                    <div className="text-2xl font-bold tabular-nums">{(txStats.totalSats).toLocaleString()}</div>
-                    <div className="text-xs text-muted-foreground">Total Sats · Economy Wallet</div>
+                  <div className="text-base font-semibold tabular-nums">
+                    {txStats.groups.economy.txns.toLocaleString()} transactions ·{' '}
+                    {txStats.groups.economy.sats.toLocaleString()} sats
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1 italic">
+                    Main economy coordination wallet
                   </div>
                 </div>
-                <div className="text-xs text-muted-foreground mt-3 italic">
-                  All activity on the main economy coordination wallet
+
+                {/* Earner Wallets */}
+                <div
+                  className="rounded-md border border-border bg-background/40 p-4 border-l-4"
+                  style={{ borderLeftColor: '#3B82F6' }}
+                >
+                  <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium mb-2">
+                    Earner Wallets
+                  </div>
+                  {txStats.groupCounts.earner > 0 ? (
+                    <div className="text-base font-semibold tabular-nums">
+                      {txStats.groups.earner.txns.toLocaleString()} transactions ·{' '}
+                      {txStats.groups.earner.sats.toLocaleString()} sats ·{' '}
+                      {txStats.groupCounts.earner} earner{txStats.groupCounts.earner === 1 ? '' : 's'} connected
+                    </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground italic">
+                      No earner wallets connected yet
+                    </div>
+                  )}
                 </div>
+
+                {/* Merchant Wallets */}
+                <div
+                  className="rounded-md border border-border bg-background/40 p-4 border-l-4"
+                  style={{ borderLeftColor: '#10B981' }}
+                >
+                  <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium mb-2">
+                    Merchant Wallets
+                  </div>
+                  {txStats.groupCounts.merchant > 0 ? (
+                    <div className="text-base font-semibold tabular-nums">
+                      {txStats.groups.merchant.txns.toLocaleString()} transactions ·{' '}
+                      {txStats.groups.merchant.sats.toLocaleString()} sats ·{' '}
+                      {txStats.groupCounts.merchant} merchant{txStats.groupCounts.merchant === 1 ? '' : 's'} connected
+                    </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground italic">
+                      No merchant wallets connected yet — generate claim links above to invite merchants
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Combined summary */}
+              <div className="text-xs text-muted-foreground border-t border-border pt-3">
+                Total: {txStats.total.toLocaleString()} transactions ·{' '}
+                {txStats.totalSats.toLocaleString()} sats across {txStats.totalWallets} wallet
+                {txStats.totalWallets === 1 ? '' : 's'}
               </div>
 
               {/* Row 2 — Circular Detection */}
