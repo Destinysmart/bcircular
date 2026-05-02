@@ -328,6 +328,7 @@ export async function fetchAllCommunitiesWithStats() {
         daysSoFar,
         daysInMonth,
         activityRate,
+        connectedWallets: walletsRes.count || 0,
       };
     })
   );
