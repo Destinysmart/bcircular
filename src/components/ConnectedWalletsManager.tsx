@@ -253,16 +253,23 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2"><Zap className="h-5 w-5 text-score-amber" /> Connected wallets</CardTitle>
+        <CardTitle className="flex items-center gap-2"><Zap className="h-5 w-5 text-score-amber" /> Connected Wallets</CardTitle>
         <CardDescription>Send each approved merchant or earner a link so they can connect their Blink wallet read-only.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {metrics && connectedCount >= 2 && (
-          <div className="rounded-md border border-score-amber/40 bg-score-amber/5 p-4">
-            <div className="text-xs uppercase tracking-wide text-score-amber font-medium mb-1">Real circularity (last 30d)</div>
-            <div className="text-3xl font-bold">{Number(metrics.real_circularity_rate).toFixed(0)}%</div>
-            <div className="text-xs text-muted-foreground mt-1">Based on {connectedCount} connected wallets · {Number(metrics.circular_volume_sats).toLocaleString()} sats stayed in economy</div>
-            <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden"><div className="h-full bg-score-amber" style={{ width: `${Math.min(100, Number(metrics.real_circularity_rate))}%` }} /></div>
+        {txStats && (
+          <div className={`rounded-md border p-4 ${txStats.circularityRate > 0 ? 'border-score-green/40 bg-score-green/5' : 'border-score-amber/40 bg-score-amber/5'}`}>
+            <div className={`text-xs uppercase tracking-wide font-medium mb-1 ${txStats.circularityRate > 0 ? 'text-score-green' : 'text-score-amber'}`}>🔄 Circularity rate</div>
+            <div className={`text-3xl font-bold ${txStats.circularityRate > 0 ? 'text-score-green' : 'text-score-amber'}`}>{txStats.circularityRate}%</div>
+            <div className="text-xs text-muted-foreground mt-1">
+              {txStats.circularTxnCount} circular transaction{txStats.circularTxnCount === 1 ? '' : 's'} · {txStats.circularVolume.toLocaleString()} sats stayed in economy
+            </div>
+            <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
+              <div className={`h-full ${txStats.circularityRate > 0 ? 'bg-score-green' : 'bg-score-amber'}`} style={{ width: `${Math.min(100, txStats.circularityRate)}%` }} />
+            </div>
+            {txStats.circularityRate === 0 && (
+              <div className="text-xs text-muted-foreground mt-2 italic">Rate rises as more community members connect wallets and transact locally.</div>
+            )}
           </div>
         )}
 
