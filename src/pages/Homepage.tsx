@@ -235,7 +235,74 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
 
       {topSlot}
 
-      {/* (Map + Activity moved below the Discover grid) */}
+      {/* MEASURE · PROVE · RANK */}
+      <section className="border-b border-border bg-card/30">
+        <div className="container py-14">
+          <div className="text-center mb-10 max-w-2xl mx-auto">
+            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-4">
+              The platform
+            </div>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
+              Measure. Prove. Rank.
+            </h2>
+            <p className="text-sm text-muted-foreground mt-2">
+              The world's first intelligence platform for Bitcoin circular economies.
+            </p>
+          </div>
+          <motion.div
+            variants={stagger}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-40px' }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto"
+          >
+            {[
+              {
+                icon: <Radio className="h-5 w-5" />,
+                eyebrow: 'Measure',
+                title: 'Real data, not stories',
+                desc: 'Live merchant data from BTCMap, real transactions from Blink wallets, classified by the FBCE international standard.',
+                cta: 'Explore economies',
+                to: '/leaderboard',
+              },
+              {
+                icon: <BadgeCheck className="h-5 w-5" />,
+                eyebrow: 'Prove',
+                title: 'Public, verified dashboards',
+                desc: 'Every economy gets a circularity score, transaction history, and shareable proof reports — verified by independent validators.',
+                cta: 'See the methodology',
+                to: '/methodology',
+              },
+              {
+                icon: <Trophy className="h-5 w-5" />,
+                eyebrow: 'Rank',
+                title: 'A global leaderboard',
+                desc: 'Compare every Bitcoin circular economy worldwide. See what is working, what is growing, and what to improve.',
+                cta: 'Compare economies',
+                to: '/compare',
+              },
+            ].map((c, i) => (
+              <motion.div key={c.eyebrow} variants={fadeUp} custom={i}>
+                <Link
+                  to={c.to}
+                  className="group block h-full rounded-2xl border border-border bg-card p-6 transition-all duration-200 hover:-translate-y-0.5 hover:border-score-amber/50 hover:shadow-[0_8px_32px_-12px_hsl(var(--score-amber)/0.25)]"
+                >
+                  <div className="h-10 w-10 rounded-xl bg-score-amber/10 border border-score-amber/30 text-score-amber flex items-center justify-center mb-4">
+                    {c.icon}
+                  </div>
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-score-amber mb-1.5">{c.eyebrow}</div>
+                  <div className="font-semibold text-base mb-2">{c.title}</div>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-4">{c.desc}</p>
+                  <div className="inline-flex items-center gap-1 text-xs text-muted-foreground group-hover:text-score-amber transition-colors">
+                    {c.cta} <ArrowRight className="h-3 w-3" />
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
 
       {/* FILTER PILLS */}
       {!gated && (
