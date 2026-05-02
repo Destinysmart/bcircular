@@ -102,13 +102,23 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
     queryFn: async () => {
       const { data: txns } = await (supabase as any)
         .from('blink_transactions')
-        .select('is_internal, settlement_amount')
+        .select('is_internal, settlement_amount, wallet_id')
         .eq('community_id', communityId);
       const totalVolume = (txns || []).reduce((s: number, t: any) => s + Number(t.settlement_amount || 0), 0);
       const circularVolume = (txns || []).filter((t: any) => t.is_internal).reduce((s: number, t: any) => s + Number(t.settlement_amount || 0), 0);
       const circularTxnCount = (txns || []).filter((t: any) => t.is_internal).length;
       const circularityRate = totalVolume > 0 ? Math.round((circularVolume / totalVolume) * 100) : 0;
-      return { totalVolume, circularVolume, circularTxnCount, circularityRate };
+      // Per-wallet aggregates so each row can show its own contribution.
+      const perWallet = new Map<string, { count: number; sats: number }>();
+      for (const t of (txns || [])) {
+        const wid = t.wallet_id as string;
+        if (!wid) continue;
+        const cur = perWallet.get(wid) || { count: 0, sats: 0 };
+        cur.count += 1;
+        cur.sats += Number(t.settlement_amount || 0);
+        perWallet.set(wid, cur);
+      }
+      return { totalVolume, circularVolume, circularTxnCount, circularityRate, perWallet };
     },
   });
 
