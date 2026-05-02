@@ -105,7 +105,7 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
       setResultById(prev => ({ ...prev, [id]: { type: 'success', message } }));
       toast({ title: 'Sync complete', description: message });
       await refetch();
-      await refetchMetrics();
+      await refetchMetrics(); await refetchTxStats();
     } catch (err: any) {
       const message = err.message || 'Sync failed';
       setResultById(prev => ({ ...prev, [id]: { type: 'error', message } }));
@@ -144,7 +144,7 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
       if (error) throw error;
       toast({ title: 'Wallet disconnected' });
       await refetch();
-      await refetchMetrics();
+      await refetchMetrics(); await refetchTxStats();
     } catch (err: any) {
       toast({ title: 'Failed to disconnect', description: err.message, variant: 'destructive' });
     } finally {
@@ -168,7 +168,7 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
       if (oErr) throw oErr;
       toast({ title: 'Entry deleted permanently' });
       await refetch();
-      await refetchMetrics();
+      await refetchMetrics(); await refetchTxStats();
     } catch (err: any) {
       toast({ title: 'Failed to delete', description: err.message, variant: 'destructive' });
     } finally {
