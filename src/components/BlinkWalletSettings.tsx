@@ -227,59 +227,6 @@ const BlinkWalletSettings = ({ communityId, isAdmin }: BlinkWalletSettingsProps)
         </section>
       )}
 
-      {/* Connected Wallets */}
-      <section className="rounded-lg border border-border bg-card p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Wallet className="h-4 w-4 text-primary" />
-          <h2 className="text-lg font-semibold">Connected Wallets ({wallets?.length || 0})</h2>
-        </div>
-
-        {loadingWallets ? (
-          <p className="text-sm text-muted-foreground">Loading wallets...</p>
-        ) : (wallets?.length || 0) === 0 ? (
-          <p className="text-sm text-muted-foreground">No wallets connected yet. Participants can connect their Blink wallets to enable automatic transaction tracking.</p>
-        ) : (
-          <div className="space-y-2">
-            {wallets?.map(w => (
-              <div key={w.id} className="flex items-center justify-between rounded-md border border-border p-3 text-sm">
-                <div className="flex items-center gap-3">
-                  <Wallet className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <span className="font-mono text-xs">{w.blink_wallet_id.slice(0, 8)}...{w.blink_wallet_id.slice(-4)}</span>
-                    <Badge variant="outline" className="ml-2 text-xs">{w.wallet_currency}</Badge>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-muted-foreground">
-                    {w.balance_sats.toLocaleString()} sats
-                  </span>
-                  {w.last_synced_at && (
-                    <span className="text-xs text-muted-foreground">
-                      Synced {new Date(w.last_synced_at).toLocaleDateString()}
-                    </span>
-                  )}
-                  {w.user_id === user?.id && (
-                    <Button variant="ghost" size="sm" onClick={handleDisconnectWallet}>
-                      <Unlink className="h-3.5 w-3.5 text-destructive" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Connect own wallet */}
-        {user && !myWallet && (
-          <div className="mt-4 p-4 rounded-md border border-dashed border-border">
-            <h3 className="text-sm font-medium mb-2">Connect your Blink wallet</h3>
-            <p className="text-xs text-muted-foreground mb-3">
-              Enter your Blink wallet ID to join this economy's transaction tracking. Find it in your Blink app settings.
-            </p>
-            <ConnectWalletForm onConnect={handleConnectWallet} />
-          </div>
-        )}
-      </section>
     </div>
   );
 };
