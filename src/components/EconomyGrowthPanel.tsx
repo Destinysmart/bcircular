@@ -22,8 +22,9 @@ const PILLAR_FIX: Record<string, { action: string; href: (slug: string) => strin
   'Growth': { action: 'Add new submissions →', href: (s) => `/c/${s}/submit` },
 };
 
-export default function EconomyGrowthPanel({ communityId, slug, merchants, walletCount, pillars }: Props) {
+export default function EconomyGrowthPanel({ communityId, slug, merchants, earners, walletCount, pillars }: Props) {
   const btcmapCount = merchants.filter(m => m.source === 'btcmap').length;
+  const coverage = getCoverage(walletCount, merchants.length, earners.length);
 
   // Top merchant categories (top 3)
   const catCounts = new Map<string, number>();
@@ -42,7 +43,7 @@ export default function EconomyGrowthPanel({ communityId, slug, merchants, walle
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <MerchantGrowthChart communityId={communityId} />
         <EarnerGrowthChart communityId={communityId} slug={slug} />
-        <CircularFlowGauge communityId={communityId} walletCount={walletCount} />
+        <CircularFlowGauge communityId={communityId} walletCount={walletCount} coverageTier={coverage.tier} />
       </div>
 
       {/* Wallets connected — kept as a simple inline summary */}
