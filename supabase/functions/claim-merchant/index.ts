@@ -9,7 +9,9 @@ const BLINK_API_URL = 'https://api.blink.sv/graphql'
 
 const BodySchema = z.object({
   public_merchant_id: z.string().min(4),
-  claim_token: z.string().min(32),
+  claim_token: z.string().min(8),
+  // Blink wallet IDs are typically UUIDs; some users may paste a "blink_..." prefixed value.
+  // Accept anything reasonably long and normalize later.
   blink_wallet_id: z.string().min(8),
 })
 
@@ -34,50 +36,72 @@ function timingSafeEqual(a: string, b: string): boolean {
   return r === 0
 }
 
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  })
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
-    const parsed = BodySchema.safeParse(await req.json())
-    if (!parsed.success) {
-      return new Response(JSON.stringify({ error: parsed.error.flatten().fieldErrors }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    let bodyJson: unknown
+    try {
+      bodyJson = await req.json()
+    } catch {
+      return jsonResponse({ error: 'Invalid request body' }, 400)
     }
-    const { public_merchant_id, claim_token, blink_wallet_id } = parsed.data
+
+    const parsed = BodySchema.safeParse(bodyJson)
+    if (!parsed.success) {
+      return jsonResponse({ error: 'Please fill in both the claim token and Blink wallet ID.' }, 400)
+    }
+    const { public_merchant_id, claim_token } = parsed.data
+    // Normalize wallet ID — strip optional "blink_" prefix, trim whitespace.
+    const blink_wallet_id = parsed.data.blink_wallet_id.trim().replace(/^blink_/i, '')
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
 
-    const { data: merchant } = await supabase
+    const { data: merchant, error: mErr } = await supabase
       .from('merchants')
-      .select('id, community_id, status, claim_token_hash, wallet_id, public_merchant_id')
+      .select('id, community_id, status, claim_token_hash, wallet_id, public_merchant_id, claimed_at')
       .eq('public_merchant_id', public_merchant_id)
       .maybeSingle()
 
+    if (mErr) {
+      console.error('merchant lookup error', mErr)
+      return jsonResponse({ error: 'Could not look up merchant. Try again shortly.' }, 500)
+    }
     if (!merchant) {
-      return new Response(JSON.stringify({ error: 'Invalid claim link' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      return jsonResponse({ error: 'This claim link is invalid. Contact your economy admin for a new link.' }, 404)
     }
     if (merchant.status !== 'approved') {
-      return new Response(JSON.stringify({ error: 'Merchant not approved' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      return jsonResponse({ error: 'This merchant has not been approved yet. Ask your economy admin to approve it first.' }, 400)
     }
     if (!merchant.claim_token_hash) {
-      return new Response(JSON.stringify({ error: 'No active claim token. Ask an admin to generate a new claim link.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      return jsonResponse({
+        error: 'This claim link has already been used or has expired. Contact your economy admin for a new link.',
+      }, 400)
     }
 
-    const submittedHash = await sha256Hex(claim_token)
+    const submittedHash = await sha256Hex(claim_token.trim())
     if (!timingSafeEqual(submittedHash, merchant.claim_token_hash)) {
-      return new Response(JSON.stringify({ error: 'Invalid claim token' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      return jsonResponse({
+        error: 'This claim link has already been used or has expired. Contact your economy admin for a new link.',
+      }, 403)
     }
 
-    // Get economy admin id (used to satisfy wallets RLS / ownership)
     const { data: communityRow } = await supabase
       .from('communities')
       .select('admin_id')
       .eq('id', merchant.community_id)
       .single()
 
-    // Get economy Blink API key + verify wallet exists in the connected Blink account
     const { data: keyRow } = await supabase
       .from('blink_api_keys')
       .select('api_key_encrypted')
@@ -86,22 +110,40 @@ Deno.serve(async (req) => {
       .maybeSingle()
 
     if (!keyRow) {
-      return new Response(JSON.stringify({ error: 'This economy has not connected a Blink wallet yet. Ask the admin to configure Blink first.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      return jsonResponse({
+        error: 'This economy has not connected a Blink wallet yet. Ask the admin to configure Blink first.',
+      }, 400)
     }
 
-    const blinkRes = await fetch(BLINK_API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-API-KEY': keyRow.api_key_encrypted },
-      body: JSON.stringify({ query: WALLETS_QUERY }),
-    })
-    const blinkJson = await blinkRes.json()
+    let blinkJson: any
+    try {
+      const blinkRes = await fetch(BLINK_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-API-KEY': keyRow.api_key_encrypted },
+        body: JSON.stringify({ query: WALLETS_QUERY }),
+      })
+      blinkJson = await blinkRes.json()
+    } catch (e) {
+      console.error('blink fetch failed', e)
+      return jsonResponse({ error: 'Could not reach Blink right now. Please try again in a moment.' }, 502)
+    }
+
+    if (blinkJson?.errors?.length) {
+      console.error('blink api errors', blinkJson.errors)
+      return jsonResponse({
+        error: "The economy's Blink connection is not working. Ask the admin to reconnect their Blink API key.",
+      }, 400)
+    }
+
     const blinkWallets = blinkJson?.data?.me?.defaultAccount?.wallets ?? []
     const matched = blinkWallets.find((w: any) => w.id === blink_wallet_id)
     if (!matched) {
-      return new Response(JSON.stringify({ error: 'Wallet ID not found in this economy\'s Blink account.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      return jsonResponse({
+        error: "That wallet ID was not found in this economy's Blink account. Double-check the ID in your Blink app and try again.",
+      }, 400)
     }
 
-    // Upsert wallet row
+    // Upsert wallet row, owned by merchant
     const { data: existingWallet } = await supabase
       .from('wallets')
       .select('id')
@@ -112,10 +154,18 @@ Deno.serve(async (req) => {
     let walletDbId: string
     if (existingWallet) {
       walletDbId = existingWallet.id
-      await supabase.from('wallets').update({
+      const { error: updErr } = await supabase.from('wallets').update({
+        owner_type: 'merchant',
+        owner_id: merchant.id,
+        wallet_status: 'connected',
+        wallet_currency: matched.walletCurrency,
         balance_sats: matched.balance,
         last_synced_at: new Date().toISOString(),
       }).eq('id', existingWallet.id)
+      if (updErr) {
+        console.error('wallet update failed', updErr)
+        return jsonResponse({ error: 'Could not update wallet record. Please try again.' }, 500)
+      }
     } else {
       const { data: inserted, error: insErr } = await supabase
         .from('wallets')
@@ -125,17 +175,20 @@ Deno.serve(async (req) => {
           wallet_currency: matched.walletCurrency,
           balance_sats: matched.balance,
           user_id: communityRow?.admin_id || merchant.community_id,
+          owner_type: 'merchant',
+          owner_id: merchant.id,
+          wallet_status: 'connected',
           last_synced_at: new Date().toISOString(),
         })
         .select('id')
         .single()
       if (insErr || !inserted) {
-        return new Response(JSON.stringify({ error: insErr?.message || 'Failed to register wallet' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        console.error('wallet insert failed', insErr)
+        return jsonResponse({ error: insErr?.message || 'Failed to register wallet' }, 500)
       }
       walletDbId = inserted.id
     }
 
-    // Link merchant; clear claim hash (single-use)
     const { error: linkErr } = await supabase
       .from('merchants')
       .update({
@@ -146,20 +199,21 @@ Deno.serve(async (req) => {
       .eq('id', merchant.id)
 
     if (linkErr) {
-      return new Response(JSON.stringify({ error: linkErr.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      console.error('merchant link failed', linkErr)
+      return jsonResponse({ error: linkErr.message }, 500)
     }
 
-    // Trigger sync (best-effort)
     supabase.functions.invoke('sync-blink-transactions', {
       body: { community_id: merchant.community_id },
     }).catch(() => {})
 
-    return new Response(JSON.stringify({
+    return jsonResponse({
       success: true,
       public_merchant_id: merchant.public_merchant_id,
-    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      message: "Wallet linked successfully! Save this page link — it's your private dashboard.",
+    })
   } catch (err) {
     console.error('claim-merchant error:', err)
-    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    return jsonResponse({ error: 'Something went wrong while linking your wallet. Please try again.' }, 500)
   }
 })
