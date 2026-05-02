@@ -142,10 +142,12 @@ Deno.serve(async (req) => {
         headers: { 'Content-Type': 'application/json', 'X-API-KEY': merchant_api_key },
         body: JSON.stringify({ query: WALLETS_QUERY }),
       })
-      const blinkJson: any = await blinkRes.json()
+      const blinkText = await blinkRes.text()
+      let blinkJson: any = null
+      try { blinkJson = JSON.parse(blinkText) } catch (_) { /* Blink can return HTML for 401 */ }
       if (!blinkRes.ok || blinkJson?.errors?.length) {
         const status = blinkRes.status
-        if (status === 401 || /unauthor/i.test(JSON.stringify(blinkJson?.errors || ''))) {
+        if (status === 401 || /unauthor|Authorization Required/i.test(`${blinkText} ${JSON.stringify(blinkJson?.errors || '')}`)) {
           return jsonResponse({
             error: "Blink rejected that API key. Make sure you copied a valid read-only key from dashboard.blink.sv → API Keys.",
           }, 400)
