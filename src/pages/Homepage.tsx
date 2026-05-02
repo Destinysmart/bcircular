@@ -235,7 +235,8 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
 
       {topSlot}
 
-      {/* MEASURE · PROVE · RANK */}
+      {/* MEASURE · PROVE · RANK — landing page only */}
+      {!topSlot && !compactHero && (
       <section className="border-b border-border bg-card/30">
         <div className="container py-14">
           <div className="text-center mb-10 max-w-2xl mx-auto">
@@ -302,6 +303,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
           </motion.div>
         </div>
       </section>
+      )}
 
 
       {/* FILTER PILLS */}
@@ -531,7 +533,8 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
       {/* GLOBAL ECONOMIES MAP */}
       {!gated && list.length > 0 && <GlobalEconomiesMap economies={list as any} />}
 
-      {/* WHO IT'S FOR */}
+      {/* WHO IT'S FOR — landing page only */}
+      {!topSlot && !compactHero && (
       <section className="border-t border-border">
         <div className="container py-14">
           <div className="text-center mb-8 max-w-2xl mx-auto">
@@ -560,6 +563,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
           </div>
         </div>
       </section>
+      )}
 
       {/* WHAT IS CIRCULARITY */}
       <section className="border-t border-border bg-card/40">
