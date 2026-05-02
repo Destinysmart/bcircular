@@ -407,8 +407,27 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
 
                         {/* Circularity score — small/secondary */}
                         <div className="flex items-center justify-between">
-                          <span className="text-[11px] text-muted-foreground">
-                            Circularity <span className="font-mono font-semibold text-score-amber">{score}</span><span className="text-muted-foreground">/100</span>
+                          <span className="text-[11px] text-muted-foreground inline-flex items-center gap-2 flex-wrap">
+                            <span>
+                              Circularity <span className="font-mono font-semibold text-score-amber">{score}</span><span className="text-muted-foreground">/100</span>
+                            </span>
+                            {(() => {
+                              const cov = getCoverage((e as any).connectedWallets ?? 0, e.merchants ?? 0, e.earners ?? 0);
+                              return (
+                                <span
+                                  title={`${cov.description} — ${cov.connected} wallet${cov.connected === 1 ? '' : 's'} connected${cov.estimated > 0 ? ` of ~${cov.estimated} estimated` : ''}. Higher coverage = more accurate circular flow.`}
+                                  className="inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 font-mono text-[9px]"
+                                  style={{
+                                    color: `hsl(var(--${cov.colorToken}))`,
+                                    borderColor: `hsl(var(--${cov.colorToken}) / 0.4)`,
+                                    backgroundColor: `hsl(var(--${cov.colorToken}) / 0.08)`,
+                                  }}
+                                >
+                                  <span aria-hidden>{cov.emoji}</span>
+                                  {cov.label}
+                                </span>
+                              );
+                            })()}
                           </span>
                           <span className="text-xs text-muted-foreground inline-flex items-center gap-1 group-hover:text-score-amber transition-colors">
                             View <ArrowRight className="h-3 w-3" />
