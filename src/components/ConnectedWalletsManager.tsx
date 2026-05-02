@@ -132,6 +132,14 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
     if (!target?.wallet?.id) { setDisconnectTarget(null); return; }
     setBusyId(target.id);
     try {
+      // 1. Delete all associated transaction rows first
+      const { error: txErr } = await (supabase as any)
+        .from('blink_transactions')
+        .delete()
+        .eq('wallet_id', target.wallet.id);
+      if (txErr) throw txErr;
+
+      // 2. Reset wallet to pending (clear sensitive fields)
       const { error } = await (supabase as any)
         .from('wallets')
         .update({
@@ -142,9 +150,18 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
         })
         .eq('id', target.wallet.id);
       if (error) throw error;
-      toast({ title: 'Wallet disconnected' });
-      await refetch();
-      await refetchMetrics(); await refetchTxStats();
+
+      // 3. Trigger score recalculation for this economy (best-effort)
+      try {
+        await supabase.functions.invoke('calculate-score', { body: { community_id: communityId } });
+      } catch (scoreErr) {
+        console.warn('Score recalculation failed', scoreErr);
+      }
+
+      toast({ title: 'Wallet disconnected and all associated data removed' });
+
+      // 4. Refresh all dashboard stats
+      await Promise.all([refetch(), refetchMetrics(), refetchTxStats()]);
     } catch (err: any) {
       toast({ title: 'Failed to disconnect', description: err.message, variant: 'destructive' });
     } finally {
