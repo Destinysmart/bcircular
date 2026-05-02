@@ -468,6 +468,7 @@ const Leaderboard = () => {
                               <Badge variant="outline" className="font-mono text-[10px] rounded-full">BTCMap</Badge>
                             )}
                             <ConfidenceBadge totalApproved={c.totalApproved} proofCount={c.proofCount} />
+                            <CoverageChip connected={(c as any).connectedWallets ?? 0} merchants={c.merchants ?? 0} earners={c.earners ?? 0} />
                           </div>
                         </div>
                         <div className="flex items-center gap-6">
