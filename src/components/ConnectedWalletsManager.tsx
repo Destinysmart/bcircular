@@ -331,6 +331,21 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
             <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
               <div className={`h-full ${txStats.circularityRate > 0 ? 'bg-score-green' : 'bg-score-amber'}`} style={{ width: `${Math.min(100, txStats.circularityRate)}%` }} />
             </div>
+            {/* Sub-stats explaining the number */}
+            <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+              <div className="rounded-md border border-border bg-background/40 px-3 py-2">
+                <div className="font-mono text-sm font-semibold tabular-nums">{txStats.circularTxnCount.toLocaleString()}</div>
+                <div className="text-muted-foreground">circular transactions this month</div>
+              </div>
+              <div className="rounded-md border border-border bg-background/40 px-3 py-2">
+                <div className="font-mono text-sm font-semibold tabular-nums">{txStats.circularVolume.toLocaleString()}</div>
+                <div className="text-muted-foreground">sats stayed in economy</div>
+              </div>
+              <div className="rounded-md border border-border bg-background/40 px-3 py-2">
+                <div className="font-mono text-sm font-semibold tabular-nums">2 wallets needed</div>
+                <div className="text-muted-foreground">to detect flow · currently {connectedEarnerCount} earner{connectedEarnerCount === 1 ? '' : 's'} + {connectedMerchantCount} merchant{connectedMerchantCount === 1 ? '' : 's'}</div>
+              </div>
+            </div>
             {txStats.circularityRate === 0 && (
               <div className="text-xs text-muted-foreground mt-2 italic">Rate rises as more community members connect wallets and transact locally.</div>
             )}
@@ -343,7 +358,7 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
           <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Merchant wallets ({merchants.length})</h3>
           {merchants.length === 0 && <p className="text-sm text-muted-foreground">No approved merchants yet.</p>}
           <ul className="space-y-2">
-            {merchants.map((m: any) => renderRow({ id: m.id, label: m.name, code: m.merchant_code, ownerType: 'merchant', wallet: m.wallet }))}
+            {merchants.map((m: any, i: number) => renderRow({ id: m.id, label: m.name, code: m.merchant_code, anonLabel: `Merchant ${i + 1}`, ownerType: 'merchant', wallet: m.wallet }))}
           </ul>
         </section>
 
@@ -351,7 +366,7 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
           <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Earner wallets ({earners.length})</h3>
           {earners.length === 0 && <p className="text-sm text-muted-foreground">No approved earners yet.</p>}
           <ul className="space-y-2">
-            {earners.map((e: any) => renderRow({ id: e.id, label: e.description, code: e.earner_code, ownerType: 'earner', wallet: e.wallet }))}
+            {earners.map((e: any, i: number) => renderRow({ id: e.id, label: e.description, code: e.earner_code, anonLabel: `Earner ${i + 1}`, ownerType: 'earner', wallet: e.wallet }))}
           </ul>
         </section>
       </CardContent>
