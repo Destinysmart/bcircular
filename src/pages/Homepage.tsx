@@ -10,6 +10,7 @@ import RecentActivityFeed from '@/components/RecentActivityFeed';
 import { useCountUp } from '@/hooks/useCountUp';
 import { fetchAllCommunitiesWithStats } from '@/lib/api';
 import { getFlagEmoji } from '@/lib/mock-data';
+import { getCoverage } from '@/lib/coverage';
 import { TierBadge } from '@/components/TierBadge';
 import circularLogo from '@/assets/circular-logo.png';
 import heroImage from '@/assets/hero-image.jpg';
