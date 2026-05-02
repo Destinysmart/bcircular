@@ -10,19 +10,12 @@ const BLINK_API_URL = 'https://api.blink.sv/graphql'
 const BodySchema = z.object({
   public_merchant_id: z.string().min(4),
   claim_token: z.string().min(8),
-  // Blink wallet IDs are typically UUIDs; some users may paste a "blink_..." prefixed value.
-  // Accept anything reasonably long and normalize later.
-  blink_wallet_id: z.string().min(8),
+  // Accept any non-trivial Blink wallet identifier or Lightning address.
+  // We do NOT verify it against any Blink account — merchants connect their own
+  // independent personal/business Blink wallets, which will never appear in the
+  // economy's Blink account.
+  blink_wallet_id: z.string().min(6),
 })
-
-const WALLETS_QUERY = `
-query Me {
-  me {
-    defaultAccount {
-      wallets { id walletCurrency balance }
-    }
-  }
-}`
 
 async function sha256Hex(input: string): Promise<string> {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input))
