@@ -307,7 +307,9 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: '-40px' }}
-              className={`grid grid-cols-1 sm:grid-cols-2 ${gated ? '' : 'lg:grid-cols-3'} gap-6 ${gated ? 'opacity-95' : ''}`}
+              aria-hidden={gated ? true : undefined}
+              style={gated ? { pointerEvents: 'none', userSelect: 'none' } : undefined}
+              className={`grid grid-cols-1 sm:grid-cols-2 ${gated ? '' : 'lg:grid-cols-3'} gap-6 ${gated ? 'opacity-95 [&_*]:!pointer-events-none [&_*]:!cursor-default' : ''}`}
             >
               {(gated ? displayed.slice(0, 2) : displayed).map((e, i) => {
                 const status = getStatus(e);
