@@ -339,8 +339,11 @@ Deno.serve(async (req) => {
     })
   } catch (err) {
     console.error('Sync error:', err)
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
-      status: 500,
+    const { message, code } = humanBlinkError(err)
+    // Return 200 with error payload so the frontend can render the
+    // human-readable reason instead of crashing on a non-2xx response.
+    return new Response(JSON.stringify({ success: false, error: message, code }), {
+      status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
