@@ -23,7 +23,7 @@ export default function CircularFlowSpotlight({ communityId, slug }: Props) {
       const sinceISO = since.toISOString();
 
       const [walletsRes, allTxRes, internalTxRes] = await Promise.all([
-        supabase.from('wallets').select('id', { count: 'exact', head: true }).eq('community_id', communityId),
+        (supabase as any).from('wallets_public').select('id', { count: 'exact', head: true }).eq('community_id', communityId),
         supabase.from('blink_transactions').select('settlement_amount, is_internal').eq('community_id', communityId).gte('blink_created_at', sinceISO),
         supabase.from('blink_transactions').select('id, settlement_amount, blink_created_at, direction').eq('community_id', communityId).eq('is_internal', true).order('blink_created_at', { ascending: false }).limit(3),
       ]);
