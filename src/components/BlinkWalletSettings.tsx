@@ -205,22 +205,54 @@ const BlinkWalletSettings = ({ communityId, isAdmin }: BlinkWalletSettingsProps)
             </Button>
           </div>
           {txStats && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold">{txStats.total}</div>
-                <div className="text-xs text-muted-foreground">Total transactions</div>
+            <div className="space-y-4">
+              {/* Row 1 — Economy Wallet Activity */}
+              <div className="rounded-md border border-border bg-background/40 p-4">
+                <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium mb-3">
+                  Economy Wallet Activity
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-2xl font-bold tabular-nums">{txStats.total.toLocaleString()}</div>
+                    <div className="text-xs text-muted-foreground">Total Transactions · Economy Wallet</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold tabular-nums">{(txStats.totalSats).toLocaleString()}</div>
+                    <div className="text-xs text-muted-foreground">Total Sats · Economy Wallet</div>
+                  </div>
+                </div>
+                <div className="text-xs text-muted-foreground mt-3 italic">
+                  All activity on the main economy coordination wallet
+                </div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary">{txStats.internal}</div>
-                <div className="text-xs text-muted-foreground">Internal (circular)</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold">{(txStats.totalSats).toLocaleString()}</div>
-                <div className="text-xs text-muted-foreground">Total sats</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary">{(txStats.internalSats).toLocaleString()}</div>
-                <div className="text-xs text-muted-foreground">Circular sats</div>
+
+              {/* Row 2 — Circular Detection */}
+              <div className="rounded-md border border-border bg-background/40 p-4">
+                <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium mb-3">
+                  Circular Detection
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className={`text-2xl font-bold tabular-nums ${txStats.internal > 0 ? 'text-score-green' : 'text-score-amber'}`}>
+                      {txStats.internal.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Circular Transactions Detected</div>
+                  </div>
+                  <div>
+                    <div className={`text-2xl font-bold tabular-nums ${txStats.internalSats > 0 ? 'text-score-green' : 'text-score-amber'}`}>
+                      {(txStats.internalSats).toLocaleString()}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Sats Stayed Internal</div>
+                  </div>
+                </div>
+                <div className="text-xs text-muted-foreground mt-3 italic">
+                  Transactions between two connected wallets in this economy
+                </div>
+                {txStats.internal === 0 && txStats.internalSats === 0 && (
+                  <div className="mt-3 rounded-md border border-score-amber/40 bg-score-amber/10 px-3 py-2 text-xs text-score-amber">
+                    ⚠️ No circular flow detected yet — connect more member wallets to track internal transactions
+                  </div>
+                )}
               </div>
             </div>
           )}
