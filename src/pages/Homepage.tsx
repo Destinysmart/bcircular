@@ -307,9 +307,9 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: '-40px' }}
-              className={`grid grid-cols-1 sm:grid-cols-2 ${gated ? '' : 'lg:grid-cols-3'} gap-6 ${gated ? 'pointer-events-none select-none opacity-60 blur-[6px]' : ''}`}
+              className={`grid grid-cols-1 sm:grid-cols-2 ${gated ? '' : 'lg:grid-cols-3'} gap-6 ${gated ? 'opacity-95' : ''}`}
             >
-              {(gated ? displayed.slice(0, 2) : displayed).map((e, i) => {
+              {(gated ? displayed.slice(0, 3) : displayed).map((e, i) => {
                 const status = getStatus(e);
                 const score = e.score ?? 0;
                 const monthlyTxns = (e as any).monthlyTransactions ?? 0;
@@ -321,7 +321,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
                 return (
                   <motion.div key={e.id} variants={fadeUp} custom={i}>
                     <Link
-                      to={gated ? '#' : `/c/${e.slug}`}
+                      to={`/c/${e.slug}`}
                       className="group block rounded-2xl border border-border bg-card overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:border-score-amber/50 hover:shadow-[0_8px_32px_-12px_hsl(var(--score-amber)/0.25)]"
                     >
                       {/* Banner */}
