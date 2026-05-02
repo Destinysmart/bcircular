@@ -336,7 +336,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
         <div className="flex items-end justify-between mb-8">
           <div>
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Discover circular economies</h2>
-            <p className="text-sm text-muted-foreground mt-1">Real merchants. Real sats. Verified data.</p>
+            <p className="text-sm text-muted-foreground mt-1">Real merchants. Real sats. Verified by validators.</p>
           </div>
           <Link to="/leaderboard" className="hidden sm:inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
             View all <ArrowRight className="h-3.5 w-3.5" />
