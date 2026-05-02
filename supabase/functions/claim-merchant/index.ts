@@ -10,19 +10,12 @@ const BLINK_API_URL = 'https://api.blink.sv/graphql'
 const BodySchema = z.object({
   public_merchant_id: z.string().min(4),
   claim_token: z.string().min(8),
-  // Blink wallet IDs are typically UUIDs; some users may paste a "blink_..." prefixed value.
-  // Accept anything reasonably long and normalize later.
-  blink_wallet_id: z.string().min(8),
+  // Accept any non-trivial Blink wallet identifier or Lightning address.
+  // We do NOT verify it against any Blink account — merchants connect their own
+  // independent personal/business Blink wallets, which will never appear in the
+  // economy's Blink account.
+  blink_wallet_id: z.string().min(6),
 })
-
-const WALLETS_QUERY = `
-query Me {
-  me {
-    defaultAccount {
-      wallets { id walletCurrency balance }
-    }
-  }
-}`
 
 async function sha256Hex(input: string): Promise<string> {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input))
@@ -96,52 +89,22 @@ Deno.serve(async (req) => {
       }, 403)
     }
 
+    // Validate wallet ID format only — do NOT check against the economy's Blink
+    // account. A merchant's personal Blink wallet is a separate account and
+    // will never appear in the economy's wallet list.
+    const isBlinkId = /^[A-Za-z0-9_-]{6,}$/.test(blink_wallet_id)
+    const isLightningAddress = /@blink\.sv$/i.test(blink_wallet_id)
+    if (!isBlinkId && !isLightningAddress) {
+      return jsonResponse({
+        error: 'That does not look like a valid Blink wallet ID or Lightning address. Check the value in your Blink app and try again.',
+      }, 400)
+    }
+
     const { data: communityRow } = await supabase
       .from('communities')
       .select('admin_id')
       .eq('id', merchant.community_id)
       .single()
-
-    const { data: keyRow } = await supabase
-      .from('blink_api_keys')
-      .select('api_key_encrypted')
-      .eq('community_id', merchant.community_id)
-      .eq('is_active', true)
-      .maybeSingle()
-
-    if (!keyRow) {
-      return jsonResponse({
-        error: 'This economy has not connected a Blink wallet yet. Ask the admin to configure Blink first.',
-      }, 400)
-    }
-
-    let blinkJson: any
-    try {
-      const blinkRes = await fetch(BLINK_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-API-KEY': keyRow.api_key_encrypted },
-        body: JSON.stringify({ query: WALLETS_QUERY }),
-      })
-      blinkJson = await blinkRes.json()
-    } catch (e) {
-      console.error('blink fetch failed', e)
-      return jsonResponse({ error: 'Could not reach Blink right now. Please try again in a moment.' }, 502)
-    }
-
-    if (blinkJson?.errors?.length) {
-      console.error('blink api errors', blinkJson.errors)
-      return jsonResponse({
-        error: "The economy's Blink connection is not working. Ask the admin to reconnect their Blink API key.",
-      }, 400)
-    }
-
-    const blinkWallets = blinkJson?.data?.me?.defaultAccount?.wallets ?? []
-    const matched = blinkWallets.find((w: any) => w.id === blink_wallet_id)
-    if (!matched) {
-      return jsonResponse({
-        error: "That wallet ID was not found in this economy's Blink account. Double-check the ID in your Blink app and try again.",
-      }, 400)
-    }
 
     // Upsert wallet row, owned by merchant
     const { data: existingWallet } = await supabase
@@ -158,8 +121,6 @@ Deno.serve(async (req) => {
         owner_type: 'merchant',
         owner_id: merchant.id,
         wallet_status: 'connected',
-        wallet_currency: matched.walletCurrency,
-        balance_sats: matched.balance,
         last_synced_at: new Date().toISOString(),
       }).eq('id', existingWallet.id)
       if (updErr) {
@@ -172,8 +133,6 @@ Deno.serve(async (req) => {
         .insert({
           community_id: merchant.community_id,
           blink_wallet_id,
-          wallet_currency: matched.walletCurrency,
-          balance_sats: matched.balance,
           user_id: communityRow?.admin_id || merchant.community_id,
           owner_type: 'merchant',
           owner_id: merchant.id,
