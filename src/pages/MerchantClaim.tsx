@@ -32,6 +32,7 @@ const MerchantClaim = () => {
           public_merchant_id: publicId,
           claim_token: token.trim(),
           blink_wallet_id: walletId.trim(),
+          merchant_api_key: apiKey.trim(),
         },
       });
       // supabase-js wraps non-2xx as FunctionsHttpError but still parses the JSON body into `data`.
