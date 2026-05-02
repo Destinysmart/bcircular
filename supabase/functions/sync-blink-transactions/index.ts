@@ -262,6 +262,12 @@ Deno.serve(async (req) => {
     let totalInternal = 0
 
     for (const wallet of (connectedWallets || [])) {
+      // Merchant & earner wallets live in independent Blink accounts and have
+      // their OWN stored API keys. The economy key cannot read them — those
+      // wallets are synced separately via sync-wallet-transactions using the
+      // owner's stored key.
+      if (wallet.owner_type === 'merchant' || wallet.owner_type === 'earner') continue
+
       const blinkWallet = blinkWallets.find((bw: any) => bw.id === wallet.blink_wallet_id)
       if (!blinkWallet) continue
 
