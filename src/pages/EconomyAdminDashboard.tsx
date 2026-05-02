@@ -102,7 +102,8 @@ const EconomyAdminDashboard = () => {
       const { count } = await supabase
         .from('wallets')
         .select('id', { count: 'exact', head: true })
-        .eq('community_id', communityId!);
+        .eq('community_id', communityId!)
+        .eq('wallet_status', 'connected');
       return count || 0;
     },
     enabled: !!communityId,

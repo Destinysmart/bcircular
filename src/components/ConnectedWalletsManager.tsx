@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Copy, RefreshCcw, Loader2, Zap, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -59,10 +59,33 @@ function timeAgo(iso: string | null) {
 }
 
 export default function ConnectedWalletsManager({ communityId }: Props) {
+  const queryClient = useQueryClient();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [resultById, setResultById] = useState<Record<string, { type: 'success' | 'error'; message: string }>>({});
   const [disconnectTarget, setDisconnectTarget] = useState<RowOwner | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<RowOwner | null>(null);
+
+  // Invalidate every query that depends on wallet/transaction/score data so
+  // both the admin dashboard and the public economy page refresh immediately
+  // — no manual page reload required.
+  async function invalidateAllStats() {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['wallet-count', communityId] }),
+      queryClient.invalidateQueries({ queryKey: ['admin-wallet-count', communityId] }),
+      queryClient.invalidateQueries({ queryKey: ['economy-wallet-metrics', communityId] }),
+      queryClient.invalidateQueries({ queryKey: ['economy-tx-circularity', communityId] }),
+      queryClient.invalidateQueries({ queryKey: ['blink-tx-stats', communityId] }),
+      queryClient.invalidateQueries({ queryKey: ['blink-transaction-count', communityId] }),
+      queryClient.invalidateQueries({ queryKey: ['transaction-count', communityId] }),
+      queryClient.invalidateQueries({ queryKey: ['connected-wallets', communityId] }),
+      queryClient.invalidateQueries({ queryKey: ['circularity-score', communityId] }),
+      queryClient.invalidateQueries({ queryKey: ['community', communityId] }),
+      queryClient.invalidateQueries({ queryKey: ['circular-flow-spotlight', communityId] }),
+      queryClient.invalidateQueries({ queryKey: ['verified-circularity', communityId] }),
+      queryClient.invalidateQueries({ queryKey: ['sats-flow', communityId] }),
+      queryClient.invalidateQueries({ queryKey: ['economy-alerts', communityId] }),
+    ]);
+  }
 
   const { data, refetch, isLoading } = useQuery({
     queryKey: ['connected-wallets', communityId],
@@ -106,6 +129,7 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
       toast({ title: 'Sync complete', description: message });
       await refetch();
       await refetchMetrics(); await refetchTxStats();
+      await invalidateAllStats();
     } catch (err: any) {
       const message = err.message || 'Sync failed';
       setResultById(prev => ({ ...prev, [id]: { type: 'error', message } }));
@@ -160,8 +184,9 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
 
       toast({ title: 'Wallet disconnected and all associated data removed' });
 
-      // 4. Refresh all dashboard stats
+      // 4. Refresh all dashboard stats (admin + public page)
       await Promise.all([refetch(), refetchMetrics(), refetchTxStats()]);
+      await invalidateAllStats();
     } catch (err: any) {
       toast({ title: 'Failed to disconnect', description: err.message, variant: 'destructive' });
     } finally {
@@ -186,6 +211,7 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
       toast({ title: 'Entry deleted permanently' });
       await refetch();
       await refetchMetrics(); await refetchTxStats();
+      await invalidateAllStats();
     } catch (err: any) {
       toast({ title: 'Failed to delete', description: err.message, variant: 'destructive' });
     } finally {
