@@ -388,6 +388,36 @@ export type Database = {
           },
         ]
       }
+      data_access_requests: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          name: string | null
+          organization: string | null
+          tier: string | null
+          use_case: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+          organization?: string | null
+          tier?: string | null
+          use_case?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+          organization?: string | null
+          tier?: string | null
+          use_case?: string | null
+        }
+        Relationships: []
+      }
       earner_wallets: {
         Row: {
           claimed_at: string | null
