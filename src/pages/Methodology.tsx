@@ -204,6 +204,62 @@ const Methodology = () => (
         </p>
       </div>
 
+      <h2 className="text-2xl font-bold mb-2">How Circular Flow Is Measured</h2>
+      <p className="text-muted-foreground mb-6 max-w-3xl">
+        Circular flow tracking works by connecting community members' Blink wallets via read-only API.
+      </p>
+
+      <div className="grid gap-4 mb-12">
+        <div className="rounded-lg border border-border bg-card p-5">
+          <h3 className="font-semibold mb-2">How it works</h3>
+          <p className="text-sm text-muted-foreground mb-3">When wallet A sends sats to wallet B:</p>
+          <ul className="space-y-2 text-sm">
+            <li className="flex items-start gap-2">
+              <span className="text-score-green mt-0.5">→</span>
+              <span><strong className="text-foreground">If both are connected to this economy:</strong> Tagged as <span className="font-mono text-score-green">INTERNAL FLOW ✓</span></span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-score-amber mt-0.5">→</span>
+              <span><strong className="text-foreground">If only wallet A is connected:</strong> Tagged as <span className="font-mono text-score-amber">UNMATCHED OUTFLOW</span> (may still be circular — we just cannot verify without wallet B)</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-primary mt-0.5">→</span>
+              <span><strong className="text-foreground">If only wallet B is connected:</strong> Tagged as <span className="font-mono text-primary">EXTERNAL INFLOW</span></span>
+            </li>
+          </ul>
+        </div>
+
+        <div className="rounded-lg border border-score-amber/30 bg-score-amber/5 p-5">
+          <h3 className="font-semibold mb-2">Why this matters</h3>
+          <p className="text-sm text-muted-foreground mb-2">
+            A low circular flow percentage does <strong className="text-foreground">not</strong> necessarily mean sats are leaving the community. It may simply mean most community members have not yet connected their wallets.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Circular flow accuracy increases as more merchants and earners connect their Blink wallets.
+          </p>
+        </div>
+
+        <div className="rounded-lg border border-border bg-card p-5">
+          <h3 className="font-semibold mb-2">Data sources</h3>
+          <p className="text-sm text-muted-foreground mb-2">
+            All transaction data comes directly from the Blink Lightning wallet API (read-only).
+          </p>
+          <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+            <li>Raw transaction numbers (amounts, counts, dates) are accurate.</li>
+            <li>Flow classification accuracy depends on wallet coverage.</li>
+          </ul>
+        </div>
+
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-5">
+          <h3 className="font-semibold mb-2 text-primary">Privacy</h3>
+          <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+            <li>Wallet addresses are never stored.</li>
+            <li>Only SHA-256 hashes are used for matching.</li>
+            <li>Individual transaction details are never shown publicly — only aggregate totals.</li>
+          </ul>
+        </div>
+      </div>
+
       <h2 className="text-xl font-semibold mb-4">Data Sources</h2>
       <div className="space-y-4 mb-12">
         {dataSources.map((ds) => (

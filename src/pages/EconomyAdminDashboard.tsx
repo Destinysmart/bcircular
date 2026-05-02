@@ -23,6 +23,8 @@ import { TierBadge, TIER_CHECKLIST, getTierMeta, type FbceTier } from '@/compone
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SetupChecklist from '@/components/SetupChecklist';
 import EconomyAlerts from '@/components/EconomyAlerts';
+import { getCoverage } from '@/lib/coverage';
+import { Link } from 'react-router-dom';
 
 const EconomyAdminDashboard = () => {
   const { id } = useParams();
@@ -91,6 +93,18 @@ const EconomyAdminDashboard = () => {
   const { data: transactions } = useQuery({
     queryKey: ['transactions', communityId],
     queryFn: () => fetchCommunityTransactions(communityId!),
+    enabled: !!communityId,
+  });
+
+  const { data: walletCount } = useQuery({
+    queryKey: ['admin-wallet-count', communityId],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('wallets')
+        .select('id', { count: 'exact', head: true })
+        .eq('community_id', communityId!);
+      return count || 0;
+    },
     enabled: !!communityId,
   });
 
@@ -386,6 +400,43 @@ const EconomyAdminDashboard = () => {
       <div className="container py-8 max-w-4xl">
         <h1 className="text-2xl font-bold mb-1">Economy Admin Dashboard</h1>
         <p className="text-sm text-muted-foreground mb-8">{community.name}</p>
+
+        {(() => {
+          const cov = getCoverage(walletCount ?? 0, merchants?.length ?? 0, earners?.length ?? 0);
+          if (cov.tier === 'none') {
+            return (
+              <div className="mb-6 rounded-lg border border-score-red/40 bg-score-red/10 p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-3 text-sm">
+                  <span className="text-lg" aria-hidden>🔴</span>
+                  <div>
+                    <div className="font-semibold text-score-red">No wallets connected</div>
+                    <div className="text-foreground/80 mt-0.5">Circular flow cannot be measured yet. Connect at least one merchant or earner wallet to start tracking.</div>
+                  </div>
+                </div>
+                <Link to={`/c/${community.slug}/join-as-earner`}>
+                  <Button size="sm" className="rounded-full whitespace-nowrap">Connect first wallet →</Button>
+                </Link>
+              </div>
+            );
+          }
+          if (cov.tier === 'limited') {
+            return (
+              <div className="mb-6 rounded-lg border border-score-amber/40 bg-score-amber/10 p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-3 text-sm">
+                  <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-score-amber" />
+                  <div>
+                    <div className="font-semibold text-score-amber">Low wallet coverage</div>
+                    <div className="text-foreground/80 mt-0.5">Your circular flow data is limited because fewer than 3 wallets are connected. Share wallet connect links with your merchants and earners to improve accuracy.</div>
+                  </div>
+                </div>
+                <Link to={`/c/${community.slug}/join-as-earner`}>
+                  <Button size="sm" variant="outline" className="rounded-full whitespace-nowrap">Get connect links →</Button>
+                </Link>
+              </div>
+            );
+          }
+          return null;
+        })()}
 
         <EconomyAlerts communityId={communityId!} />
         <SetupChecklist communityId={communityId!} community={community} />

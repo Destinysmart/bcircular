@@ -14,6 +14,7 @@ import SatsMovementPanel from '@/components/SatsMovementPanel';
 import BlinkWalletSettings from '@/components/BlinkWalletSettings';
 import VerifiedCircularityBlock from '@/components/VerifiedCircularityBlock';
 import CircularFlowSpotlight from '@/components/CircularFlowSpotlight';
+import WalletCoverageIndicator from '@/components/WalletCoverageIndicator';
 import EconomyGrowthPanel from '@/components/EconomyGrowthPanel';
 import TransactionActivityChart from '@/components/charts/TransactionActivityChart';
 import EcosystemGrowthChart from '@/components/charts/EcosystemGrowthChart';
@@ -289,6 +290,16 @@ const CommunityDashboard = () => {
           <Link to={`/compare?a=${community.slug}`} className="hidden md:inline-flex items-center gap-1 text-xs text-primary hover:underline self-start">
             <Scale className="h-3 w-3" /> Compare with another economy →
           </Link>
+        </div>
+
+        {/* Wallet coverage transparency — sets context for the flow numbers below */}
+        <div className="mb-4">
+          <WalletCoverageIndicator
+            connectedWallets={walletCount ?? 0}
+            merchantCount={displayMerchants}
+            earnerCount={displayEarners}
+            slug={slug!}
+          />
         </div>
 
         {/* Verified Blink-data circularity spotlight (always renders, with adaptive states) */}

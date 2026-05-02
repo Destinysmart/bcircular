@@ -8,6 +8,8 @@ import EconomyLogo from '@/components/EconomyLogo';
 import { TierBadge } from '@/components/TierBadge';
 import { fetchAllCommunitiesWithStats } from '@/lib/api';
 import { getFlagEmoji, getScoreColor, getScoreBgColor } from '@/lib/mock-data';
+import { getCoverage } from '@/lib/coverage';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
@@ -466,6 +468,7 @@ const Leaderboard = () => {
                               <Badge variant="outline" className="font-mono text-[10px] rounded-full">BTCMap</Badge>
                             )}
                             <ConfidenceBadge totalApproved={c.totalApproved} proofCount={c.proofCount} />
+                            <CoverageChip connected={(c as any).connectedWallets ?? 0} merchants={c.merchants ?? 0} earners={c.earners ?? 0} />
                           </div>
                         </div>
                         <div className="flex items-center gap-6">
@@ -505,6 +508,7 @@ const Leaderboard = () => {
                               <Badge variant="outline" className="font-mono text-[10px] rounded-full">BTCMap</Badge>
                             )}
                             <ConfidenceBadge totalApproved={c.totalApproved} proofCount={c.proofCount} />
+                            <CoverageChip connected={(c as any).connectedWallets ?? 0} merchants={c.merchants ?? 0} earners={c.earners ?? 0} />
                           </div>
                         )}
                         <div className="grid grid-cols-2 gap-2">
@@ -569,6 +573,25 @@ const ScoreWithDelta = ({ score, delta }: { score: number; delta: number }) => {
         CIRCULARITY{delta !== 0 && <span className={`ml-1 ${deltaColor}`}>{delta > 0 ? '+' : ''}{delta}</span>}
       </span>
     </div>
+  );
+};
+
+const CoverageChip = ({ connected, merchants, earners }: { connected: number; merchants: number; earners: number }) => {
+  const cov = getCoverage(connected, merchants, earners);
+  const title = `${cov.description} — ${cov.connected} wallet${cov.connected === 1 ? '' : 's'} connected${cov.estimated > 0 ? ` of ~${cov.estimated} estimated` : ''}. Higher coverage = more accurate circular flow.`;
+  return (
+    <span
+      title={title}
+      className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[10px]"
+      style={{
+        color: `hsl(var(--${cov.colorToken}))`,
+        borderColor: `hsl(var(--${cov.colorToken}) / 0.4)`,
+        backgroundColor: `hsl(var(--${cov.colorToken}) / 0.08)`,
+      }}
+    >
+      <span aria-hidden>{cov.emoji}</span>
+      {cov.label}
+    </span>
   );
 };
 

@@ -1,129 +1,124 @@
 ## Goal
 
-Extend the existing merchant flow (manual submission → admin approval) with an anonymous, wallet-based tracking layer. No KYC, no names beyond what's already collected. After approval, a merchant gets a public anonymous ID, a private claim token, can link a Blink wallet, and gets a dashboard with auto-tracked transactions and circularity metrics.
+Make circular flow honest about its coverage. Connected wallets vs estimated wallets (merchants + earners) drives a single coverage tier used everywhere. Raw transaction/merchant/earner numbers stay untouched.
 
-The existing "Add Merchant" page (`SubmitPage.tsx`), admin approval flow (`EconomyAdminDashboard.tsx`), BTCMap sync, Blink economy-level sync, and validator system are all preserved unchanged.
+## Coverage model (single source of truth)
 
-## What changes
+Create `src/lib/coverage.ts` with one helper used by every new UI piece:
 
-### 1. Database (migration)
+```ts
+type CoverageTier = 'none' | 'limited' | 'partial' | 'good' | 'high';
+getCoverage(connectedWallets, merchants, earners) =>
+  { tier, connected, estimated, label, color, description }
+```
 
-Extend `merchants` and add two new tables:
+Thresholds (per spec):
+- 0 → `none` (red, "No wallets connected")
+- 1–2 → `limited` (red, "Very Limited")
+- 3–9 → `partial` (amber, "Partial")
+- 10–19 → `good` (green, "Good")
+- 20+ → `high` (green bold, "High ✓")
 
-- **`merchants`** — add columns:
-  - `public_merchant_id text unique` — short opaque slug (e.g. `mch_a1b2c3d4`), generated on approval
-  - `claim_token_hash text` — SHA-256 hash of the one-time claim token (raw token shown to admin once, never stored)
-  - `claimed_at timestamptz` — set when merchant links a wallet
-  - `wallet_id uuid` — FK to `wallets.id` (nullable, set on link)
+`estimated = merchants + earners`. Connected wallets = `wallets` rows for the community (already queried in several pages).
 
-- **`merchant_invoices`** (optional Lightning invoices)
-  - `id`, `merchant_id`, `amount_sats`, `memo`, `payment_request`, `status` (pending/paid/expired), `paid_at`, `blink_tx_id`, `created_at`
+## 1. New `WalletCoverageIndicator` component
 
-- **Trigger / function** `assign_merchant_public_id()`:
-  - On `UPDATE` of `merchants` when `status` transitions to `approved` and `public_merchant_id` is null, generate one.
+`src/components/WalletCoverageIndicator.tsx` — the card from spec:
+- Title "Wallet Coverage" with a small icon
+- "X wallets connected of ~Y estimated"
+- Tier label badge + colored progress bar (target 20)
+- Helper line: "Higher coverage = more accurate circular flow measurement"
+- "Connect a wallet →" link to `/c/:slug/join-as-earner` (or `/connect`)
+- Stacks vertically below 768px
 
-- **View** `merchant_metrics` (security_invoker, public read):
-  - Joins `merchants` → `wallets` → `blink_transactions`
-  - Exposes only: `public_merchant_id`, `inflow_sats`, `outflow_sats`, `internal_sats`, `tx_count`, `circularity_score` (= internal / total), `last_tx_at`
-  - Never exposes `wallet_id`, `blink_wallet_id`, user_id, or amounts per individual tx beyond aggregates
+Mounted on `CommunityDashboard.tsx` directly above `CircularFlowSpotlight` / the gauge area. Uses the existing `walletCount`, `merchants`, `earners` queries already on the page — no new DB load.
 
-- **RLS**:
-  - `merchants.claim_token_hash` — restricted to economy admins / super admins via column-level policy (or moved to a side table `merchant_claim_tokens` admin-only)
-  - `merchants.wallet_id` — readable publicly (just an opaque UUID), writable only by the merchant claiming it (validated via token, see below)
-  - `merchant_invoices` — public read of `amount_sats`, `status`, `paid_at`; service-role only insert/update
+## 2. Fix `CircularFlowGauge` labels and percentage
 
-### 2. Edge functions
+`src/components/charts/CircularFlowGauge.tsx`:
 
-- **`generate-merchant-token`** (admin only)
-  - Input: `merchant_id`
-  - Caller must be economy admin / super admin
-  - Generates a random 32-byte token, stores SHA-256 hash on the merchant row, returns the raw token **once** for the admin to share with the merchant out-of-band
-  - Idempotent (rotates if called again, invalidating prior token)
+- Replace tile labels:
+  - "Circulated" → **"Internal flows"** (tooltip: "Sats transacted between two connected wallets in this economy. Both sides of each payment are counted.")
+  - "Exited" → **"Unmatched outflows"** (tooltip: "Sats sent to wallets not connected to this economy. This includes payments to community members who haven't connected their wallet yet — not necessarily money leaving the community permanently.")
+- Add a third tile **"External inflows"** by extending the `flow-sums-30d` query to also sum `flow_type = 'inflow_external'` (data already present in `blink_transactions`). Tooltip: "Sats received from wallets outside this economy — shows external demand for goods and services here."
+- Use `<TooltipProvider>` from existing `ui/tooltip.tsx`.
+- Center label change:
+  - Default: **"X% detected as internal"** with subtitle "Among connected wallets only"
+  - When coverage tier is `none` or `limited` (< 3 connected wallets): hide the percentage entirely; render only "Insufficient wallet coverage to calculate meaningful rate" inside the ring.
+- Accept `coverageTier` as a prop (passed from parent that already has wallet/merchant/earner data) so the gauge does not duplicate queries.
 
-- **`claim-merchant`** (public, no JWT required — token is the auth)
-  - Input: `public_merchant_id`, `claim_token`, `blink_wallet_id`
-  - Verifies `sha256(claim_token) == claim_token_hash` and merchant is `approved`
-  - Looks up the economy's `blink_api_keys`, calls Blink GraphQL to confirm the wallet exists in the economy's connected Blink account
-  - Inserts a row in `wallets` (uses the economy admin's `user_id` so existing RLS still works, mirrors current auto-registration pattern in `sync-blink-transactions`)
-  - Sets `merchants.wallet_id`, `merchants.claimed_at`, clears `claim_token_hash` (single-use)
-  - Triggers an immediate `sync-blink-transactions` call
+No change to the underlying sum logic.
 
-- **`generate-merchant-invoice`** (optional, behind a flag)
-  - Input: `public_merchant_id`, `amount_sats`, `memo`
-  - Looks up merchant → wallet → economy Blink key
-  - Calls Blink `lnInvoiceCreate` mutation, stores row in `merchant_invoices`, returns BOLT11
-  - Subsequent `sync-blink-transactions` already imports the resulting tx; a small post-sync step matches `payment_hash` → invoice → marks paid
+## 3. Methodology page — new section
 
-- **`sync-blink-transactions`** — extend slightly:
-  - When upserting a `blink_transaction`, if its `wallet_id` matches a merchant's `wallet_id`, no extra column is needed — the merchant link is derived via join. (Keeps the existing schema clean.)
+Append a section to `src/pages/Methodology.tsx` titled **"How Circular Flow Is Measured"** with the four sub-blocks from the spec verbatim: HOW IT WORKS, WHY THIS MATTERS, DATA SOURCES, PRIVACY. Insert it right after the existing "Final Score" block, before "Data Sources". Use the same card styling already used in the file.
 
-### 3. Admin UI changes (`EconomyAdminDashboard.tsx`)
+## 4. Economy admin dashboard banner
 
-In the merchants section, for each `approved` merchant add:
-- Badge showing `public_merchant_id` and "Wallet linked" / "Not linked"
-- "Generate claim link" button → calls `generate-merchant-token`, shows a modal with the one-time claim URL (`/merchant/claim/<public_id>?token=<raw>`) and a copy button. Warning: shown only once.
-- "Rotate token" if already generated but unclaimed
-- "Unlink wallet" (admin override)
+`src/pages/EconomyAdminDashboard.tsx`:
 
-No changes to the approval flow itself. Token generation is a separate, post-approval action.
+- Add a query for wallet count (or compute from existing `ConnectedWalletsManager` data; simplest: a small `select id, count: 'exact', head: true` from `wallets`).
+- Above `EconomyAlerts`, render:
+  - **Red banner** when 0 wallets: "🔴 No wallets connected — Circular flow cannot be measured yet…" with CTA to `BlinkWalletSettings` section anchor.
+  - **Amber banner** when 1–2 wallets: "⚠️ Low wallet coverage…" with CTA "Get connect links →" linking to `/c/:slug/join-as-earner` and the merchant claim manager section.
+- Suppress banner once coverage ≥ 3.
 
-### 4. New public pages
+These banners are pure UI — no DB writes, no new alert rows.
 
-- **`/merchant/claim/:publicId`** — `MerchantClaim.tsx`
-  - Reads `?token=` from URL
-  - Form: paste Blink wallet ID (with help text + link to Blink app)
-  - Calls `claim-merchant`; on success redirects to the merchant dashboard with the token stored in `localStorage` under `merchant_token_<publicId>` (acts as a long-lived bearer for the dashboard)
-  - On the JS side the token is also kept in URL hash for first-load resilience
+## 5. Leaderboard — coverage indicator next to circularity
 
-- **`/m/:publicId`** — `MerchantDashboard.tsx`
-  - Public read of aggregate metrics from `merchant_metrics` view (no token needed)
-  - If `localStorage` has the merchant token, also shows "private" controls:
-    - Unlink wallet
-    - Generate Lightning invoice (if enabled)
-    - Recent invoices list
-  - Sections:
-    - Header: anonymous ID, wallet status pill
-    - Stats cards: Inflow, Outflow, Internal (circular), Circularity %, Tx count
-    - Recent transactions: last 20 from `blink_transactions` joined via `wallet_id` (only direction, amount, timestamp, internal flag — no counterparty IDs publicly)
-    - Mobile-first layout reusing existing `StatCard`, `Card`, `Badge` components
+`src/pages/Leaderboard.tsx` and `src/lib/api.ts` (`fetchAllCommunitiesWithStats`):
 
-### 5. Comparison tool
+- Extend the per-community stats fetch to include `connectedWallets` (single grouped count of `wallets` per community, fetched in one round-trip).
+- In each leaderboard row that displays the circularity number/score-derived percentage:
+  - High (≥10): show value normally
+  - Partial (3–9): prefix value with `~` (e.g. `~23%`) plus tiny info icon
+  - Limited (<3): show `–` with tooltip "Insufficient wallet coverage"
+- Coverage logic uses the new `getCoverage` helper.
 
-`src/lib/api.ts` `fetchAllCommunitiesWithStats` and `fetchComparisonDetails`: add a per-economy `linkedMerchants` count and aggregate `merchantInflowSats` / `merchantInternalSats` from `merchant_metrics`. `Compare.tsx` gets one new column "Linked merchants" and the existing circularity bar uses the merchant-level data when available (falls back to current logic).
+The score column itself is not gated — only the circularity-flow-derived display.
 
-### 6. Security
+## 6. Homepage economy cards — coverage badge
 
-- Claim tokens never stored in plaintext — only SHA-256 hash
-- Edge functions validate caller (admin) for token generation; claim function validates token without requiring auth
-- `blink_api_keys` access remains service-role only — claim and invoice functions read it server-side
-- No personal info added to any table
-- Per-merchant token is single-use for claiming; for ongoing dashboard auth we use the same token as a localStorage bearer — documented in UI as "keep this link safe, it's the only way to manage this merchant"
+`src/pages/Homepage.tsx`:
 
-### 7. Files
+- Use the same `connectedWallets` field added in step 5.
+- Below the circularity score on each card, render a tiny coverage badge:
+  - 🟢 High coverage / 🟡 Partial coverage / 🔴 Limited coverage / ⚫ No wallets connected
+- Wrap with `Tooltip` explaining what the tier means.
 
-**New:**
-- `supabase/migrations/<ts>_merchant_tracking.sql`
-- `supabase/functions/generate-merchant-token/index.ts`
-- `supabase/functions/claim-merchant/index.ts`
-- `supabase/functions/generate-merchant-invoice/index.ts`
-- `src/pages/MerchantClaim.tsx`
-- `src/pages/MerchantDashboard.tsx`
-- `src/lib/merchantApi.ts` (token storage, metric queries, invoice helpers)
+## 7. Connect wallet CTA enhancements
 
-**Edited:**
-- `src/App.tsx` — add 2 routes
-- `src/pages/EconomyAdminDashboard.tsx` — claim-token UI per merchant
-- `src/lib/api.ts` — extend comparison fetchers
-- `src/pages/Compare.tsx` — surface linked-merchant column
+Touch the existing CTA spots used by the new banners and `WalletCoverageIndicator`:
 
-### Out of scope / unchanged
+- `JoinAsEarner.tsx` and `ConnectWallet.tsx` headers: append the line "Each connected wallet improves circular flow accuracy for {economyName}" plus a thin progress bar "Coverage: X / 20 wallets connected" using the same helper.
+- No change to the actual wallet-connect flow.
 
-- `SubmitPage.tsx` (Add Merchant form) — untouched
-- Existing approval workflow — untouched
-- Validator voting — untouched
-- BTCMap sync — untouched
-- Economy-level Blink wallet settings — untouched (this builds on top)
+## 8. Untouched
 
-## Open question
+- `calculate-score` edge function and all pillar math.
+- BTCMap sync.
+- Monthly transaction count, activity rate, merchant/earner counts (no disclaimers added).
+- `economy_wallet_metrics.real_circularity_rate` value — only how it is presented.
 
-The optional Lightning invoice generator (item 9) requires the economy's Blink API key to have **send/invoice** scope, not the read-only scope currently documented. If you want this enabled, admins will need to provide a key with invoice creation rights — otherwise we'll ship the dashboard + tracking without the invoice button and add it later.
+## Theming / responsive
+
+- All new UI uses `var(--background)`, `var(--foreground)`, `var(--border)`, `var(--muted-foreground)`, `var(--primary)` and the existing `--score-amber / --score-green / --score-red` tokens — automatically dark/light correct.
+- Coverage card and banners stack vertically below `md:` breakpoint (768px).
+
+## Files touched
+
+New:
+- `src/lib/coverage.ts`
+- `src/components/WalletCoverageIndicator.tsx`
+
+Edited:
+- `src/components/charts/CircularFlowGauge.tsx`
+- `src/pages/CommunityDashboard.tsx`
+- `src/pages/EconomyAdminDashboard.tsx`
+- `src/pages/Leaderboard.tsx`
+- `src/pages/Homepage.tsx`
+- `src/pages/Methodology.tsx`
+- `src/pages/JoinAsEarner.tsx`
+- `src/pages/ConnectWallet.tsx`
+- `src/lib/api.ts` (add `connectedWallets` to community stats)

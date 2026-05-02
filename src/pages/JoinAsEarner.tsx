@@ -245,7 +245,10 @@ const JoinAsEarner = () => {
               transition={{ duration: 0.2 }}
             >
               <h2 className="text-lg font-semibold mb-1">Connect your wallet (optional)</h2>
-              <p className="text-sm text-muted-foreground mb-4">Help prove Bitcoin actually circulates here. Activated after validator approval.</p>
+              <p className="text-sm text-muted-foreground mb-2">Help prove Bitcoin actually circulates here. Activated after validator approval.</p>
+              <p className="text-xs text-primary mb-4">
+                Each connected wallet improves circular flow accuracy for {community?.name}.
+              </p>
 
               <div className="rounded-lg border border-border bg-card p-4 space-y-4 mb-4">
                 <div>
