@@ -19,6 +19,7 @@ const MerchantClaim = () => {
   const tokenFromUrl = searchParams.get('token') || '';
   const [token, setToken] = useState(tokenFromUrl);
   const [walletId, setWalletId] = useState('');
+  const [apiKey, setApiKey] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,6 +32,7 @@ const MerchantClaim = () => {
           public_merchant_id: publicId,
           claim_token: token.trim(),
           blink_wallet_id: walletId.trim(),
+          merchant_api_key: apiKey.trim(),
         },
       });
       // supabase-js wraps non-2xx as FunctionsHttpError but still parses the JSON body into `data`.
@@ -106,6 +108,30 @@ const MerchantClaim = () => {
                   className="text-xs text-primary hover:underline inline-flex items-center gap-1 mt-1"
                 >
                   How to find my wallet ID <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+              <div>
+                <Label htmlFor="apiKey">Your Blink read-only API key</Label>
+                <Input
+                  id="apiKey"
+                  type="password"
+                  value={apiKey}
+                  onChange={e => setApiKey(e.target.value)}
+                  placeholder="blink_…"
+                  required
+                  className="font-mono text-xs"
+                  autoComplete="off"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Get this from dashboard.blink.sv → API Keys → Create read-only key.
+                </p>
+                <a
+                  href="https://dashboard.blink.sv"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-primary hover:underline inline-flex items-center gap-1 mt-1"
+                >
+                  How to get your API key <ExternalLink className="h-3 w-3" />
                 </a>
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
