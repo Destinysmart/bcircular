@@ -452,26 +452,25 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
             )}
 
             {gated && (
-              <div className="absolute inset-0 flex items-center justify-center z-10">
-                <div className="rounded-2xl border border-border bg-background/95 backdrop-blur-md px-8 py-8 text-center max-w-md w-[90%] shadow-2xl">
-                  <div className="text-3xl mb-3">🔒</div>
-                  <h3 className="text-xl font-bold text-foreground mb-2">Join to explore all circular economies</h3>
-                  <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-                    Track Bitcoin adoption worldwide.<br />Free to join. No funds held. Ever.
-                  </p>
-                  <div className="flex gap-3 justify-center flex-wrap">
-                    <Link to="/login?signup=1">
-                      <Button className="rounded-lg px-6 bg-score-amber text-background hover:bg-score-amber/90 font-semibold">
-                        Create free account
-                      </Button>
-                    </Link>
-                    <Link to="/login">
-                      <Button variant="outline" className="rounded-lg px-6 border-foreground/20">
-                        Log in
-                      </Button>
-                    </Link>
-                  </div>
+              <div className="mt-10 rounded-2xl border border-border bg-card px-6 py-8 text-center max-w-xl mx-auto">
+                <div className="text-2xl mb-3">⚡</div>
+                <h3 className="text-xl font-bold text-foreground mb-2">Join Bitcoin Circular</h3>
+                <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
+                  Sign up to access the full leaderboard, compare economies, and track your Bitcoin circular economy.
+                </p>
+                <div className="flex gap-3 justify-center flex-wrap">
+                  <Link to="/login?signup=1">
+                    <Button className="rounded-lg px-6 bg-score-amber text-background hover:bg-score-amber/90 font-semibold">
+                      Create free account
+                    </Button>
+                  </Link>
+                  <Link to="/login">
+                    <Button variant="outline" className="rounded-lg px-6 border-foreground/20">
+                      Log in
+                    </Button>
+                  </Link>
                 </div>
+                <p className="text-[11px] text-muted-foreground mt-4">Free forever · No funds held · Ever</p>
               </div>
             )}
           </div>
