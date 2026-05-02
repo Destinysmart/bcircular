@@ -1,6 +1,6 @@
 
-import { useParams, Link } from 'react-router-dom';
-import { Share2, Store, Zap, ChevronDown, Info, ExternalLink, Shield, Scale } from 'lucide-react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { Share2, Store, Zap, ChevronDown, Info, ExternalLink, Shield, Scale, Wallet } from 'lucide-react';
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
@@ -11,7 +11,6 @@ import ConfidenceBadge from '@/components/ConfidenceBadge';
 import SatsFlowGraph from '@/components/SatsFlowGraph';
 import LiveActivityFeed from '@/components/LiveActivityFeed';
 import SatsMovementPanel from '@/components/SatsMovementPanel';
-import BlinkWalletSettings from '@/components/BlinkWalletSettings';
 import VerifiedCircularityBlock from '@/components/VerifiedCircularityBlock';
 import CircularFlowSpotlight from '@/components/CircularFlowSpotlight';
 import WalletCoverageIndicator from '@/components/WalletCoverageIndicator';
@@ -39,6 +38,7 @@ const pillarDescriptions: Record<string, string> = {
 const CommunityDashboard = () => {
   const { user } = useAuth();
   const { slug } = useParams();
+  const navigate = useNavigate();
   
 
   const { data: community, isLoading, isError, error } = useQuery({
@@ -98,8 +98,11 @@ const CommunityDashboard = () => {
   const { data: walletCount } = useQuery({
     queryKey: ['wallet-count', communityId],
     queryFn: async () => {
-      const { count } = await supabase
-        .from('wallets')
+      // Use wallets_public view: counts are visible to everyone
+      // (logged-out visitors, regular users, admins) without leaking
+      // sensitive wallet data.
+      const { count } = await (supabase as any)
+        .from('wallets_public')
         .select('id', { count: 'exact', head: true })
         .eq('community_id', communityId!);
       return count || 0;
