@@ -260,6 +260,7 @@ const Methodology = () => (
         </div>
       </div>
 
+      <h2 className="text-xl font-semibold mb-4">Data Sources</h2>
       <div className="space-y-4 mb-12">
         {dataSources.map((ds) => (
           <div key={ds.name} className="rounded-lg border border-border bg-card p-5">
