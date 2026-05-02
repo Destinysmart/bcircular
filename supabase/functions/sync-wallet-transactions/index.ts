@@ -488,18 +488,9 @@ Deno.serve(async (req) => {
       } catch (syncErr: any) {
         const msg = String(syncErr?.message || syncErr)
         // Blink rejected the stored API key — flag the wallet so admin can re-link.
-        if (/Blink API error 401|Authorization Required/i.test(msg)) {
-          await supabase
-            .from('wallets')
-            .update({ wallet_status: 'auth_error', last_synced_at: new Date().toISOString() })
-            .eq('id', wallet.id)
-          return new Response(
-            JSON.stringify({
-              error: 'Blink rejected the stored API key (401). Ask the wallet owner to re-connect with a fresh key.',
-              code: 'blink_unauthorized',
-            }),
-            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-          )
+        if (isBlinkUnauthorized(msg)) {
+          await markWalletAuthError(supabase, wallet.id)
+          return authErrorResponse()
         }
         throw syncErr
       }
@@ -633,7 +624,17 @@ Deno.serve(async (req) => {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
-      const result = await performSync(supabase, wallet)
+      let result: any
+      try {
+        result = await performSync(supabase, wallet)
+      } catch (syncErr: any) {
+        const msg = String(syncErr?.message || syncErr)
+        if (isBlinkUnauthorized(msg)) {
+          await markWalletAuthError(supabase, wallet.id)
+          return authErrorResponse()
+        }
+        throw syncErr
+      }
       return new Response(JSON.stringify({ success: true, ...result }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
