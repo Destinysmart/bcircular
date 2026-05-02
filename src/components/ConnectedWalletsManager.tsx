@@ -244,18 +244,24 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
     const authErr = row.wallet?.wallet_status === 'auth_error';
     const hasWallet = !!row.wallet?.id;
     const rowResult = resultById[row.id];
+    const contribution = (hasWallet && txStats?.perWallet?.get(row.wallet.id)) || { count: 0, sats: 0 };
     return (
       <li key={row.id} className="rounded-md border p-3 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
             <div className="font-medium truncate">{row.label}</div>
             <div className="text-xs text-muted-foreground">
-              <code>{row.code}</code> ·{' '}
+              <span className="font-mono">{row.anonLabel}</span> ·{' '}
               <Badge variant={conn ? 'default' : authErr ? 'destructive' : 'secondary'} className={conn ? 'bg-score-green text-background' : ''}>
                 {conn ? '● Connected' : authErr ? '⚠ Re-connect required' : hasWallet ? '○ Saved, not synced' : '○ Pending'}
               </Badge>{' '}
               {hasWallet && `· last sync ${timeAgo(row.wallet.last_synced_at)}`}
             </div>
+            {hasWallet && (
+              <div className="text-xs text-muted-foreground mt-1 italic">
+                This {row.ownerType}'s wallet has contributed {contribution.count.toLocaleString()} transaction{contribution.count === 1 ? '' : 's'} and {contribution.sats.toLocaleString()} sats to the economy data
+              </div>
+            )}
           </div>
           <div className="flex flex-wrap gap-2">
             <Button size="sm" variant="outline" onClick={() => copyLink(row.ownerType, row.code)}>
