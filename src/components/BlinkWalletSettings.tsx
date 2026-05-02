@@ -52,20 +52,76 @@ const BlinkWalletSettings = ({ communityId, isAdmin }: BlinkWalletSettingsProps)
     },
   });
 
-  // Fetch blink transaction stats
+  // Fetch blink transaction stats grouped by wallet owner_type
   const { data: txStats } = useQuery({
     queryKey: ['blink-tx-stats', communityId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('blink_transactions')
-        .select('direction, settlement_amount, is_internal')
-        .eq('community_id', communityId);
-      if (error) throw error;
-      const total = data?.length || 0;
-      const internal = data?.filter(t => t.is_internal).length || 0;
-      const totalSats = data?.reduce((s, t) => s + Number(t.settlement_amount), 0) || 0;
-      const internalSats = data?.filter(t => t.is_internal).reduce((s, t) => s + Number(t.settlement_amount), 0) || 0;
-      return { total, internal, totalSats, internalSats };
+      const [{ data: txns, error: txErr }, { data: wals, error: wErr }] = await Promise.all([
+        supabase
+          .from('blink_transactions')
+          .select('wallet_id, settlement_amount, is_internal')
+          .eq('community_id', communityId),
+        supabase
+          .from('wallets')
+          .select('id, owner_type, owner_id')
+          .eq('community_id', communityId),
+      ]);
+      if (txErr) throw txErr;
+      if (wErr) throw wErr;
+
+      const ownerByWallet = new Map<string, string | null>();
+      const groupCounts = { economy: 0, earner: 0, merchant: 0 };
+      const uniqueOwners = { economy: new Set<string>(), earner: new Set<string>(), merchant: new Set<string>() };
+      for (const w of wals || []) {
+        ownerByWallet.set(w.id, w.owner_type);
+        if (w.owner_type === 'economy' || w.owner_type === 'earner' || w.owner_type === 'merchant') {
+          groupCounts[w.owner_type as 'economy' | 'earner' | 'merchant'] += 1;
+          if (w.owner_id) uniqueOwners[w.owner_type as 'economy' | 'earner' | 'merchant'].add(w.owner_id);
+        } else {
+          console.warn('[BlinkWalletSettings] Wallet missing owner_type, excluded:', w.id);
+        }
+      }
+
+      const groups = {
+        economy: { txns: 0, sats: 0 },
+        earner: { txns: 0, sats: 0 },
+        merchant: { txns: 0, sats: 0 },
+      };
+      let total = 0;
+      let totalSats = 0;
+      let internal = 0;
+      let internalSats = 0;
+      for (const t of txns || []) {
+        const sats = Number(t.settlement_amount) || 0;
+        total += 1;
+        totalSats += sats;
+        if (t.is_internal) {
+          internal += 1;
+          internalSats += sats;
+        }
+        const ot = ownerByWallet.get(t.wallet_id);
+        if (ot === 'economy' || ot === 'earner' || ot === 'merchant') {
+          groups[ot].txns += 1;
+          groups[ot].sats += sats;
+        }
+      }
+
+      const totalWallets =
+        groupCounts.economy + groupCounts.earner + groupCounts.merchant;
+
+      return {
+        total,
+        internal,
+        totalSats,
+        internalSats,
+        groups,
+        groupCounts,
+        ownerCounts: {
+          earner: uniqueOwners.earner.size,
+          merchant: uniqueOwners.merchant.size,
+        },
+        totalWallets,
+      };
     },
   });
 
