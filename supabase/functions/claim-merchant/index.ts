@@ -272,6 +272,15 @@ Deno.serve(async (req) => {
       walletDbId = inserted.id
     }
 
+    const { error: linkErr } = await supabase
+      .from('merchants')
+      .update({
+        wallet_id: walletDbId,
+        claimed_at: new Date().toISOString(),
+        claim_token_hash: null,
+      })
+      .eq('id', merchant.id)
+
     if (linkErr) {
       console.error('merchant link failed', linkErr)
       return jsonResponse({ error: linkErr.message }, 500)
