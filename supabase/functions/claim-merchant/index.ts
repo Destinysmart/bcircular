@@ -197,13 +197,39 @@ Deno.serve(async (req) => {
       .eq('id', merchant.community_id)
       .single()
 
-    // Upsert wallet row, owned by merchant
-    const { data: existingWallet } = await supabase
+    const ownerUserId = communityRow?.admin_id || merchant.community_id
+
+    // Look up existing wallet by either (community_id, blink_wallet_id) or
+    // by the unique constraint (user_id, community_id, wallet_currency) so we
+    // never trip a duplicate-key error from a partial previous attempt.
+    const { data: existingByBlink } = await supabase
       .from('wallets')
       .select('id')
       .eq('community_id', merchant.community_id)
       .eq('blink_wallet_id', resolvedBlinkWalletId)
       .maybeSingle()
+
+    let existingWallet = existingByBlink
+    if (!existingWallet) {
+      const { data: existingByUnique } = await supabase
+        .from('wallets')
+        .select('id')
+        .eq('user_id', ownerUserId)
+        .eq('community_id', merchant.community_id)
+        .eq('wallet_currency', resolvedCurrency)
+        .maybeSingle()
+      existingWallet = existingByUnique
+    }
+    // Also check if this merchant already has a wallet row attached.
+    if (!existingWallet) {
+      const { data: existingByMerchant } = await supabase
+        .from('wallets')
+        .select('id')
+        .eq('owner_type', 'merchant')
+        .eq('owner_id', merchant.id)
+        .maybeSingle()
+      existingWallet = existingByMerchant
+    }
 
     let walletDbId: string
     if (existingWallet) {
@@ -214,6 +240,7 @@ Deno.serve(async (req) => {
         wallet_status: 'connected',
         wallet_currency: resolvedCurrency,
         balance_sats: resolvedBalance,
+        blink_wallet_id: resolvedBlinkWalletId,
         blink_api_key_encrypted: encryptedKey,
         last_synced_at: new Date().toISOString(),
       }).eq('id', existingWallet.id)
@@ -229,7 +256,7 @@ Deno.serve(async (req) => {
           blink_wallet_id: resolvedBlinkWalletId,
           wallet_currency: resolvedCurrency,
           balance_sats: resolvedBalance,
-          user_id: communityRow?.admin_id || merchant.community_id,
+          user_id: ownerUserId,
           owner_type: 'merchant',
           owner_id: merchant.id,
           wallet_status: 'connected',
@@ -244,15 +271,6 @@ Deno.serve(async (req) => {
       }
       walletDbId = inserted.id
     }
-
-    const { error: linkErr } = await supabase
-      .from('merchants')
-      .update({
-        wallet_id: walletDbId,
-        claimed_at: new Date().toISOString(),
-        claim_token_hash: null,
-      })
-      .eq('id', merchant.id)
 
     if (linkErr) {
       console.error('merchant link failed', linkErr)
