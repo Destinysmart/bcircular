@@ -199,6 +199,15 @@ const Leaderboard = () => {
     return [...list].filter(c => (c.weeklyChange ?? 0) > 0).sort((a, b) => (b.weeklyChange ?? 0) - (a.weeklyChange ?? 0))[0];
   }, [list]);
 
+  if (!authLoading && !user) {
+    return (
+      <AuthGate
+        title="Unlock the full leaderboard"
+        message="Sign up to access the full leaderboard, compare economies, and track your Bitcoin circular economy."
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
