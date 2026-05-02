@@ -33,10 +33,26 @@ const MerchantClaim = () => {
           blink_wallet_id: walletId.trim(),
         },
       });
-      if (error) throw error;
-      if ((data as any)?.error) throw new Error((data as any).error);
+      // supabase-js wraps non-2xx as FunctionsHttpError but still parses the JSON body into `data`.
+      const payload = (data as any) || {};
+      if (payload?.error) {
+        throw new Error(typeof payload.error === 'string' ? payload.error : 'Could not link wallet');
+      }
+      if (error && !payload?.success) {
+        // Try to read body from FunctionsHttpError
+        const ctx: any = (error as any).context;
+        let msg = error.message || 'Could not link wallet';
+        try {
+          const body = await ctx?.json?.();
+          if (body?.error) msg = typeof body.error === 'string' ? body.error : msg;
+        } catch { /* ignore */ }
+        throw new Error(msg);
+      }
       saveMerchantToken(publicId, token.trim());
-      toast({ title: 'Wallet linked', description: 'Your merchant dashboard is ready.' });
+      toast({
+        title: 'Wallet linked successfully!',
+        description: "Save this page link — it's your private dashboard.",
+      });
       navigate(`/m/${publicId}`);
     } catch (err: any) {
       toast({ title: 'Claim failed', description: err.message || 'Could not link wallet', variant: 'destructive' });
