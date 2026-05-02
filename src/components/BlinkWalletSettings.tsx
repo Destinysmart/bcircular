@@ -260,7 +260,7 @@ const BlinkWalletSettings = ({ communityId, isAdmin }: BlinkWalletSettingsProps)
               {syncing ? 'Syncing...' : 'Sync now'}
             </Button>
           </div>
-          {txStats && (
+          {txStats && txStats.groups && (
             <div className="space-y-4">
               {/* Row 1 — Wallet Activity by Role */}
               <div className="grid grid-cols-1 gap-3">
