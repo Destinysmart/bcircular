@@ -274,7 +274,7 @@ export async function fetchAllCommunitiesWithStats() {
 
   const results = await Promise.all(
     (communities || []).map(async (c) => {
-      const [merchantsRes, merchantSourcesRes, earnersRes, txRes, scoreRes, prevScoreRes, proofRes, monthlyTxRes, monthlyBlinkRes] = await Promise.all([
+      const [merchantsRes, merchantSourcesRes, earnersRes, txRes, scoreRes, prevScoreRes, proofRes, monthlyTxRes, monthlyBlinkRes, walletsRes] = await Promise.all([
         supabase.from('merchants').select('id', { count: 'exact', head: true }).eq('community_id', c.id).eq('status', 'approved'),
         supabase.from('merchants').select('source').eq('community_id', c.id).eq('status', 'approved'),
         supabase.from('earners').select('id', { count: 'exact', head: true }).eq('community_id', c.id).eq('status', 'approved'),
@@ -284,6 +284,7 @@ export async function fetchAllCommunitiesWithStats() {
         (supabase as any).from('proofs').select('id', { count: 'exact', head: true }).eq('community_id', c.id).eq('status', 'approved'),
         supabase.from('transactions').select('created_at').eq('community_id', c.id).eq('status', 'approved').gte('created_at', startOfMonth.toISOString()),
         supabase.from('blink_transactions').select('blink_created_at').eq('community_id', c.id).gte('blink_created_at', startOfMonth.toISOString()),
+        supabase.from('wallets').select('id', { count: 'exact', head: true }).eq('community_id', c.id),
       ]);
       const circularSats = (txRes.data || []).filter(t => t.is_circular).reduce((s, t) => s + Number(t.amount_sats), 0);
       const totalSats = (txRes.data || []).reduce((s, t) => s + Number(t.amount_sats), 0);
