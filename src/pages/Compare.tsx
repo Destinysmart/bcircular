@@ -6,6 +6,8 @@ import { Scale, Zap } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import Navbar from '@/components/Navbar';
 import ScoreRing from '@/components/ScoreRing';
+import AuthGate from '@/components/AuthGate';
+import { useAuth } from '@/contexts/AuthContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { fetchAllCommunitiesWithStats, fetchComparisonDetails } from '@/lib/api';
 import { getFlagEmoji } from '@/lib/mock-data';
@@ -127,6 +129,16 @@ const generateInsights = (a: any, b: any, aDetails: any, bDetails: any): string[
 };
 
 const Compare = () => {
+  const { user, loading: authLoading } = useAuth();
+  if (!authLoading && !user) {
+    return (
+      <AuthGate
+        title="Compare circular economies"
+        message="Sign up to side-by-side any two Bitcoin economies and see what makes them tick."
+      />
+    );
+  }
+
   const [params, setParams] = useSearchParams();
   const aSlug = params.get('a') || '';
   const bSlug = params.get('b') || '';
