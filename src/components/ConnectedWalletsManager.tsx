@@ -74,6 +74,21 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
     queryFn: () => fetchEconomyWalletMetrics(communityId),
   });
 
+  const { data: txStats, refetch: refetchTxStats } = useQuery({
+    queryKey: ['economy-tx-circularity', communityId],
+    queryFn: async () => {
+      const { data: txns } = await (supabase as any)
+        .from('blink_transactions')
+        .select('is_internal, settlement_amount')
+        .eq('community_id', communityId);
+      const totalVolume = (txns || []).reduce((s: number, t: any) => s + Number(t.settlement_amount || 0), 0);
+      const circularVolume = (txns || []).filter((t: any) => t.is_internal).reduce((s: number, t: any) => s + Number(t.settlement_amount || 0), 0);
+      const circularTxnCount = (txns || []).filter((t: any) => t.is_internal).length;
+      const circularityRate = totalVolume > 0 ? Math.round((circularVolume / totalVolume) * 100) : 0;
+      return { totalVolume, circularVolume, circularTxnCount, circularityRate };
+    },
+  });
+
   function copyLink(ownerType: OwnerType, code: string) {
     const url = `${appUrl()}/connect?code=${code}`;
     navigator.clipboard.writeText(url);
