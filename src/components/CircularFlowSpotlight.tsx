@@ -49,26 +49,8 @@ export default function CircularFlowSpotlight({ communityId, slug }: Props) {
 
   if (isLoading || !data) return null;
 
-  // State 1: no wallets
-  if (data.walletCount === 0) {
-    return (
-      <div className="rounded-2xl border border-dashed border-border bg-card p-6">
-        <div className="flex items-center gap-2 mb-2 text-xs uppercase tracking-wide font-semibold text-muted-foreground">
-          <Wallet className="h-4 w-4" /> Verified circular flow
-        </div>
-        <h3 className="text-lg font-bold text-foreground mb-1">Prove sats stay in this economy</h3>
-        <p className="text-sm text-muted-foreground mb-4 max-w-lg">
-          Connect a Blink wallet (read-only) to start verifying circular transactions automatically. We never see your keys or balances move.
-        </p>
-        <Link
-          to="/connect"
-          className="inline-flex items-center gap-1.5 rounded-full bg-score-amber px-4 py-2 text-sm font-semibold text-background hover:bg-score-amber/90 transition-colors"
-        >
-          <Zap className="h-4 w-4" /> Connect first wallet
-        </Link>
-      </div>
-    );
-  }
+  // State 1: no wallets — handled by WalletCoverageIndicator above; render nothing here
+  if (data.walletCount === 0) return null;
 
   // State 2: wallets connected but no circular txns yet
   if (data.internalCount === 0) {
