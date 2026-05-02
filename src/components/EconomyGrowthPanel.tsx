@@ -3,6 +3,7 @@ import { Store, Users, ArrowRight, CheckCircle2, AlertCircle, XCircle, Sparkles 
 import MerchantGrowthChart from '@/components/charts/MerchantGrowthChart';
 import EarnerGrowthChart from '@/components/charts/EarnerGrowthChart';
 import CircularFlowGauge from '@/components/charts/CircularFlowGauge';
+import { getCoverage } from '@/lib/coverage';
 
 interface Props {
   communityId: string;
