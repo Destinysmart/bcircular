@@ -96,6 +96,18 @@ const EconomyAdminDashboard = () => {
     enabled: !!communityId,
   });
 
+  const { data: walletCount } = useQuery({
+    queryKey: ['admin-wallet-count', communityId],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('wallets')
+        .select('id', { count: 'exact', head: true })
+        .eq('community_id', communityId!);
+      return count || 0;
+    },
+    enabled: !!communityId,
+  });
+
   const { data: validators } = useQuery({
     queryKey: ['validators', communityId],
     queryFn: async () => {
