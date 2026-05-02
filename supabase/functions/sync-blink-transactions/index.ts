@@ -62,26 +62,78 @@ query TransactionsForWallet($walletId: WalletId!, $first: Int, $after: String) {
   }
 }`
 
+class BlinkApiError extends Error {
+  status: number
+  body: string
+  constructor(status: number, body: string) {
+    super(`Blink API ${status}: ${body.slice(0, 200)}`)
+    this.status = status
+    this.body = body
+  }
+}
+
 async function blinkGraphQL(apiKey: string, query: string, variables?: Record<string, unknown>) {
-  const res = await fetch(BLINK_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-API-KEY': apiKey,
-    },
-    body: JSON.stringify({ query, variables }),
-  })
+  let res: Response
+  try {
+    res = await fetch(BLINK_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-KEY': apiKey,
+      },
+      body: JSON.stringify({ query, variables }),
+    })
+  } catch (e: any) {
+    console.error('[blink] network error:', e?.message || e)
+    throw new BlinkApiError(0, `Network error: ${e?.message || e}`)
+  }
 
   if (!res.ok) {
     const text = await res.text()
-    throw new Error(`Blink API error [${res.status}]: ${text}`)
+    console.error(`[blink] HTTP ${res.status}:`, text.slice(0, 500))
+    throw new BlinkApiError(res.status, text)
   }
 
   const json = await res.json()
   if (json.errors?.length) {
-    throw new Error(`Blink GraphQL error: ${json.errors[0].message}`)
+    const msg = json.errors[0].message || 'GraphQL error'
+    console.error('[blink] GraphQL error:', msg)
+    // Treat invalid-token GraphQL errors as 401-equivalent
+    if (/unauthor|invalid.*(token|api[ _-]?key)|forbidden/i.test(msg)) {
+      throw new BlinkApiError(401, msg)
+    }
+    throw new BlinkApiError(400, msg)
   }
   return json.data
+}
+
+function humanBlinkError(err: unknown): { message: string; code: string; status: number } {
+  if (err instanceof BlinkApiError) {
+    if (err.status === 401 || err.status === 403) {
+      return {
+        code: 'blink_unauthorized',
+        status: 401,
+        message: 'Invalid Blink API key — please check and re-enter your read-only Blink API key.',
+      }
+    }
+    if (err.status === 429) {
+      return {
+        code: 'blink_rate_limited',
+        status: 429,
+        message: 'Blink rate-limited the request. Please wait a few minutes and try again.',
+      }
+    }
+    if (err.status === 0 || err.status >= 500) {
+      return {
+        code: 'blink_unreachable',
+        status: 502,
+        message: 'Blink API unreachable — please try again later.',
+      }
+    }
+    return { code: 'blink_error', status: 400, message: err.message }
+  }
+  const msg = (err as any)?.message || String(err)
+  return { code: 'unknown_error', status: 500, message: msg }
 }
 
 Deno.serve(async (req) => {
@@ -210,6 +262,12 @@ Deno.serve(async (req) => {
     let totalInternal = 0
 
     for (const wallet of (connectedWallets || [])) {
+      // Merchant & earner wallets live in independent Blink accounts and have
+      // their OWN stored API keys. The economy key cannot read them — those
+      // wallets are synced separately via sync-wallet-transactions using the
+      // owner's stored key.
+      if (wallet.owner_type === 'merchant' || wallet.owner_type === 'earner') continue
+
       const blinkWallet = blinkWallets.find((bw: any) => bw.id === wallet.blink_wallet_id)
       if (!blinkWallet) continue
 
@@ -287,8 +345,11 @@ Deno.serve(async (req) => {
     })
   } catch (err) {
     console.error('Sync error:', err)
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
-      status: 500,
+    const { message, code } = humanBlinkError(err)
+    // Return 200 with error payload so the frontend can render the
+    // human-readable reason instead of crashing on a non-2xx response.
+    return new Response(JSON.stringify({ success: false, error: message, code }), {
+      status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }

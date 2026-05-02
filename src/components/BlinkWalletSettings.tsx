@@ -96,7 +96,10 @@ const BlinkWalletSettings = ({ communityId, isAdmin }: BlinkWalletSettingsProps)
       const { data, error } = await supabase.functions.invoke('sync-blink-transactions', {
         body: { community_id: communityId },
       });
-      if (error) throw error;
+      if (error) throw new Error(error.message || 'Sync failed');
+      if (data?.success === false || data?.error) {
+        throw new Error(data.error || 'Sync failed');
+      }
       queryClient.invalidateQueries({ queryKey: ['wallets', communityId] });
       queryClient.invalidateQueries({ queryKey: ['blink-tx-stats', communityId] });
       toast({
