@@ -494,12 +494,38 @@ const CommunityDashboard = () => {
           </div>
         </div>
 
-        {/* Wallet Integration */}
-        {user && (
-          <div className="mb-10">
-            <BlinkWalletSettings communityId={communityId!} isAdmin={community.admin_id === user.id || isCommunityAdmin || isSuperAdmin} />
+        {/* Wallet Integration — read-only summary, admin gets a Manage link.
+            The actual API key / wallet connection lives on /dashboard/economy/:id
+            (admins) and /connect?code=… (earners and merchants). It must NEVER
+            render on this public page. */}
+        <div className="mb-10">
+          <div className="rounded-xl border border-border bg-card p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="h-9 w-9 shrink-0 rounded-lg bg-score-amber/15 border border-score-amber/30 text-score-amber flex items-center justify-center">
+                <Wallet className="h-4 w-4" />
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-foreground inline-flex items-center gap-1.5">
+                  <Zap className="h-3.5 w-3.5 text-score-amber" /> Prove sats stay in this economy
+                </div>
+                <div className="text-xs text-muted-foreground mt-1 max-w-md">
+                  Merchants and earners connect Blink wallets (read-only) so this
+                  economy can verify circular flow. Economy admins share the
+                  connect link from their dashboard.
+                </div>
+              </div>
+            </div>
+            {canAdminEconomy && (
+              <Button
+                size="sm"
+                onClick={() => navigate(`/dashboard/economy/${community.id}`)}
+                className="rounded-full bg-score-amber text-background hover:bg-score-amber/90 whitespace-nowrap"
+              >
+                Manage wallets →
+              </Button>
+            )}
           </div>
-        )}
+        </div>
 
         {/* Embed Widget */}
         <div className="rounded-xl border border-border bg-card p-5">
