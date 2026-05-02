@@ -1,129 +1,111 @@
-## Goal
 
-Extend the existing merchant flow (manual submission → admin approval) with an anonymous, wallet-based tracking layer. No KYC, no names beyond what's already collected. After approval, a merchant gets a public anonymous ID, a private claim token, can link a Blink wallet, and gets a dashboard with auto-tracked transactions and circularity metrics.
+# Landing page rewrite — "Measure · Prove · Rank"
 
-The existing "Add Merchant" page (`SubmitPage.tsx`), admin approval flow (`EconomyAdminDashboard.tsx`), BTCMap sync, Blink economy-level sync, and validator system are all preserved unchanged.
+Reframe `src/pages/Homepage.tsx` so the first thing visitors read tells them exactly what Bitcoin Circular is, what it does, and why it matters — using the narrative you just defined. The economy grid, map, activity feed, methodology block, register CTA, and footer stay as-is (they already work hard).
 
-## What changes
+## The narrative we're encoding
 
-### 1. Database (migration)
+> The world's first intelligence platform for Bitcoin circular economies.
+> We **measure**, **prove**, and **rank** how much Bitcoin is actually being used as real money in communities worldwide.
 
-Extend `merchants` and add two new tables:
+Three verbs become the spine of the page.
 
-- **`merchants`** — add columns:
-  - `public_merchant_id text unique` — short opaque slug (e.g. `mch_a1b2c3d4`), generated on approval
-  - `claim_token_hash text` — SHA-256 hash of the one-time claim token (raw token shown to admin once, never stored)
-  - `claimed_at timestamptz` — set when merchant links a wallet
-  - `wallet_id uuid` — FK to `wallets.id` (nullable, set on link)
+## Sections (top → bottom)
 
-- **`merchant_invoices`** (optional Lightning invoices)
-  - `id`, `merchant_id`, `amount_sats`, `memo`, `payment_request`, `status` (pending/paid/expired), `paid_at`, `blink_tx_id`, `created_at`
+### 1. Hero — rewritten copy, same visual treatment
 
-- **Trigger / function** `assign_merchant_public_id()`:
-  - On `UPDATE` of `merchants` when `status` transitions to `approved` and `public_merchant_id` is null, generate one.
+Keep the hero image, amber accent, stat pills, and motion. Only swap copy.
 
-- **View** `merchant_metrics` (security_invoker, public read):
-  - Joins `merchants` → `wallets` → `blink_transactions`
-  - Exposes only: `public_merchant_id`, `inflow_sats`, `outflow_sats`, `internal_sats`, `tx_count`, `circularity_score` (= internal / total), `last_tx_at`
-  - Never exposes `wallet_id`, `blink_wallet_id`, user_id, or amounts per individual tx beyond aggregates
+- **Eyebrow chip:** `Bitcoin adoption intelligence` (replaces "Bitcoin Circular Economy")
+- **Headline:** 
+  > Is Bitcoin actually  
+  > <span class="amber">working as money?</span>
+- **Subhead:** 
+  > Bitcoin Circular is the intelligence platform that measures, proves, and ranks how Bitcoin moves as real money in communities worldwide. Verified data. No funds held. Ever.
+- **Primary CTA:** `Explore Economies →` (unchanged route `/leaderboard`)
+- **Secondary CTA:** `See how it works` → `/methodology`
+- Live stat pills (Merchants / Txns this month / Avg activity / Countries / Advanced Economies) stay exactly as they are — they are proof the platform is live.
 
-- **RLS**:
-  - `merchants.claim_token_hash` — restricted to economy admins / super admins via column-level policy (or moved to a side table `merchant_claim_tokens` admin-only)
-  - `merchants.wallet_id` — readable publicly (just an opaque UUID), writable only by the merchant claiming it (validated via token, see below)
-  - `merchant_invoices` — public read of `amount_sats`, `status`, `paid_at`; service-role only insert/update
+### 2. NEW — "Measure · Prove · Rank" trio (placed directly under hero)
 
-### 2. Edge functions
+A single tight section, three cards side-by-side on desktop, stacked on mobile. This is the load-bearing addition.
 
-- **`generate-merchant-token`** (admin only)
-  - Input: `merchant_id`
-  - Caller must be economy admin / super admin
-  - Generates a random 32-byte token, stores SHA-256 hash on the merchant row, returns the raw token **once** for the admin to share with the merchant out-of-band
-  - Idempotent (rotates if called again, invalidating prior token)
+```text
+┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+│  MEASURE     │  │  PROVE       │  │  RANK        │
+│  📡 icon     │  │  ✅ icon     │  │  🏆 icon     │
+│              │  │              │  │              │
+│  Real data   │  │  Verified    │  │  Global      │
+│  from BTCMap │  │  dashboards  │  │  leaderboard │
+│  + Blink     │  │  + proof     │  │  for every   │
+│  wallets,    │  │  reports     │  │  economy.    │
+│  classified  │  │  funders     │  │  Compare,    │
+│  by FBCE.    │  │  can trust.  │  │  improve.    │
+└──────────────┘  └──────────────┘  └──────────────┘
+```
 
-- **`claim-merchant`** (public, no JWT required — token is the auth)
-  - Input: `public_merchant_id`, `claim_token`, `blink_wallet_id`
-  - Verifies `sha256(claim_token) == claim_token_hash` and merchant is `approved`
-  - Looks up the economy's `blink_api_keys`, calls Blink GraphQL to confirm the wallet exists in the economy's connected Blink account
-  - Inserts a row in `wallets` (uses the economy admin's `user_id` so existing RLS still works, mirrors current auto-registration pattern in `sync-blink-transactions`)
-  - Sets `merchants.wallet_id`, `merchants.claimed_at`, clears `claim_token_hash` (single-use)
-  - Triggers an immediate `sync-blink-transactions` call
+Each card: amber icon chip, short title, 1-sentence body, small "→ link" to the relevant existing page (`/leaderboard`, `/methodology`, `/compare`). Uses the same card style as the existing "What makes an economy circular?" section so it feels native, not bolted on.
 
-- **`generate-merchant-invoice`** (optional, behind a flag)
-  - Input: `public_merchant_id`, `amount_sats`, `memo`
-  - Looks up merchant → wallet → economy Blink key
-  - Calls Blink `lnInvoiceCreate` mutation, stores row in `merchant_invoices`, returns BOLT11
-  - Subsequent `sync-blink-transactions` already imports the resulting tx; a small post-sync step matches `payment_hash` → invoice → marks paid
+### 3. Existing economy grid + filters — unchanged
 
-- **`sync-blink-transactions`** — extend slightly:
-  - When upserting a `blink_transaction`, if its `wallet_id` matches a merchant's `wallet_id`, no extra column is needed — the merchant link is derived via join. (Keeps the existing schema clean.)
+The "Discover circular economies" grid is the proof the platform is real. It stays exactly where it is, exactly how it looks. Maybe a tiny copy tweak on the section subtitle:
 
-### 3. Admin UI changes (`EconomyAdminDashboard.tsx`)
+- From: `Real merchants. Real sats. Verified data.`
+- To: `Real merchants. Real sats. Verified by validators.`
 
-In the merchants section, for each `approved` merchant add:
-- Badge showing `public_merchant_id` and "Wallet linked" / "Not linked"
-- "Generate claim link" button → calls `generate-merchant-token`, shows a modal with the one-time claim URL (`/merchant/claim/<public_id>?token=<raw>`) and a copy button. Warning: shown only once.
-- "Rotate token" if already generated but unclaimed
-- "Unlink wallet" (admin override)
+### 4. Recent Activity + Global Map — unchanged
 
-No changes to the approval flow itself. Token generation is a separate, post-approval action.
+These are working proof. Leave them.
 
-### 4. New public pages
+### 5. NEW — "Who it's for" strip (placed between map and methodology block)
 
-- **`/merchant/claim/:publicId`** — `MerchantClaim.tsx`
-  - Reads `?token=` from URL
-  - Form: paste Blink wallet ID (with help text + link to Blink app)
-  - Calls `claim-merchant`; on success redirects to the merchant dashboard with the token stored in `localStorage` under `merchant_token_<publicId>` (acts as a long-lived bearer for the dashboard)
-  - On the JS side the token is also kept in URL hash for first-load resilience
+A compact 4-up row of audience tags — no big hero treatment, just a quiet "this is who uses it" signal:
 
-- **`/m/:publicId`** — `MerchantDashboard.tsx`
-  - Public read of aggregate metrics from `merchant_metrics` view (no token needed)
-  - If `localStorage` has the merchant token, also shows "private" controls:
-    - Unlink wallet
-    - Generate Lightning invoice (if enabled)
-    - Recent invoices list
-  - Sections:
-    - Header: anonymous ID, wallet status pill
-    - Stats cards: Inflow, Outflow, Internal (circular), Circularity %, Tx count
-    - Recent transactions: last 20 from `blink_transactions` joined via `wallet_id` (only direction, amount, timestamp, internal flag — no counterparty IDs publicly)
-    - Mobile-first layout reusing existing `StatCard`, `Card`, `Badge` components
+- **Economy leaders** — Prove impact. Win funding.
+- **Funders (HRF, etc.)** — Verified data before grants.
+- **Researchers** — Open methodology, open data.
+- **Blink** — The wallet powering the transaction layer.
 
-### 5. Comparison tool
+Visual: 4 small bordered cards, muted, no CTAs. Builds credibility without selling.
 
-`src/lib/api.ts` `fetchAllCommunitiesWithStats` and `fetchComparisonDetails`: add a per-economy `linkedMerchants` count and aggregate `merchantInflowSats` / `merchantInternalSats` from `merchant_metrics`. `Compare.tsx` gets one new column "Linked merchants" and the existing circularity bar uses the merchant-level data when available (falls back to current logic).
+### 6. Existing "What makes an economy circular?" — unchanged
 
-### 6. Security
+Already does its job (Retention / Velocity / Growth + methodology link).
 
-- Claim tokens never stored in plaintext — only SHA-256 hash
-- Edge functions validate caller (admin) for token generation; claim function validates token without requiring auth
-- `blink_api_keys` access remains service-role only — claim and invoice functions read it server-side
-- No personal info added to any table
-- Per-merchant token is single-use for claiming; for ongoing dashboard auth we use the same token as a localStorage bearer — documented in UI as "keep this link safe, it's the only way to manage this merchant"
+### 7. Existing "Register Your Economy" CTA — light copy refresh
 
-### 7. Files
+- Headline stays: `Is your Bitcoin community missing?`
+- Subcopy refresh: 
+  > Get a verified circularity score, a public dashboard, and a place on the global leaderboard. Free. Non-custodial. Always.
 
-**New:**
-- `supabase/migrations/<ts>_merchant_tracking.sql`
-- `supabase/functions/generate-merchant-token/index.ts`
-- `supabase/functions/claim-merchant/index.ts`
-- `supabase/functions/generate-merchant-invoice/index.ts`
-- `src/pages/MerchantClaim.tsx`
-- `src/pages/MerchantDashboard.tsx`
-- `src/lib/merchantApi.ts` (token storage, metric queries, invoice helpers)
+### 8. Footer — unchanged
 
-**Edited:**
-- `src/App.tsx` — add 2 routes
-- `src/pages/EconomyAdminDashboard.tsx` — claim-token UI per merchant
-- `src/lib/api.ts` — extend comparison fetchers
-- `src/pages/Compare.tsx` — surface linked-merchant column
+Trust signals (BTCMap, no custodial risk, open data) already align perfectly with the new narrative. Leave it.
 
-### Out of scope / unchanged
+## What stays identical
 
-- `SubmitPage.tsx` (Add Merchant form) — untouched
-- Existing approval workflow — untouched
-- Validator voting — untouched
-- BTCMap sync — untouched
-- Economy-level Blink wallet settings — untouched (this builds on top)
+- Hero background image, amber/indigo palette, fonts, motion variants (`fadeUp`, `stagger`)
+- Filter pills, economy grid layout and card design
+- Recent Activity feed component
+- Global Economies Map component
+- Footer + trust signal strip
+- Gated state for logged-out `RootRedirect` users (the `gated` prop continues to blur the grid and show the signup overlay)
+- All routes, all data fetching, all React Query keys
 
-## Open question
+## What changes — file-by-file
 
-The optional Lightning invoice generator (item 9) requires the economy's Blink API key to have **send/invoice** scope, not the read-only scope currently documented. If you want this enabled, admins will need to provide a key with invoice creation rights — otherwise we'll ship the dashboard + tracking without the invoice button and add it later.
+- **`src/pages/Homepage.tsx`** — only file touched.
+  - Rewrite hero eyebrow / headline / subhead / secondary CTA label
+  - Add "Measure · Prove · Rank" section component above the filter pills
+  - Add "Who it's for" 4-up strip between the map and methodology block
+  - Update one subtitle string ("Verified by validators")
+  - Update register-CTA subcopy
+
+No new files. No new dependencies. No data-layer changes. No DB migrations. No edge function changes.
+
+## Out of scope
+
+- Logged-in `Home` page (`src/pages/Home.tsx`)
+- Methodology page copy
+- Leaderboard / Compare / Widget / Dashboard pages
+- Any backend, scoring, or wallet logic
