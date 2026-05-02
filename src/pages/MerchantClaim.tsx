@@ -110,6 +110,30 @@ const MerchantClaim = () => {
                   How to find my wallet ID <ExternalLink className="h-3 w-3" />
                 </a>
               </div>
+              <div>
+                <Label htmlFor="apiKey">Your Blink read-only API key</Label>
+                <Input
+                  id="apiKey"
+                  type="password"
+                  value={apiKey}
+                  onChange={e => setApiKey(e.target.value)}
+                  placeholder="blink_…"
+                  required
+                  className="font-mono text-xs"
+                  autoComplete="off"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Get this from dashboard.blink.sv → API Keys → Create read-only key.
+                </p>
+                <a
+                  href="https://dashboard.blink.sv"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-primary hover:underline inline-flex items-center gap-1 mt-1"
+                >
+                  How to get your API key <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? 'Linking…' : 'Link wallet'}
               </Button>
