@@ -59,10 +59,33 @@ function timeAgo(iso: string | null) {
 }
 
 export default function ConnectedWalletsManager({ communityId }: Props) {
+  const queryClient = useQueryClient();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [resultById, setResultById] = useState<Record<string, { type: 'success' | 'error'; message: string }>>({});
   const [disconnectTarget, setDisconnectTarget] = useState<RowOwner | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<RowOwner | null>(null);
+
+  // Invalidate every query that depends on wallet/transaction/score data so
+  // both the admin dashboard and the public economy page refresh immediately
+  // — no manual page reload required.
+  async function invalidateAllStats() {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['wallet-count', communityId] }),
+      queryClient.invalidateQueries({ queryKey: ['admin-wallet-count', communityId] }),
+      queryClient.invalidateQueries({ queryKey: ['economy-wallet-metrics', communityId] }),
+      queryClient.invalidateQueries({ queryKey: ['economy-tx-circularity', communityId] }),
+      queryClient.invalidateQueries({ queryKey: ['blink-tx-stats', communityId] }),
+      queryClient.invalidateQueries({ queryKey: ['blink-transaction-count', communityId] }),
+      queryClient.invalidateQueries({ queryKey: ['transaction-count', communityId] }),
+      queryClient.invalidateQueries({ queryKey: ['connected-wallets', communityId] }),
+      queryClient.invalidateQueries({ queryKey: ['circularity-score', communityId] }),
+      queryClient.invalidateQueries({ queryKey: ['community', communityId] }),
+      queryClient.invalidateQueries({ queryKey: ['circular-flow-spotlight', communityId] }),
+      queryClient.invalidateQueries({ queryKey: ['verified-circularity', communityId] }),
+      queryClient.invalidateQueries({ queryKey: ['sats-flow', communityId] }),
+      queryClient.invalidateQueries({ queryKey: ['economy-alerts', communityId] }),
+    ]);
+  }
 
   const { data, refetch, isLoading } = useQuery({
     queryKey: ['connected-wallets', communityId],
