@@ -619,7 +619,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
                 Is your Bitcoin community missing?
               </h2>
               <p className="text-sm md:text-base text-muted-foreground mb-6 leading-relaxed">
-                Join the global network of circular economies. Track your sats flow and prove real adoption.
+                Get a verified circularity score, a public dashboard, and a place on the global leaderboard. Free. Non-custodial. Always.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link to="/register" className="w-full sm:w-auto">
