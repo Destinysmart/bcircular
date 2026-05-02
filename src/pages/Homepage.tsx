@@ -301,7 +301,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
             )}
           </div>
         ) : (
-          <div className="relative">
+          <div className={`relative ${gated ? 'min-h-[600px] overflow-hidden' : ''}`}>
             <motion.div
               variants={stagger}
               initial="hidden"
@@ -309,7 +309,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
               viewport={{ once: true, margin: '-40px' }}
               className={`grid grid-cols-1 sm:grid-cols-2 ${gated ? '' : 'lg:grid-cols-3'} gap-6 ${gated ? 'opacity-95' : ''}`}
             >
-              {(gated ? displayed.slice(0, 3) : displayed).map((e, i) => {
+              {(gated ? displayed.slice(0, 2) : displayed).map((e, i) => {
                 const status = getStatus(e);
                 const score = e.score ?? 0;
                 const monthlyTxns = (e as any).monthlyTransactions ?? 0;
