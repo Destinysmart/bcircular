@@ -26,7 +26,11 @@ async function invokeFunction(functionName: string, body: Record<string, unknown
     }
     throw new Error(message);
   }
-  if (data?.error) throw new Error(data.error);
+  if (data?.error) {
+    const err = new Error(data.error) as Error & { code?: string };
+    err.code = data.code;
+    throw err;
+  }
   return data;
 }
 

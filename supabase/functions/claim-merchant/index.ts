@@ -142,10 +142,12 @@ Deno.serve(async (req) => {
         headers: { 'Content-Type': 'application/json', 'X-API-KEY': merchant_api_key },
         body: JSON.stringify({ query: WALLETS_QUERY }),
       })
-      const blinkJson: any = await blinkRes.json()
+      const blinkText = await blinkRes.text()
+      let blinkJson: any = null
+      try { blinkJson = JSON.parse(blinkText) } catch (_) { /* Blink can return HTML for 401 */ }
       if (!blinkRes.ok || blinkJson?.errors?.length) {
         const status = blinkRes.status
-        if (status === 401 || /unauthor/i.test(JSON.stringify(blinkJson?.errors || ''))) {
+        if (status === 401 || /unauthor|Authorization Required/i.test(`${blinkText} ${JSON.stringify(blinkJson?.errors || '')}`)) {
           return jsonResponse({
             error: "Blink rejected that API key. Make sure you copied a valid read-only key from dashboard.blink.sv → API Keys.",
           }, 400)
@@ -252,8 +254,9 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: linkErr.message }, 500)
     }
 
-    // Fire-and-forget: sync this merchant's own wallet (uses the merchant's API key)
-    // and also kick the economy-wide sync so circular pairing picks up the new wallet.
+    // Fire-and-forget: sync this merchant's own wallet (uses the merchant's API key).
+    // Do not run the economy-wide Blink sync here — it uses the economy account key
+    // and cannot read merchants' independent personal/business Blink accounts.
     const { data: merchantRow } = await supabase
       .from('merchants')
       .select('merchant_code')
@@ -264,9 +267,6 @@ Deno.serve(async (req) => {
         body: { action: 'sync', owner_type: 'merchant', code: merchantRow.merchant_code },
       }).catch(() => {})
     }
-    supabase.functions.invoke('sync-blink-transactions', {
-      body: { community_id: merchant.community_id },
-    }).catch(() => {})
 
     return jsonResponse({
       success: true,
