@@ -15,7 +15,38 @@ const BodySchema = z.object({
   // independent personal/business Blink wallets, which will never appear in the
   // economy's Blink account.
   blink_wallet_id: z.string().min(6),
+  // Merchant's OWN read-only Blink API key. Required so the platform can sync
+  // the merchant's personal wallet transactions — the economy's API key cannot
+  // access another account.
+  merchant_api_key: z.string().min(8).max(512),
 })
+
+const WALLETS_QUERY = `
+query Me {
+  me {
+    defaultAccount {
+      wallets { id walletCurrency balance }
+    }
+  }
+}`
+
+async function getAesKey(): Promise<CryptoKey> {
+  const secret = Deno.env.get('BLINK_KEY_ENCRYPTION_SECRET')
+  if (!secret) throw new Error('BLINK_KEY_ENCRYPTION_SECRET not configured')
+  const keyMaterial = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(secret))
+  return crypto.subtle.importKey('raw', keyMaterial, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt'])
+}
+
+async function encryptApiKey(plaintext: string): Promise<string> {
+  const key = await getAesKey()
+  const iv = crypto.getRandomValues(new Uint8Array(12))
+  const ct = new Uint8Array(
+    await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(plaintext)),
+  )
+  const out = new Uint8Array(iv.length + ct.length)
+  out.set(iv, 0); out.set(ct, iv.length)
+  return btoa(String.fromCharCode(...out))
+}
 
 async function sha256Hex(input: string): Promise<string> {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input))
