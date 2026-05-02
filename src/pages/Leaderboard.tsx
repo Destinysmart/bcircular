@@ -576,4 +576,23 @@ const ScoreWithDelta = ({ score, delta }: { score: number; delta: number }) => {
   );
 };
 
+const CoverageChip = ({ connected, merchants, earners }: { connected: number; merchants: number; earners: number }) => {
+  const cov = getCoverage(connected, merchants, earners);
+  const title = `${cov.description} — ${cov.connected} wallet${cov.connected === 1 ? '' : 's'} connected${cov.estimated > 0 ? ` of ~${cov.estimated} estimated` : ''}. Higher coverage = more accurate circular flow.`;
+  return (
+    <span
+      title={title}
+      className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[10px]"
+      style={{
+        color: `hsl(var(--${cov.colorToken}))`,
+        borderColor: `hsl(var(--${cov.colorToken}) / 0.4)`,
+        backgroundColor: `hsl(var(--${cov.colorToken}) / 0.08)`,
+      }}
+    >
+      <span aria-hidden>{cov.emoji}</span>
+      {cov.label}
+    </span>
+  );
+};
+
 export default Leaderboard;
