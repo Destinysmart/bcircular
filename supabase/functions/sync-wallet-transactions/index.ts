@@ -365,11 +365,17 @@ async function performSync(supabase: any, walletRow: any) {
       const node = edge.node
       if (node.status !== 'SUCCESS') continue
 
-      const counterPartyWalletId: string | null = node.initiationVia?.counterPartyWalletId || null
+      // Counterparty wallet id may live in initiationVia OR settlementVia
+      // (Blink returns it via SettlementViaIntraLedger for same-account
+      // intraledger transfers, where InitiationViaLn carries no counterparty).
+      const counterPartyWalletId: string | null =
+        node.initiationVia?.counterPartyWalletId
+        || node.settlementVia?.counterPartyWalletId
+        || null
       const rawPaymentHash: string | null = node.initiationVia?.paymentHash || null
       const paymentHashSha = rawPaymentHash ? await sha256Hex(rawPaymentHash) : null
 
-      // Wallet-ID match first
+      // Wallet-ID match first (works even when both wallets share the same LN address / owner)
       let isInternal = counterPartyWalletId ? economyBlinkIds.has(counterPartyWalletId) : false
       let counterpartyDbWalletId: string | null = null
       if (isInternal && counterPartyWalletId) {
@@ -377,7 +383,11 @@ async function performSync(supabase: any, walletRow: any) {
         if (match?.id) counterpartyDbWalletId = match.id
       }
 
-      // Payment-hash pairing fallback: look for an existing tx with same payment_hash_sha256 in another wallet of this economy
+      console.log(
+        `[sync] tx ${node.id} dir=${node.direction} amt=${node.settlementAmount} cpWalletId=${counterPartyWalletId} payHashSha=${paymentHashSha?.slice(0, 8) || 'none'} → isInternal=${isInternal}`,
+      )
+
+      // Payment-hash pairing fallback
       if (!isInternal && paymentHashSha) {
         const { data: pair } = await supabase
           .from('blink_transactions')
@@ -390,7 +400,6 @@ async function performSync(supabase: any, walletRow: any) {
         if (pair) {
           isInternal = true
           counterpartyDbWalletId = pair.wallet_id
-          // Mark the paired record internal too — and reclassify its flow_type
           const pairedFlow = pair.direction === 'RECEIVE' ? 'circular_receive' : 'circular_spend'
           await supabase.from('blink_transactions').update({
             is_internal: true,
@@ -399,16 +408,12 @@ async function performSync(supabase: any, walletRow: any) {
           }).eq('community_id', walletRow.community_id)
             .eq('payment_hash_sha256', paymentHashSha)
             .eq('wallet_id', pair.wallet_id)
+          console.log(`[sync] tx ${node.id} matched via payment_hash to wallet ${pair.wallet_id}`)
         }
       }
 
       if (isInternal) internal++
 
-      // Classify flow_type:
-      //   circular_receive  → counterparty inside economy, money received
-      //   circular_spend    → counterparty inside economy, money sent
-      //   inflow_external   → counterparty NOT in economy, money received (external customer)
-      //   offramp_or_external → counterparty NOT in economy, money sent (offramp / outside spend)
       const flowType = isInternal
         ? (node.direction === 'RECEIVE' ? 'circular_receive' : 'circular_spend')
         : (node.direction === 'RECEIVE' ? 'inflow_external' : 'offramp_or_external')
