@@ -220,16 +220,29 @@ const BlinkWalletSettings = ({ communityId, isAdmin }: BlinkWalletSettingsProps)
               <Zap className="h-4 w-4 text-primary" />
               <h2 className="text-lg font-semibold">Transaction Sync</h2>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5"
-              onClick={handleSync}
-              disabled={syncing}
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${syncing ? 'animate-spin' : ''}`} />
-              {syncing ? 'Syncing...' : 'Sync now'}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={handleReclassify}
+                disabled={reclassifying || syncing}
+                title="Re-run circular detection on existing synced transactions"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${reclassifying ? 'animate-spin' : ''}`} />
+                {reclassifying ? 'Reclassifying...' : 'Reclassify'}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={handleSync}
+                disabled={syncing || reclassifying}
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${syncing ? 'animate-spin' : ''}`} />
+                {syncing ? 'Syncing...' : 'Sync now'}
+              </Button>
+            </div>
           </div>
           {txStats && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
