@@ -21,6 +21,7 @@ const BlinkWalletSettings = ({ communityId, isAdmin }: BlinkWalletSettingsProps)
   const [apiKey, setApiKey] = useState('');
   const [showKey, setShowKey] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [reclassifying, setReclassifying] = useState(false);
 
   // Check if API key exists (admin only — RLS blocks non-service-role reads,
   // so we track "has key" via wallets or a dedicated check)
@@ -113,6 +114,29 @@ const BlinkWalletSettings = ({ communityId, isAdmin }: BlinkWalletSettingsProps)
     }
   };
 
+  const handleReclassify = async () => {
+    setReclassifying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-wallet-transactions', {
+        body: { action: 'reclassify', community_id: communityId },
+      });
+      if (error) throw new Error(error.message || 'Reclassify failed');
+      if (data?.success === false || data?.error) throw new Error(data.error || 'Reclassify failed');
+      // Recompute the score after reclassification
+      await supabase.functions.invoke('calculate-score', { body: { community_id: communityId } });
+      queryClient.invalidateQueries({ queryKey: ['blink-tx-stats', communityId] });
+      queryClient.invalidateQueries({ queryKey: ['economy-wallet-metrics', communityId] });
+      toast({
+        title: 'Reclassification complete',
+        description: `${data.scanned} scanned · ${data.updated} updated · ${data.internal_now} now circular.`,
+      });
+    } catch (err: any) {
+      toast({ title: 'Reclassify failed', description: err.message, variant: 'destructive' });
+    } finally {
+      setReclassifying(false);
+    }
+  };
+
   const myWallet = wallets?.find(w => w.user_id === user?.id);
 
   const handleConnectWallet = async (blinkWalletId: string) => {
@@ -196,16 +220,29 @@ const BlinkWalletSettings = ({ communityId, isAdmin }: BlinkWalletSettingsProps)
               <Zap className="h-4 w-4 text-primary" />
               <h2 className="text-lg font-semibold">Transaction Sync</h2>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5"
-              onClick={handleSync}
-              disabled={syncing}
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${syncing ? 'animate-spin' : ''}`} />
-              {syncing ? 'Syncing...' : 'Sync now'}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={handleReclassify}
+                disabled={reclassifying || syncing}
+                title="Re-run circular detection on existing synced transactions"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${reclassifying ? 'animate-spin' : ''}`} />
+                {reclassifying ? 'Reclassifying...' : 'Reclassify'}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={handleSync}
+                disabled={syncing || reclassifying}
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${syncing ? 'animate-spin' : ''}`} />
+                {syncing ? 'Syncing...' : 'Sync now'}
+              </Button>
+            </div>
           </div>
           {txStats && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
