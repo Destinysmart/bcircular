@@ -102,11 +102,15 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
     queryFn: async () => {
       const { data: txns } = await (supabase as any)
         .from('blink_transactions')
-        .select('is_internal, settlement_amount')
+        .select('is_internal, flow_type, settlement_amount')
         .eq('community_id', communityId);
+      const isCircular = (t: any) =>
+        t.is_internal === true
+        || t.flow_type === 'circular_receive'
+        || t.flow_type === 'circular_spend';
       const totalVolume = (txns || []).reduce((s: number, t: any) => s + Number(t.settlement_amount || 0), 0);
-      const circularVolume = (txns || []).filter((t: any) => t.is_internal).reduce((s: number, t: any) => s + Number(t.settlement_amount || 0), 0);
-      const circularTxnCount = (txns || []).filter((t: any) => t.is_internal).length;
+      const circularVolume = (txns || []).filter(isCircular).reduce((s: number, t: any) => s + Number(t.settlement_amount || 0), 0);
+      const circularTxnCount = (txns || []).filter(isCircular).length;
       const circularityRate = totalVolume > 0 ? Math.round((circularVolume / totalVolume) * 100) : 0;
       return { totalVolume, circularVolume, circularTxnCount, circularityRate };
     },
