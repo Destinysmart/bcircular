@@ -101,8 +101,18 @@ const BlinkWalletSettings = ({ communityId, isAdmin }: BlinkWalletSettingsProps)
       if (data?.success === false || data?.error) {
         throw new Error(data.error || 'Sync failed');
       }
+      // Auto-reclassify so cross-wallet pairs (which Blink doesn't always
+      // tag with a counterparty id) are detected without a manual click.
+      await supabase.functions.invoke('sync-wallet-transactions', {
+        body: { action: 'reclassify', community_id: communityId },
+      });
+      await supabase.functions.invoke('calculate-score', { body: { community_id: communityId } });
       queryClient.invalidateQueries({ queryKey: ['wallets', communityId] });
       queryClient.invalidateQueries({ queryKey: ['blink-tx-stats', communityId] });
+      queryClient.invalidateQueries({ queryKey: ['economy-wallet-metrics', communityId] });
+      queryClient.invalidateQueries({ queryKey: ['economy-tx-circularity', communityId] });
+      queryClient.invalidateQueries({ queryKey: ['flow-sums-30d', communityId] });
+      queryClient.invalidateQueries({ queryKey: ['circularity-score', communityId] });
       toast({
         title: 'Sync complete',
         description: `${data.transactions_synced} transactions synced, ${data.internal_transactions} internal.`,
