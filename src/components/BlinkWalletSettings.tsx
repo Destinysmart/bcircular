@@ -21,6 +21,7 @@ const BlinkWalletSettings = ({ communityId, isAdmin }: BlinkWalletSettingsProps)
   const [apiKey, setApiKey] = useState('');
   const [showKey, setShowKey] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [reclassifying, setReclassifying] = useState(false);
 
   // Check if API key exists (admin only — RLS blocks non-service-role reads,
   // so we track "has key" via wallets or a dedicated check)
