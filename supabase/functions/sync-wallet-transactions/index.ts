@@ -34,6 +34,11 @@ const SyncWalletSchema = z.object({
   wallet_id: z.string().uuid(),
 })
 
+const ReclassifySchema = z.object({
+  action: z.literal('reclassify'),
+  community_id: z.string().uuid(),
+})
+
 const DashboardSchema = z.object({
   action: z.literal('dashboard'),
   code: z.string().min(4).max(64),
@@ -46,7 +51,7 @@ const DisconnectSchema = z.object({
   code: z.string().min(4).max(64),
 })
 
-const BodySchema = z.discriminatedUnion('action', [ConnectSchema, SyncSchema, SyncWalletSchema, DashboardSchema, DisconnectSchema])
+const BodySchema = z.discriminatedUnion('action', [ConnectSchema, SyncSchema, SyncWalletSchema, ReclassifySchema, DashboardSchema, DisconnectSchema])
 
 // ── Crypto helpers ────────────────────────────────────────────────────────
 async function sha256Hex(input: string): Promise<string> {
