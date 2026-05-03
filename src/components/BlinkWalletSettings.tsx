@@ -114,6 +114,29 @@ const BlinkWalletSettings = ({ communityId, isAdmin }: BlinkWalletSettingsProps)
     }
   };
 
+  const handleReclassify = async () => {
+    setReclassifying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-wallet-transactions', {
+        body: { action: 'reclassify', community_id: communityId },
+      });
+      if (error) throw new Error(error.message || 'Reclassify failed');
+      if (data?.success === false || data?.error) throw new Error(data.error || 'Reclassify failed');
+      // Recompute the score after reclassification
+      await supabase.functions.invoke('calculate-score', { body: { community_id: communityId } });
+      queryClient.invalidateQueries({ queryKey: ['blink-tx-stats', communityId] });
+      queryClient.invalidateQueries({ queryKey: ['economy-wallet-metrics', communityId] });
+      toast({
+        title: 'Reclassification complete',
+        description: `${data.scanned} scanned · ${data.updated} updated · ${data.internal_now} now circular.`,
+      });
+    } catch (err: any) {
+      toast({ title: 'Reclassify failed', description: err.message, variant: 'destructive' });
+    } finally {
+      setReclassifying(false);
+    }
+  };
+
   const myWallet = wallets?.find(w => w.user_id === user?.id);
 
   const handleConnectWallet = async (blinkWalletId: string) => {
