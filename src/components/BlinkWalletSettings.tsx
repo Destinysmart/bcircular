@@ -126,6 +126,9 @@ const BlinkWalletSettings = ({ communityId, isAdmin }: BlinkWalletSettingsProps)
       await supabase.functions.invoke('calculate-score', { body: { community_id: communityId } });
       queryClient.invalidateQueries({ queryKey: ['blink-tx-stats', communityId] });
       queryClient.invalidateQueries({ queryKey: ['economy-wallet-metrics', communityId] });
+      queryClient.invalidateQueries({ queryKey: ['economy-tx-circularity', communityId] });
+      queryClient.invalidateQueries({ queryKey: ['flow-sums-30d', communityId] });
+      queryClient.invalidateQueries({ queryKey: ['circularity-score', communityId] });
       toast({
         title: 'Reclassification complete',
         description: `${data.scanned} scanned · ${data.updated} updated · ${data.internal_now} now circular.`,
