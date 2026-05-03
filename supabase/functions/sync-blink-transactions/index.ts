@@ -230,14 +230,18 @@ Deno.serve(async (req) => {
 
       if (!existing) {
         console.log('Auto-registering Blink wallet:', bw.id, bw.walletCurrency)
-        await supabase.from('wallets').insert({
+        const { error: insertErr } = await supabase.from('wallets').insert({
           community_id,
           blink_wallet_id: bw.id,
           wallet_currency: bw.walletCurrency,
           balance_sats: bw.balance,
+          wallet_status: 'connected',
           user_id: communityRow?.admin_id || community_id, // fallback
           last_synced_at: new Date().toISOString(),
         })
+        if (insertErr) {
+          console.error('[sync] failed to auto-register wallet', bw.id, insertErr.message)
+        }
       } else {
         await supabase.from('wallets').update({
           balance_sats: bw.balance,

@@ -1,0 +1,2 @@
+ALTER TABLE public.wallets DROP CONSTRAINT IF EXISTS wallets_user_id_community_id_wallet_currency_key;
+ALTER TABLE public.wallets ADD CONSTRAINT wallets_community_blink_wallet_unique UNIQUE (community_id, blink_wallet_id);
