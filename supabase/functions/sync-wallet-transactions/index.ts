@@ -473,6 +473,103 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     )
 
+
+    if (body.action === 'reclassify') {
+      const authError = await requireEconomyAdmin(req, supabase, body.community_id)
+      if (authError) {
+        return new Response(JSON.stringify({ error: authError }), {
+          status: authError === 'Unauthorized' ? 401 : 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      // Pull every transaction in this economy + the wallet table for matching.
+      const { data: txs } = await supabase
+        .from('blink_transactions')
+        .select('id, wallet_id, direction, settlement_amount, payment_hash_sha256, blink_created_at, is_internal, counterparty_wallet_id, flow_type')
+        .eq('community_id', body.community_id)
+
+      let updated = 0
+      let pairedInternal = 0
+      const all = txs || []
+
+      // Pass 1: payment-hash pairing
+      const byHash = new Map<string, any[]>()
+      for (const t of all) {
+        if (!t.payment_hash_sha256) continue
+        const arr = byHash.get(t.payment_hash_sha256) || []
+        arr.push(t)
+        byHash.set(t.payment_hash_sha256, arr)
+      }
+
+      const internalIds = new Map<string, string>() // tx.id -> counterparty wallet id
+      for (const [, group] of byHash) {
+        if (group.length < 2) continue
+        const wallets = new Set(group.map(g => g.wallet_id))
+        if (wallets.size < 2) continue
+        for (const t of group) {
+          const other = group.find(g => g.wallet_id !== t.wallet_id)
+          if (other) internalIds.set(t.id, other.wallet_id)
+        }
+      }
+
+      // Pass 2: timestamp+amount pairing for orphan rows (Blink omits cp data
+      // for some intraledger transfers — pair SEND/RECEIVE within ±5s, same amount).
+      const PAIR_WINDOW_MS = 5_000
+      for (const a of all) {
+        if (internalIds.has(a.id)) continue
+        if (a.direction !== 'SEND') continue
+        const aTime = new Date(a.blink_created_at).getTime()
+        const match = all.find(b =>
+          b.id !== a.id
+          && b.wallet_id !== a.wallet_id
+          && b.direction === 'RECEIVE'
+          && Number(b.settlement_amount) === Number(a.settlement_amount)
+          && !internalIds.has(b.id)
+          && Math.abs(new Date(b.blink_created_at).getTime() - aTime) <= PAIR_WINDOW_MS,
+        )
+        if (match) {
+          internalIds.set(a.id, match.wallet_id)
+          internalIds.set(match.id, a.wallet_id)
+        }
+      }
+
+      // Apply updates
+      for (const t of all) {
+        const cp = internalIds.get(t.id) || null
+        const isInternal = !!cp
+        const flowType = isInternal
+          ? (t.direction === 'RECEIVE' ? 'circular_receive' : 'circular_spend')
+          : (t.direction === 'RECEIVE' ? 'inflow_external' : 'offramp_or_external')
+
+        if (
+          t.is_internal === isInternal
+          && t.counterparty_wallet_id === cp
+          && t.flow_type === flowType
+        ) continue
+
+        const { error: upErr } = await supabase.from('blink_transactions').update({
+          is_internal: isInternal,
+          counterparty_wallet_id: cp,
+          flow_type: flowType,
+        }).eq('id', t.id)
+        if (!upErr) {
+          updated++
+          if (isInternal) pairedInternal++
+        }
+      }
+
+      console.log(`[reclassify] community ${body.community_id}: ${all.length} scanned, ${updated} updated, ${pairedInternal} now internal`)
+
+      await recomputeMetrics(supabase, body.community_id)
+
+      return new Response(JSON.stringify({
+        success: true,
+        scanned: all.length,
+        updated,
+        internal_now: pairedInternal,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
     if (body.action === 'sync_wallet') {
       const authError = await requireEconomyAdmin(req, supabase, body.community_id)
       if (authError) {
