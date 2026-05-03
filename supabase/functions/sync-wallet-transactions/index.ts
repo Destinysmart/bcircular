@@ -111,12 +111,14 @@ query Tx($walletId: WalletId!, $first: Int, $after: String) {
           node {
             id direction settlementAmount settlementCurrency status createdAt memo
             initiationVia {
-              ... on InitiationViaIntraLedger { counterPartyWalletId }
+              ... on InitiationViaIntraLedger { counterPartyWalletId counterPartyUsername }
               ... on InitiationViaLn { paymentHash }
               ... on InitiationViaOnChain { address }
             }
             settlementVia {
-              ... on SettlementViaLn { preImage }
+              ... on SettlementViaIntraLedger { counterPartyWalletId counterPartyUsername }
+              ... on SettlementViaLn { preImage paymentSecret }
+              ... on SettlementViaOnChain { transactionHash }
             }
           }
         }
