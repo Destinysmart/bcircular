@@ -219,7 +219,7 @@ async function ensureOwnerWallet(supabase: any, owner_type: 'merchant' | 'earner
     ln_address_hash: owner.pending_ln_address_hash || null,
     blink_api_key_encrypted: owner.pending_blink_api_key_encrypted,
     wallet_status: 'pending',
-  }, { onConflict: 'user_id,community_id,wallet_currency' }).select('*').single()
+  }, { onConflict: 'community_id,blink_wallet_id' }).select('*').single()
   if (error) throw error
 
   if (owner_type === 'merchant') {
@@ -696,7 +696,7 @@ Deno.serve(async (req) => {
         blink_api_key_encrypted: encrypted,
         wallet_status: 'connected',
         last_synced_at: new Date().toISOString(),
-      }, { onConflict: 'user_id,community_id,wallet_currency' }).select('*').single()
+      }, { onConflict: 'community_id,blink_wallet_id' }).select('*').single()
       if (upsertErr) throw upsertErr
 
       // Link merchant/earner row
