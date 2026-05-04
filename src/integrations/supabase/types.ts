@@ -1114,6 +1114,7 @@ export type Database = {
     }
     Functions: {
       generate_merchant_public_id: { Args: never; Returns: string }
+      get_is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
