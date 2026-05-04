@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Copy, RefreshCcw, Loader2, Zap, Trash2 } from 'lucide-react';
+import { Copy, RefreshCcw, Loader2, Zap, Trash2, KeyRound } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -120,6 +120,17 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
     const url = `${appUrl()}/connect?code=${code}`;
     navigator.clipboard.writeText(url);
     toast({ title: 'Connect link copied', description: 'Share via WhatsApp, email, etc.' });
+  }
+
+  function requestNewKey(ownerType: OwnerType, code: string) {
+    // Fresh claim link reuses the owner's permanent code — opening it lets
+    // them paste a new read-only API key, replacing the rejected one.
+    const url = `${appUrl()}/connect?code=${code}&rekey=1`;
+    navigator.clipboard.writeText(url);
+    toast({
+      title: 'Re-key link copied',
+      description: `Send to the ${ownerType} so they can paste a fresh Blink API key.`,
+    });
   }
 
   async function syncOne(ownerType: OwnerType, code: string, id: string, walletId?: string) {
@@ -275,6 +286,17 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
                 Disconnect
               </Button>
             )}
+            {authErr && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-score-amber/40 text-score-amber hover:bg-score-amber/10 hover:text-score-amber"
+                onClick={() => requestNewKey(row.ownerType, row.code)}
+                title="Copy a fresh re-key link to send to the wallet owner"
+              >
+                <KeyRound className="h-3 w-3 mr-1" /> Request new key
+              </Button>
+            )}
             <Button
               size="sm"
               variant="outline"
@@ -288,8 +310,8 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
           </div>
         </div>
         {authErr && (
-          <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-            Blink rejected this wallet's API key. Disconnect, then ask the {row.ownerType} to re-connect with a fresh key.
+          <div className="rounded-md border border-score-amber/40 bg-score-amber/10 px-3 py-2 text-xs text-score-amber">
+            Blink rejected this wallet's API key (401). Click <strong>Request new key</strong> to copy a fresh re-key link, then send it to the {row.ownerType}.
           </div>
         )}
         {rowResult && (
