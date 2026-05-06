@@ -75,6 +75,14 @@ const HERO_IMAGE = heroImage;
 const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = false }: { topSlot?: React.ReactNode; hideHero?: boolean; compactHero?: boolean; gated?: boolean } = {}) => {
   const [filter, setFilter] = useState<FilterId>('featured');
   const { data, isLoading } = useQuery({ queryKey: ['communities-stats'], queryFn: fetchAllCommunitiesWithStats });
+  const { data: verifiedTxns } = useQuery({
+    queryKey: ['homepage-verified-txns'],
+    queryFn: async () => {
+      const { count } = await supabase.from('blink_transactions').select('*', { count: 'exact', head: true });
+      return count ?? 0;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
   const list: Economy[] = data || [];
   const heroHeight = compactHero ? 320 : 520;
   const heroHeightMobile = compactHero ? 260 : 380;
