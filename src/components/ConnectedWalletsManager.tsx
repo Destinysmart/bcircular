@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { walletApi, fetchEconomyWalletMetrics } from '@/lib/walletApi';
+import { shareUrl } from '@/lib/shareUrl';
 import { toast } from '@/hooks/use-toast';
 
 interface Props { communityId: string }
@@ -29,9 +30,7 @@ type RowOwner = {
   wallet: any | null;
 };
 
-function appUrl() {
-  return typeof window !== 'undefined' ? window.location.origin : '';
-}
+// Share URLs always go through the canonical https origin — see src/lib/shareUrl.ts
 
 async function fetchOwnersWithWallets(communityId: string) {
   const [{ data: merchants }, { data: earners }, { data: wallets }] = await Promise.all([
@@ -117,7 +116,7 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
   });
 
   function copyLink(ownerType: OwnerType, code: string) {
-    const url = `${appUrl()}/connect?code=${code}`;
+    const url = shareUrl(`/connect?code=${code}`);
     navigator.clipboard.writeText(url);
     toast({ title: 'Connect link copied', description: 'Share via WhatsApp, email, etc.' });
   }
@@ -125,7 +124,7 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
   function requestNewKey(ownerType: OwnerType, code: string) {
     // Fresh claim link reuses the owner's permanent code — opening it lets
     // them paste a new read-only API key, replacing the rejected one.
-    const url = `${appUrl()}/connect?code=${code}&rekey=1`;
+    const url = shareUrl(`/connect?code=${code}&rekey=1`);
     navigator.clipboard.writeText(url);
     toast({
       title: 'Re-key link copied',

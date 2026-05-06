@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { shareUrl } from '@/lib/shareUrl';
 import { Wallet, Link as LinkIcon, Copy, Unlink, ExternalLink, Users } from 'lucide-react';
 
 interface Props {
@@ -41,7 +42,7 @@ const MerchantClaimManager = ({ communityId }: Props) => {
       if (error) throw error;
       const payload = data as any;
       if (payload?.error) throw new Error(payload.error);
-      const url = `${window.location.origin}/merchant/claim/${payload.public_merchant_id}?token=${payload.claim_token}`;
+      const url = shareUrl(`/merchant/claim/${payload.public_merchant_id}?token=${payload.claim_token}`);
       setLinkModal({ url, publicId: payload.public_merchant_id });
       qc.invalidateQueries({ queryKey: ['admin-merchants-claim', communityId] });
     } catch (err: any) {
