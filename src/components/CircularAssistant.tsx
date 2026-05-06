@@ -56,12 +56,12 @@ export default function CircularAssistant() {
       if (cancel || !comm) return;
       const { data: score } = await supabase
         .from('circularity_scores')
-        .select('total_score')
+        .select('score')
         .eq('community_id', comm.id)
         .order('calculated_at', { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (!cancel) setEconomy({ name: comm.name, latest_score: (score as { total_score: number } | null)?.total_score ?? null });
+      if (!cancel) setEconomy({ name: comm.name, latest_score: score?.score ?? null });
     })();
     return () => { cancel = true; };
   }, [location.pathname]);
