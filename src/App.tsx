@@ -55,6 +55,7 @@ const App = () => (
               <Route path="/c/:slug/proof" element={<ProofOfCircularity />} />
               <Route path="/c/:slug/proofs" element={<Proofs />} />
               <Route path="/data" element={<PublicData />} />
+              <Route path="/pricing" element={<Pricing />} />
               <Route path="/widget/:slug" element={<Widget />} />
               <Route path="/quick-submit" element={<QuickSubmit />} />
               <Route path="/compare" element={<Compare />} />
