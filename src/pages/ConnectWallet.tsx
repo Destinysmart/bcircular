@@ -72,11 +72,8 @@ export default function ConnectWallet({ ownerType }: Props) {
       toast({ title: 'Wallet connected', description: 'Your transactions are syncing now.' });
       navigate(dashHref);
     } catch (err: any) {
-      toast({
-        title: 'Could not connect',
-        description: err.message || 'Please check your API key.',
-        variant: 'destructive',
-      });
+      const { friendlyToast } = await import('@/lib/friendlyError');
+      toast(friendlyToast(err));
     } finally {
       setSubmitting(false);
     }
@@ -124,7 +121,7 @@ export default function ConnectWallet({ ownerType }: Props) {
     owner.wallet?.wallet_status === 'connected' || owner.wallet?.wallet_status === 'pending';
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+    <div className="min-h-screen flex items-center justify-center px-4 py-6 sm:p-6 bg-background">
       <Card className="max-w-xl w-full">
         <CardHeader className="space-y-2">
           <div className="flex items-center gap-2 text-score-amber">
@@ -132,11 +129,11 @@ export default function ConnectWallet({ ownerType }: Props) {
             <span className="text-sm font-medium uppercase tracking-wide">Connect your Blink wallet</span>
           </div>
           <CardTitle className="text-2xl">{owner.name}</CardTitle>
-          <CardDescription>
+          <CardDescription className="break-words">
             {owner.community_name} · {owner.community_city}, {owner.community_country}
             <br />
             {detectedType === 'merchant' ? 'Merchant ID' : 'Earner ID'}:{' '}
-            <code className="text-xs">{code}</code>
+            <code className="text-xs break-all">{code}</code>
           </CardDescription>
         </CardHeader>
 
@@ -164,7 +161,7 @@ export default function ConnectWallet({ ownerType }: Props) {
                 You don't need to enter it again.
               </div>
               <Link to={dashHref}>
-                <Button className="w-full bg-score-amber text-background hover:bg-score-amber/90">
+                <Button className="w-full h-11 bg-score-amber text-background hover:bg-score-amber/90">
                   View dashboard <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
               </Link>
@@ -213,7 +210,7 @@ export default function ConnectWallet({ ownerType }: Props) {
             <Button
               type="submit"
               disabled={submitting || !apiKey.trim()}
-              className="w-full bg-score-amber text-background hover:bg-score-amber/90"
+              className="w-full h-11 bg-score-amber text-background hover:bg-score-amber/90"
             >
               {submitting ? (
                 <>

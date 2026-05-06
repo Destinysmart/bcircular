@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import Navbar from '@/components/Navbar';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchCommunityBySlug, submitEarner } from '@/lib/api';
+import { shareUrl } from '@/lib/shareUrl';
 import { useToast } from '@/hooks/use-toast';
 
 const ROLES = [
@@ -100,10 +101,7 @@ const JoinAsEarner = () => {
     }
   };
 
-  const shareOrigin = window.location.hostname.includes('bitcoincircular.com')
-    ? window.location.origin
-    : 'https://bitcoincircular.com';
-  const dashboardUrl = earnerCode ? `${shareOrigin}/connect/dashboard?code=${earnerCode}` : '';
+  const dashboardUrl = earnerCode ? shareUrl(`/connect/dashboard?code=${earnerCode}`) : '';
 
   const handleCopy = () => {
     navigator.clipboard.writeText(dashboardUrl);

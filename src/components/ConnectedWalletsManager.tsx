@@ -16,6 +16,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { walletApi, fetchEconomyWalletMetrics } from '@/lib/walletApi';
+import { shareUrl } from '@/lib/shareUrl';
+import { friendlyError, friendlyToast } from '@/lib/friendlyError';
 import { toast } from '@/hooks/use-toast';
 
 interface Props { communityId: string }
@@ -29,9 +31,7 @@ type RowOwner = {
   wallet: any | null;
 };
 
-function appUrl() {
-  return typeof window !== 'undefined' ? window.location.origin : '';
-}
+// Share URLs always go through the canonical https origin — see src/lib/shareUrl.ts
 
 async function fetchOwnersWithWallets(communityId: string) {
   const [{ data: merchants }, { data: earners }, { data: wallets }] = await Promise.all([
@@ -117,7 +117,7 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
   });
 
   function copyLink(ownerType: OwnerType, code: string) {
-    const url = `${appUrl()}/connect?code=${code}`;
+    const url = shareUrl(`/connect?code=${code}`);
     navigator.clipboard.writeText(url);
     toast({ title: 'Connect link copied', description: 'Share via WhatsApp, email, etc.' });
   }
@@ -125,7 +125,7 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
   function requestNewKey(ownerType: OwnerType, code: string) {
     // Fresh claim link reuses the owner's permanent code — opening it lets
     // them paste a new read-only API key, replacing the rejected one.
-    const url = `${appUrl()}/connect?code=${code}&rekey=1`;
+    const url = shareUrl(`/connect?code=${code}&rekey=1`);
     navigator.clipboard.writeText(url);
     toast({
       title: 'Re-key link copied',
@@ -146,9 +146,10 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
       await refetchMetrics(); await refetchTxStats();
       await invalidateAllStats();
     } catch (err: any) {
-      const message = err.message || 'Sync failed';
+      const f = friendlyError(err);
+      const message = f.hint ? `${f.description} ${f.hint}` : f.description;
       setResultById(prev => ({ ...prev, [id]: { type: 'error', message } }));
-      toast({ title: 'Sync failed', description: message, variant: 'destructive' });
+      toast(friendlyToast(err));
     } finally { setBusyId(null); }
   }
 
@@ -160,9 +161,10 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
       setResultById(prev => ({ ...prev, [id]: { type: 'success', message } }));
       toast({ title: 'Connection test passed', description: message });
     } catch (err: any) {
-      const message = err.message || 'Connection test failed';
+      const f = friendlyError(err);
+      const message = f.hint ? `${f.description} ${f.hint}` : f.description;
       setResultById(prev => ({ ...prev, [id]: { type: 'error', message } }));
-      toast({ title: 'Connection test failed', description: message, variant: 'destructive' });
+      toast(friendlyToast(err));
     } finally { setBusyId(null); }
   }
 
@@ -203,7 +205,7 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
       await Promise.all([refetch(), refetchMetrics(), refetchTxStats()]);
       await invalidateAllStats();
     } catch (err: any) {
-      toast({ title: 'Failed to disconnect', description: err.message, variant: 'destructive' });
+      toast(friendlyToast(err));
     } finally {
       setBusyId(null);
       setDisconnectTarget(null);
@@ -228,7 +230,7 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
       await refetchMetrics(); await refetchTxStats();
       await invalidateAllStats();
     } catch (err: any) {
-      toast({ title: 'Failed to delete', description: err.message, variant: 'destructive' });
+      toast(friendlyToast(err));
     } finally {
       setBusyId(null);
       setDeleteTarget(null);
@@ -311,7 +313,7 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
         </div>
         {authErr && (
           <div className="rounded-md border border-score-amber/40 bg-score-amber/10 px-3 py-2 text-xs text-score-amber">
-            Blink rejected this wallet's API key (401). Click <strong>Request new key</strong> to copy a fresh re-key link, then send it to the {row.ownerType}.
+            <strong>Blink rejected the API key (401).</strong> Click <strong>Request new key</strong> to copy a fresh re-key link, then send it to the {row.ownerType} so they can paste a new read-only key.
           </div>
         )}
         {rowResult && (
