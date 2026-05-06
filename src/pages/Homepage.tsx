@@ -807,4 +807,13 @@ const FooterCol = ({ title, links }: { title: string; links: [string, string][] 
   </div>
 );
 
+const TrustItem = ({ Icon, label }: { Icon: typeof Globe; label: string }) => (
+  <span className="inline-flex items-center gap-1.5">
+    <Icon className="h-3.5 w-3.5 text-score-amber" />
+    <span className="text-foreground/80">{label}</span>
+  </span>
+);
+
+const Dot = () => <span className="text-border">·</span>;
+
 export default Homepage;
