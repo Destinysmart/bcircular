@@ -244,6 +244,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
       )}
 
       {/* TRUST STRIP */}
+      {gated && (
       <section className="border-b border-border bg-card/40">
         <div className="container py-3">
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
@@ -259,6 +260,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
           </div>
         </div>
       </section>
+      )}
 
       {topSlot}
 
