@@ -615,30 +615,9 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
               <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Anyone with an account</span>
             </div>
             <div className="text-xl font-bold text-foreground mb-1">Public Data</div>
-            <div className="text-2xl font-extrabold text-foreground mb-4">$0</div>
-            <ul className="space-y-2 mb-5 text-sm text-muted-foreground flex-1">
-              {['Live leaderboard & economy profiles', 'CSV snapshot download', 'Embeddable economy widget', 'Methodology + verified sources'].map(f => (
-                <li key={f} className="flex items-start gap-2">
-                  <Check className="h-4 w-4 text-score-green shrink-0 mt-0.5" />
-                  <span>{f}</span>
-                </li>
-              ))}
-            </ul>
-            <Link to="/data">
-              <Button variant="outline" className="w-full rounded-lg border-foreground/20">
-                Explore data <ArrowRight className="h-4 w-4 ml-1" />
-              </Button>
-            </Link>
-          </div>
-          {/* Pro */}
-          <div className="relative rounded-2xl border border-score-amber/60 bg-gradient-to-br from-score-amber/[0.06] to-card p-6 flex flex-col">
-            <div className="absolute top-4 right-4 text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full bg-score-amber text-background font-bold">Pro</div>
-            <div className="flex items-center gap-2 mb-1">
-              <div className="text-[10px] uppercase tracking-widest text-score-amber font-semibold">Premium</div>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-score-amber/10 text-score-amber">Researchers · NGOs · Bitcoin cos</span>
-            </div>
-            <div className="text-xl font-bold text-foreground mb-1">Research & Partner Access</div>
-            <div className="text-2xl font-extrabold text-foreground mb-4">Apply / Contact</div>
+            <div className="text-2xl text-foreground mb-4 font-bold">$0</div>
+...
+            <div className="text-2xl text-foreground mb-4 font-bold">Apply / Contact</div>
             <ul className="space-y-2 mb-5 text-sm text-muted-foreground flex-1">
               {['Full historical dataset', 'Economy-level time series', 'API feeds & white-label', 'Custom exports & due diligence'].map(f => (
                 <li key={f} className="flex items-start gap-2">
