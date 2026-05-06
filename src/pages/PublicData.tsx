@@ -24,7 +24,6 @@ const TIER_LABELS: Record<AccessTier, string> = {
 };
 
 const PublicData = () => {
-const PublicData = () => {
   const { user, loading: authLoading } = useAuth();
   const [tier, setTier] = useState<AccessTier | null>(null);
   const [submitting, setSubmitting] = useState(false);
