@@ -72,11 +72,8 @@ export default function ConnectWallet({ ownerType }: Props) {
       toast({ title: 'Wallet connected', description: 'Your transactions are syncing now.' });
       navigate(dashHref);
     } catch (err: any) {
-      toast({
-        title: 'Could not connect',
-        description: err.message || 'Please check your API key.',
-        variant: 'destructive',
-      });
+      const { friendlyToast } = await import('@/lib/friendlyError');
+      toast(friendlyToast(err));
     } finally {
       setSubmitting(false);
     }

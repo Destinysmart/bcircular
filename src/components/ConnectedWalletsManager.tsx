@@ -313,7 +313,7 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
         </div>
         {authErr && (
           <div className="rounded-md border border-score-amber/40 bg-score-amber/10 px-3 py-2 text-xs text-score-amber">
-            Blink rejected this wallet's API key (401). Click <strong>Request new key</strong> to copy a fresh re-key link, then send it to the {row.ownerType}.
+            <strong>Blink rejected the API key (401).</strong> Click <strong>Request new key</strong> to copy a fresh re-key link, then send it to the {row.ownerType} so they can paste a new read-only key.
           </div>
         )}
         {rowResult && (

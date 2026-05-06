@@ -57,7 +57,8 @@ const MerchantClaim = () => {
       });
       navigate(`/m/${publicId}`);
     } catch (err: any) {
-      toast({ title: 'Claim failed', description: err.message || 'Could not link wallet', variant: 'destructive' });
+      const { friendlyToast } = await import('@/lib/friendlyError');
+      toast(friendlyToast(err));
     } finally {
       setLoading(false);
     }
