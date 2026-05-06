@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { fetchAllCommunitiesWithStats } from '@/lib/api';
 import { supabase } from '@/integrations/supabase/client';
+import AuthGate from '@/components/AuthGate';
+import { useAuth } from '@/contexts/AuthContext';
 
 type AccessTier = 'researcher' | 'organization' | 'partner';
 
@@ -22,6 +24,7 @@ const TIER_LABELS: Record<AccessTier, string> = {
 };
 
 const PublicData = () => {
+  const { user, loading: authLoading } = useAuth();
   const [tier, setTier] = useState<AccessTier | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ name: '', organization: '', use_case: '', email: '' });
@@ -29,7 +32,10 @@ const PublicData = () => {
   const { data: economies, isLoading } = useQuery({
     queryKey: ['communities-stats'],
     queryFn: fetchAllCommunitiesWithStats,
+    enabled: !!user,
   });
+
+
 
   // Aggregate sats + verified txns from blink_transactions
   const { data: aggregates } = useQuery({
@@ -125,6 +131,15 @@ const PublicData = () => {
     setForm({ name: '', organization: '', use_case: '', email: '' });
     setTier(null);
   };
+
+  if (!authLoading && !user) {
+    return (
+      <AuthGate
+        title="Unlock open Bitcoin economy data"
+        message="Sign up free to access the dataset, CSV downloads, preview table, and request research or partner access."
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
