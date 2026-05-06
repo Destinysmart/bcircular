@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, ArrowRight, Check, Zap } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,12 +30,17 @@ const countries = [
   { name: 'Argentina', code: 'AR', region: 'Latin America' },
 ];
 
+const STEP_LABELS = ['Your Economy', 'Your Area', 'Your Story', 'Your Contact'] as const;
+
 const RegisterCommunity = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const [step, setStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+
   const [name, setName] = useState('');
   const [selectedCountry, setSelectedCountry] = useState('');
   const [city, setCity] = useState('');
@@ -44,15 +51,46 @@ const RegisterCommunity = () => {
   const [website, setWebsite] = useState('');
   const [twitter, setTwitter] = useState('');
   const [contactEmail, setContactEmail] = useState('');
+  const [committed, setCommitted] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  function validateStep(s: number) {
+    const e: Record<string, string> = {};
+    if (s === 1) {
+      if (!name.trim()) e.name = 'Economy name is required';
+      if (!selectedCountry) e.country = 'Country is required';
+    } else if (s === 2) {
+      if (!economicZoneDesc.trim()) e.economicZoneDesc = 'Please describe your economic zone';
+      if (!declaredPopulation || parseInt(declaredPopulation) < 1) e.declaredPopulation = 'Population is required';
+    } else if (s === 3) {
+      if (!description.trim()) e.description = 'A short description is required';
+      if (!foundingYear) e.foundingYear = 'Founding year is required';
+    } else if (s === 4) {
+      if (!contactEmail.trim()) e.contactEmail = 'Contact email is required';
+      if (!committed) e.committed = 'Please confirm the validator commitment';
+    }
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  }
+
+  function next() {
+    if (!validateStep(step)) return;
+    setStep((s) => Math.min(4, s + 1));
+  }
+  function back() {
+    setErrors({});
+    setStep((s) => Math.max(1, s - 1));
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateStep(4)) return;
     if (!user) {
       toast({ title: 'Login required', description: 'Please log in to register an economy.', variant: 'destructive' });
       navigate('/login');
       return;
     }
-    const country = countries.find(c => c.name === selectedCountry);
+    const country = countries.find((c) => c.name === selectedCountry);
     if (!country) return;
 
     setLoading(true);
@@ -80,75 +118,267 @@ const RegisterCommunity = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="container py-16 max-w-lg text-center">
-          <div className="text-4xl mb-4">🎯</div>
-          <h2 className="text-xl font-semibold mb-2">Your economy is pending approval</h2>
-          <div className="text-sm text-muted-foreground space-y-2">
-            <p>Here's what happens next:</p>
-            <ul className="text-left list-disc list-inside space-y-1">
-              <li>A super-admin will review your registration within 48 hours</li>
-              <li>You'll receive an email once your economy is approved</li>
-              <li>Then you can start appointing validators and submitting data</li>
-            </ul>
+        <div className="container px-4 sm:px-6 py-12 sm:py-20 max-w-xl">
+          <div className="rounded-2xl border border-score-amber/30 bg-card p-8 sm:p-10 text-center">
+            <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-score-amber/15 text-score-amber mb-4">
+              <Zap className="h-8 w-8" fill="currentColor" />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2">Your economy has been submitted!</h1>
+            <p className="text-sm text-muted-foreground mb-2">
+              We'll review and approve within 48 hours.
+            </p>
+            <p className="text-sm text-muted-foreground mb-6">
+              Check your email at <span className="font-medium text-foreground break-all">{contactEmail}</span> for next steps.
+            </p>
+            <p className="text-sm text-muted-foreground mb-4">
+              While you wait — explore active economies on the leaderboard.
+            </p>
+            <Link to="/leaderboard">
+              <Button className="w-full h-11 bg-score-amber text-background hover:bg-score-amber/90">
+                View Leaderboard <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
     );
   }
 
+  const stepTitles: Record<number, { title: string; subtitle: string }> = {
+    1: { title: "What's your Bitcoin community called?", subtitle: "Tell us the basics — we'll help you set up the rest." },
+    2: { title: 'Where does your economy operate?', subtitle: 'This helps us match your merchants on BTCMap and calculate your coverage.' },
+    3: { title: 'Tell us about your community', subtitle: 'This appears on your public economy profile.' },
+    4: { title: 'Almost there — how do we reach you?', subtitle: 'Your contact details are never shown publicly.' },
+  };
+
+  const current = stepTitles[step];
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="container py-8 max-w-lg">
-        <h1 className="text-2xl font-bold mb-1">Register Your Circular Economy</h1>
-        <p className="text-sm text-muted-foreground mb-6">Start tracking your Bitcoin circular economy.</p>
-        {!user && <p className="text-sm text-primary mb-4">You'll need to <a href="/login" className="underline">log in</a> to register an economy.</p>}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div><Label>Economy name</Label><Input placeholder="e.g. Bitcoin Beach" value={name} onChange={e => setName(e.target.value)} required /></div>
-          <div><Label>Country</Label>
-            <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-              <SelectTrigger><SelectValue placeholder="Select country" /></SelectTrigger>
-              <SelectContent>{countries.map(c => <SelectItem key={c.code} value={c.name}>{c.name}</SelectItem>)}</SelectContent>
-            </Select>
+      <div className="container px-4 sm:px-6 py-8 sm:py-12 max-w-[560px]">
+        {!user && (
+          <p className="text-sm text-primary mb-4">
+            You'll need to <Link to="/login" className="underline">log in</Link> to register an economy.
+          </p>
+        )}
+
+        {/* Progress indicator */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between gap-2 mb-3">
+            {[1, 2, 3, 4].map((n, i) => {
+              const isDone = n < step;
+              const isCurrent = n === step;
+              return (
+                <div key={n} className="flex items-center flex-1 last:flex-none">
+                  <div
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
+                      isCurrent
+                        ? 'bg-score-amber text-background'
+                        : isDone
+                        ? 'bg-score-amber/20 text-score-amber'
+                        : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {isDone ? <Check className="h-4 w-4" /> : n}
+                  </div>
+                  {i < 3 && (
+                    <div className={`flex-1 h-0.5 mx-2 ${n < step ? 'bg-score-amber/40' : 'bg-muted'}`} />
+                  )}
+                </div>
+              );
+            })}
           </div>
-          <div><Label>City</Label><Input placeholder="e.g. El Zonte" value={city} onChange={e => setCity(e.target.value)} required /></div>
-          <div>
-            <Label>Economic zone description</Label>
-            <Textarea placeholder="Describe the geographic area this economy covers (e.g. 'Ikorodu Local Government Area, Lagos, Nigeria')" value={economicZoneDesc} onChange={e => setEconomicZoneDesc(e.target.value)} rows={2} />
-          </div>
-          <div><Label>Description</Label><Textarea placeholder="Short description of your Bitcoin circular economy" value={description} onChange={e => setDescription(e.target.value)} rows={3} /></div>
-          <div>
-            <Label>Approximate population (people)</Label>
-            <Input type="number" placeholder="e.g. 5000" value={declaredPopulation} onChange={e => setDeclaredPopulation(e.target.value)} required min={1} />
-            <p className="text-xs text-muted-foreground mt-1">Best estimate of how many people live or work in this economic zone. Used for density calculations.</p>
-          </div>
-          <div><Label>Founding year (when did Bitcoin activity start?)</Label><Input type="number" placeholder="e.g. 2019" value={foundingYear} onChange={e => setFoundingYear(e.target.value)} /></div>
-          <div><Label>Website (optional)</Label><Input placeholder="https://" value={website} onChange={e => setWebsite(e.target.value)} /></div>
-          <div><Label>Twitter handle (optional)</Label><Input placeholder="@handle" value={twitter} onChange={e => setTwitter(e.target.value)} /></div>
-          <div><Label>Contact email</Label><Input type="email" placeholder="For the super-admin to reach you" value={contactEmail} onChange={e => setContactEmail(e.target.value)} /></div>
-          <label className="flex items-start gap-2 text-sm text-muted-foreground">
-            <Checkbox className="mt-0.5" />
-            <span>I will appoint at least 2 validators and ensure submitted data is accurate.</span>
-          </label>
-          <button
-            type="submit"
-            disabled={loading || !user}
-            style={{
-              background: '#F59E0B',
-              color: '#0A0F1E',
-              fontWeight: 700,
-              padding: '12px 32px',
-              borderRadius: 8,
-              border: 'none',
-              width: '100%',
-              fontSize: 15,
-              cursor: loading || !user ? 'not-allowed' : 'pointer',
-              opacity: loading || !user ? 0.6 : 1,
-            }}
-          >
-            {loading ? 'Submitting...' : 'Submit registration'}
-          </button>
-        </form>
+          <p className="text-xs text-muted-foreground font-mono">
+            Step {step} of 4 — {STEP_LABELS[step - 1]}
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-card p-5 sm:p-7">
+          <h1 className="text-xl sm:text-2xl font-bold mb-1">{current.title}</h1>
+          <p className="text-sm text-muted-foreground mb-6">{current.subtitle}</p>
+
+          <form onSubmit={handleSubmit} noValidate>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={step}
+                initial={{ opacity: 0, x: 12 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -12 }}
+                transition={{ duration: 0.18 }}
+                className="space-y-4"
+              >
+                {step === 1 && (
+                  <>
+                    <div>
+                      <Label>Economy name</Label>
+                      <Input
+                        placeholder="e.g. Bitcoin Beach"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="h-11"
+                      />
+                      {errors.name && <p className="text-xs text-destructive mt-1">{errors.name}</p>}
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <Label>Country</Label>
+                        <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                          <SelectTrigger className="h-11"><SelectValue placeholder="Select country" /></SelectTrigger>
+                          <SelectContent>
+                            {countries.map((c) => <SelectItem key={c.code} value={c.name}>{c.name}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                        {errors.country && <p className="text-xs text-destructive mt-1">{errors.country}</p>}
+                      </div>
+                      <div>
+                        <Label>City</Label>
+                        <Input
+                          placeholder="e.g. El Zonte"
+                          value={city}
+                          onChange={(e) => setCity(e.target.value)}
+                          className="h-11"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {step === 2 && (
+                  <>
+                    <div>
+                      <Label>Economic zone description</Label>
+                      <Textarea
+                        placeholder="Describe the geographic area this economy covers (e.g. 'Ikorodu Local Government Area, Lagos, Nigeria')"
+                        value={economicZoneDesc}
+                        onChange={(e) => setEconomicZoneDesc(e.target.value)}
+                        rows={3}
+                      />
+                      {errors.economicZoneDesc && <p className="text-xs text-destructive mt-1">{errors.economicZoneDesc}</p>}
+                    </div>
+                    <div>
+                      <Label>Approximate population (people)</Label>
+                      <Input
+                        type="number"
+                        inputMode="numeric"
+                        placeholder="e.g. 5000"
+                        value={declaredPopulation}
+                        onChange={(e) => setDeclaredPopulation(e.target.value)}
+                        min={1}
+                        className="h-11"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Best estimate of how many people live or work in this economic zone. Used for density calculations.
+                      </p>
+                      {errors.declaredPopulation && <p className="text-xs text-destructive mt-1">{errors.declaredPopulation}</p>}
+                    </div>
+                  </>
+                )}
+
+                {step === 3 && (
+                  <>
+                    <div>
+                      <Label>Description</Label>
+                      <Textarea
+                        placeholder="Short description of your Bitcoin circular economy"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        rows={3}
+                      />
+                      {errors.description && <p className="text-xs text-destructive mt-1">{errors.description}</p>}
+                    </div>
+                    <div>
+                      <Label>Founding year (when did Bitcoin activity start?)</Label>
+                      <Input
+                        type="number"
+                        inputMode="numeric"
+                        placeholder="e.g. 2019"
+                        value={foundingYear}
+                        onChange={(e) => setFoundingYear(e.target.value)}
+                        className="h-11"
+                      />
+                      {errors.foundingYear && <p className="text-xs text-destructive mt-1">{errors.foundingYear}</p>}
+                    </div>
+                    <div>
+                      <Label>Website (optional)</Label>
+                      <Input
+                        placeholder="https://"
+                        value={website}
+                        onChange={(e) => setWebsite(e.target.value)}
+                        className="h-11"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {step === 4 && (
+                  <>
+                    <div>
+                      <Label>Twitter handle (optional)</Label>
+                      <Input
+                        placeholder="@handle"
+                        value={twitter}
+                        onChange={(e) => setTwitter(e.target.value)}
+                        className="h-11"
+                      />
+                    </div>
+                    <div>
+                      <Label>Contact email</Label>
+                      <Input
+                        type="email"
+                        placeholder="For the super-admin to reach you"
+                        value={contactEmail}
+                        onChange={(e) => setContactEmail(e.target.value)}
+                        className="h-11"
+                      />
+                      {errors.contactEmail && <p className="text-xs text-destructive mt-1">{errors.contactEmail}</p>}
+                    </div>
+                    <label className="flex items-start gap-2 text-sm text-muted-foreground cursor-pointer">
+                      <Checkbox
+                        className="mt-0.5"
+                        checked={committed}
+                        onCheckedChange={(v) => setCommitted(v === true)}
+                      />
+                      <span>I will appoint at least 2 validators and ensure submitted data is accurate.</span>
+                    </label>
+                    {errors.committed && <p className="text-xs text-destructive">{errors.committed}</p>}
+                  </>
+                )}
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Nav buttons */}
+            <div className="flex flex-col sm:flex-row gap-2 mt-7">
+              {step > 1 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={back}
+                  className="h-11 sm:flex-none sm:px-6"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-1" /> Back
+                </Button>
+              )}
+              {step < 4 ? (
+                <Button
+                  type="button"
+                  onClick={next}
+                  className="h-11 flex-1 bg-score-amber text-background hover:bg-score-amber/90"
+                >
+                  Continue <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  disabled={loading || !user}
+                  className="h-11 flex-1 bg-score-amber text-background hover:bg-score-amber/90"
+                >
+                  {loading ? 'Submitting...' : 'Submit registration'}
+                </Button>
+              )}
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
