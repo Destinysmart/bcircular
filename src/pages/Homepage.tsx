@@ -593,6 +593,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
           </div>
         </div>
       </section>
+      )}
 
       {/* FREE vs PRO DATA ACCESS */}
       <motion.section
