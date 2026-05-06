@@ -243,6 +243,23 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
       </section>
       )}
 
+      {/* TRUST STRIP */}
+      <section className="border-b border-border bg-card/40">
+        <div className="container py-3">
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
+            <TrustItem Icon={Globe} label={countries ? `${countries} countries` : '—'} />
+            <Dot />
+            <TrustItem Icon={Store} label={totalMerchants ? `${totalMerchants.toLocaleString()} merchants` : '—'} />
+            <Dot />
+            <TrustItem Icon={CheckCircle2} label={verifiedTxns != null ? `${verifiedTxns.toLocaleString()} verified txns` : '—'} />
+            <Dot />
+            <TrustItem Icon={ShieldCheck} label="2-of-3 validator consensus" />
+            <Dot />
+            <TrustItem Icon={Lock} label="Non-custodial — no funds held" />
+          </div>
+        </div>
+      </section>
+
       {topSlot}
 
       {/* (Map + Activity moved below the Discover grid) */}
