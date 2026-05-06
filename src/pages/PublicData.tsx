@@ -24,9 +24,17 @@ const TIER_LABELS: Record<AccessTier, string> = {
 };
 
 const PublicData = () => {
+const PublicData = () => {
+  const { user, loading: authLoading } = useAuth();
   const [tier, setTier] = useState<AccessTier | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ name: '', organization: '', use_case: '', email: '' });
+
+  const { data: economies, isLoading } = useQuery({
+    queryKey: ['communities-stats'],
+    queryFn: fetchAllCommunitiesWithStats,
+    enabled: !!user,
+  });
 
   const { data: economies, isLoading } = useQuery({
     queryKey: ['communities-stats'],
