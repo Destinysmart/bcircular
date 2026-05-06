@@ -558,6 +558,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
           </div>
         </div>
       </section>
+      )}
 
       {/* PILLARS */}
       <section className="border-t border-border bg-card/40">
