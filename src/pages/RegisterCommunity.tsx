@@ -133,11 +133,18 @@ const RegisterCommunity = () => {
             <p className="text-sm text-muted-foreground mb-4">
               While you wait — explore active economies on the leaderboard.
             </p>
-            <Link to="/leaderboard">
-              <Button className="w-full h-11 bg-score-amber text-background hover:bg-score-amber/90">
-                View Leaderboard <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            </Link>
+            <div className="flex flex-col gap-2">
+              <Link to="/leaderboard">
+                <Button className="w-full h-11 bg-score-amber text-background hover:bg-score-amber/90">
+                  View Leaderboard <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </Link>
+              <Link to="/dashboard">
+                <Button variant="outline" className="w-full h-11">
+                  Explore your dashboard <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -194,7 +201,7 @@ const RegisterCommunity = () => {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-5 sm:p-7">
+        <div className="rounded-2xl border border-border bg-background p-5 sm:p-7">
           <h1 className="text-xl sm:text-2xl font-bold mb-1">{current.title}</h1>
           <p className="text-sm text-muted-foreground mb-6">{current.subtitle}</p>
 
@@ -205,7 +212,7 @@ const RegisterCommunity = () => {
                 initial={{ opacity: 0, x: 12 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -12 }}
-                transition={{ duration: 0.18 }}
+                transition={{ duration: 0.2, ease: 'easeInOut' }}
                 className="space-y-4"
               >
                 {step === 1 && (
