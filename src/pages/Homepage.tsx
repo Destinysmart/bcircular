@@ -596,6 +596,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
       )}
 
       {/* FREE vs PRO DATA ACCESS */}
+      {gated && (
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -634,6 +635,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
           </div>
         </div>
       </motion.section>
+      )}
 
       {/* REGISTER YOUR ECONOMY CTA */}
       {!gated && (
