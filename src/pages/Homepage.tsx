@@ -674,13 +674,13 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
             <div className="relative max-w-2xl">
               <div className="inline-flex items-center gap-2 rounded-full border border-score-amber/40 bg-score-amber/10 px-3 py-1 text-[11px] font-mono uppercase tracking-wider text-score-amber mb-4">
                 <Bitcoin className="h-3 w-3" />
-                Add your community
+                Add your economy
               </div>
               <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight text-foreground mb-3">
-                Is your Bitcoin community missing?
+                Is your Bitcoin economy missing from the map?
               </h2>
               <p className="text-sm md:text-base text-muted-foreground mb-6 leading-relaxed">
-                Join the global network of circular economies. Track your sats flow and prove real adoption.
+                Join the verified economies already proving real circulation on-chain. Free, non-custodial, takes 2 minutes.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link to="/register" className="w-full sm:w-auto">
