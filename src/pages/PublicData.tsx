@@ -133,6 +133,15 @@ const PublicData = () => {
     setTier(null);
   };
 
+  if (!authLoading && !user) {
+    return (
+      <AuthGate
+        title="Unlock open Bitcoin economy data"
+        message="Sign up free to access the dataset, CSV downloads, preview table, and request research or partner access."
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
