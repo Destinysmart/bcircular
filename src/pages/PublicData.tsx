@@ -36,10 +36,7 @@ const PublicData = () => {
     enabled: !!user,
   });
 
-  const { data: economies, isLoading } = useQuery({
-    queryKey: ['communities-stats'],
-    queryFn: fetchAllCommunitiesWithStats,
-  });
+
 
   // Aggregate sats + verified txns from blink_transactions
   const { data: aggregates } = useQuery({
