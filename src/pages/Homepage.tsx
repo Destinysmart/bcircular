@@ -618,7 +618,20 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
             </div>
             <div className="text-xl font-bold text-foreground mb-1">Public Data</div>
             <div className="text-2xl text-foreground mb-4 font-bold">$0</div>
-...
+            <ul className="space-y-2 mb-5 text-sm text-muted-foreground flex-1">
+              {['Live leaderboard & economy profiles', 'CSV snapshot download', 'Embeddable economy widget', 'Methodology + verified sources'].map(f => (
+                <li key={f} className="flex items-start gap-2">
+                  <Check className="h-4 w-4 text-score-green shrink-0 mt-0.5" />
+                  <span>{f}</span>
+                </li>
+              ))}
+            </ul>
+            <Link to="/data">
+              <Button variant="outline" className="w-full rounded-lg border-foreground/20">
+                Explore data <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </Link>
+          </div>
           {/* Pro - landing page only */}
           {gated && (
           <div className="rounded-2xl border border-score-amber/40 bg-card p-6 flex flex-col">
