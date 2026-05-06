@@ -1,124 +1,82 @@
-## Goal
+# Launch-blocker fixes — BCE registration & wallet flows
 
-Make circular flow honest about its coverage. Connected wallets vs estimated wallets (merchants + earners) drives a single coverage tier used everywhere. Raw transaction/merchant/earner numbers stay untouched.
+Scope: 3 fixes only. Onboarding sequencing and dashboard de-duplication are deferred to a post-launch pass.
 
-## Coverage model (single source of truth)
+---
 
-Create `src/lib/coverage.ts` with one helper used by every new UI piece:
+## 1. HTTPS-canonical claim & connect links
 
-```ts
-type CoverageTier = 'none' | 'limited' | 'partial' | 'good' | 'high';
-getCoverage(connectedWallets, merchants, earners) =>
-  { tier, connected, estimated, label, color, description }
-```
+**Problem.** Admins copy claim links from the dashboard. Today these use `window.location.origin`, so a link copied while the admin is on a `*.lovable.app` preview or any non-canonical host produces a URL that may resolve to http (or to a dev preview), triggering browser security warnings for the merchant/earner who clicks it.
 
-Thresholds (per spec):
-- 0 → `none` (red, "No wallets connected")
-- 1–2 → `limited` (red, "Very Limited")
-- 3–9 → `partial` (amber, "Partial")
-- 10–19 → `good` (green, "Good")
-- 20+ → `high` (green bold, "High ✓")
+**Fix.** Centralize one helper that always returns the canonical https origin (`https://bitcoincircular.com`) when the app isn't already running on the production custom domain. `JoinAsEarner.tsx` already does this inline — promote it.
 
-`estimated = merchants + earners`. Connected wallets = `wallets` rows for the community (already queried in several pages).
+**Changes**
+- New `src/lib/shareUrl.ts` exporting `canonicalOrigin()` and `shareUrl(path)`. Returns `window.location.origin` only if hostname is `bitcoincircular.com` / `www.bitcoincircular.com`; otherwise returns `https://bitcoincircular.com`.
+- Replace raw `${window.location.origin}/connect…` and `${window.location.origin}/merchant/claim…` usages in:
+  - `src/components/ConnectedWalletsManager.tsx` (lines 33, 120, 128) — both "copy link" and the new "Request new key" button.
+  - `src/components/MerchantClaimManager.tsx` (line 44).
+  - `src/pages/JoinAsEarner.tsx` (replace inline logic with helper).
+- Leave routes that are inherently dev-only (`/quick-submit` admin URL on ValidatorDashboard, widget iframe code) unchanged or route through helper as a follow-up.
 
-## 1. New `WalletCoverageIndicator` component
+**Verification.** Open the dashboard from the lovable preview, copy an earner claim link, confirm the copied string starts with `https://bitcoincircular.com/connect?code=…`.
 
-`src/components/WalletCoverageIndicator.tsx` — the card from spec:
-- Title "Wallet Coverage" with a small icon
-- "X wallets connected of ~Y estimated"
-- Tier label badge + colored progress bar (target 20)
-- Helper line: "Higher coverage = more accurate circular flow measurement"
-- "Connect a wallet →" link to `/c/:slug/join-as-earner` (or `/connect`)
-- Stacks vertically below 768px
+---
 
-Mounted on `CommunityDashboard.tsx` directly above `CircularFlowSpotlight` / the gauge area. Uses the existing `walletCount`, `merchants`, `earners` queries already on the page — no new DB load.
+## 2. Plain-English error messaging
 
-## 2. Fix `CircularFlowGauge` labels and percentage
+**Problem.** Users see raw Postgres / Blink errors: "ON CONFLICT specification", "401 unauthorized", "duplicate key value violates unique constraint". These appear in toasts and inline wallet-row badges during the highest-stakes moment (first wallet connect).
 
-`src/components/charts/CircularFlowGauge.tsx`:
+**Fix.** A single error-translation layer applied at the toast / inline-error boundary — not scattered try/catches.
 
-- Replace tile labels:
-  - "Circulated" → **"Internal flows"** (tooltip: "Sats transacted between two connected wallets in this economy. Both sides of each payment are counted.")
-  - "Exited" → **"Unmatched outflows"** (tooltip: "Sats sent to wallets not connected to this economy. This includes payments to community members who haven't connected their wallet yet — not necessarily money leaving the community permanently.")
-- Add a third tile **"External inflows"** by extending the `flow-sums-30d` query to also sum `flow_type = 'inflow_external'` (data already present in `blink_transactions`). Tooltip: "Sats received from wallets outside this economy — shows external demand for goods and services here."
-- Use `<TooltipProvider>` from existing `ui/tooltip.tsx`.
-- Center label change:
-  - Default: **"X% detected as internal"** with subtitle "Among connected wallets only"
-  - When coverage tier is `none` or `limited` (< 3 connected wallets): hide the percentage entirely; render only "Insufficient wallet coverage to calculate meaningful rate" inside the ring.
-- Accept `coverageTier` as a prop (passed from parent that already has wallet/merchant/earner data) so the gauge does not duplicate queries.
+**Changes**
+- New `src/lib/friendlyError.ts` exporting `friendlyError(err): { title, description, hint? }` that pattern-matches on common signatures:
+  - `ON CONFLICT` / `duplicate key` → "This wallet is already connected to your economy."
+  - `401` / `Unauthorized` / `Blink rejected` → "Blink no longer accepts this API key. Generate a new read-only key and reconnect."
+  - `network` / `fetch failed` → "Couldn't reach Blink. Check your connection and try again."
+  - Encryption / decryption errors → "We couldn't read the stored key. Please reconnect this wallet."
+  - Default fallback → original message, prefixed with friendly title.
+- Wire through the 4 entry points where wallet errors surface:
+  1. `ConnectWallet.tsx` `handleConnect` catch block (toast).
+  2. `MerchantClaim.tsx` `handleSubmit` catch block (toast).
+  3. `ConnectedWalletsManager.tsx` inline 401 badge text.
+  4. `sync-wallet-transactions` errors bubbled into `ConnectedWalletsManager` row state (the amber persistent badge).
+- Edge functions: confirm `sync-wallet-transactions` and `claim-merchant` return `{ error: { code, message } }` with stable `code` strings (`WALLET_DUPLICATE`, `BLINK_UNAUTHORIZED`, etc.) so the frontend can match on code, not message text. Add codes where missing.
 
-No change to the underlying sum logic.
+**Verification.** Trigger each known failure (duplicate connect, expired key, bad key) and confirm the toast/badge shows the human message, not a stack trace.
 
-## 3. Methodology page — new section
+---
 
-Append a section to `src/pages/Methodology.tsx` titled **"How Circular Flow Is Measured"** with the four sub-blocks from the spec verbatim: HOW IT WORKS, WHY THIS MATTERS, DATA SOURCES, PRIVACY. Insert it right after the existing "Final Score" block, before "Data Sources". Use the same card styling already used in the file.
+## 3. Mobile responsiveness on wallet connect flows
 
-## 4. Economy admin dashboard banner
+**Problem.** `ConnectWallet.tsx` and `MerchantClaim.tsx` are the pages a merchant/earner opens *on their phone* via the link the admin sent. Inputs, the privacy promise list, and the submit button must work cleanly at 360px width.
 
-`src/pages/EconomyAdminDashboard.tsx`:
+**Audit targets (read + adjust only what breaks at 360px)**
+- `src/pages/ConnectWallet.tsx` — `Card max-w-xl`, full-width form, padding `p-4`. Likely fine but verify: privacy promise list spacing, API key input (no horizontal scroll on long placeholder), Lightning address row, submit button reaches edges with `min-h-[44px]` for touch.
+- `src/pages/MerchantClaim.tsx` — same audit. The `font-mono text-xs` claim token field tends to overflow on narrow screens; switch to `break-all` and ensure `Input` doesn't force min-width.
+- `src/pages/JoinAsEarner.tsx` success state — share buttons (WhatsApp, copy) need to wrap, not overflow.
 
-- Add a query for wallet count (or compute from existing `ConnectedWalletsManager` data; simplest: a small `select id, count: 'exact', head: true` from `wallets`).
-- Above `EconomyAlerts`, render:
-  - **Red banner** when 0 wallets: "🔴 No wallets connected — Circular flow cannot be measured yet…" with CTA to `BlinkWalletSettings` section anchor.
-  - **Amber banner** when 1–2 wallets: "⚠️ Low wallet coverage…" with CTA "Get connect links →" linking to `/c/:slug/join-as-earner` and the merchant claim manager section.
-- Suppress banner once coverage ≥ 3.
+**Changes**
+- Tighten container padding to `px-4 sm:px-6` on these 3 pages.
+- Stack inline button rows with `flex-col sm:flex-row gap-2`.
+- Increase tap targets: all primary buttons get `h-11` minimum on mobile.
+- Confirm `Input` font-size ≥ 16px on iOS to prevent zoom-on-focus (Tailwind `text-base` already does this — verify no override).
+- Test the 3 pages at 360×800 and 414×896 in the preview, take screenshots, fix visible issues only. No speculative redesign.
 
-These banners are pure UI — no DB writes, no new alert rows.
+**Verification.** Open each page on a 360px viewport in the preview. Confirm: no horizontal scroll, all CTAs tappable, no input overflow, privacy list readable.
 
-## 5. Leaderboard — coverage indicator next to circularity
+---
 
-`src/pages/Leaderboard.tsx` and `src/lib/api.ts` (`fetchAllCommunitiesWithStats`):
+## Out of scope (deferred)
 
-- Extend the per-community stats fetch to include `connectedWallets` (single grouped count of `wallets` per community, fetched in one round-trip).
-- In each leaderboard row that displays the circularity number/score-derived percentage:
-  - High (≥10): show value normally
-  - Partial (3–9): prefix value with `~` (e.g. `~23%`) plus tiny info icon
-  - Limited (<3): show `–` with tooltip "Insufficient wallet coverage"
-- Coverage logic uses the new `getCoverage` helper.
+- **Onboarding sequencing.** `SetupChecklist.tsx` exists and works; reorder + repositioning is a week-2 task once we see drop-off data.
+- **Dashboard de-duplication.** Needs real usage observation first.
 
-The score column itself is not gated — only the circularity-flow-derived display.
+---
 
-## 6. Homepage economy cards — coverage badge
+## Order of work
 
-`src/pages/Homepage.tsx`:
+1. Ship the HTTPS helper + replacements (~30 min, smallest blast radius).
+2. Ship the friendly-error layer + edge function error codes (~1–2 h).
+3. Mobile audit + targeted CSS fixes on 3 pages (~1 h).
 
-- Use the same `connectedWallets` field added in step 5.
-- Below the circularity score on each card, render a tiny coverage badge:
-  - 🟢 High coverage / 🟡 Partial coverage / 🔴 Limited coverage / ⚫ No wallets connected
-- Wrap with `Tooltip` explaining what the tier means.
-
-## 7. Connect wallet CTA enhancements
-
-Touch the existing CTA spots used by the new banners and `WalletCoverageIndicator`:
-
-- `JoinAsEarner.tsx` and `ConnectWallet.tsx` headers: append the line "Each connected wallet improves circular flow accuracy for {economyName}" plus a thin progress bar "Coverage: X / 20 wallets connected" using the same helper.
-- No change to the actual wallet-connect flow.
-
-## 8. Untouched
-
-- `calculate-score` edge function and all pillar math.
-- BTCMap sync.
-- Monthly transaction count, activity rate, merchant/earner counts (no disclaimers added).
-- `economy_wallet_metrics.real_circularity_rate` value — only how it is presented.
-
-## Theming / responsive
-
-- All new UI uses `var(--background)`, `var(--foreground)`, `var(--border)`, `var(--muted-foreground)`, `var(--primary)` and the existing `--score-amber / --score-green / --score-red` tokens — automatically dark/light correct.
-- Coverage card and banners stack vertically below `md:` breakpoint (768px).
-
-## Files touched
-
-New:
-- `src/lib/coverage.ts`
-- `src/components/WalletCoverageIndicator.tsx`
-
-Edited:
-- `src/components/charts/CircularFlowGauge.tsx`
-- `src/pages/CommunityDashboard.tsx`
-- `src/pages/EconomyAdminDashboard.tsx`
-- `src/pages/Leaderboard.tsx`
-- `src/pages/Homepage.tsx`
-- `src/pages/Methodology.tsx`
-- `src/pages/JoinAsEarner.tsx`
-- `src/pages/ConnectWallet.tsx`
-- `src/lib/api.ts` (add `connectedWallets` to community stats)
+Each step is independently shippable and independently verifiable.
