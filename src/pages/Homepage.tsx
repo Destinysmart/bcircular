@@ -560,7 +560,8 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
       </section>
       )}
 
-      {/* PILLARS */}
+      {/* PILLARS (landing only) */}
+      {gated && (
       <section className="border-t border-border bg-card/40">
         <div className="container py-16">
           <div className="text-center mb-10">
@@ -592,6 +593,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
           </div>
         </div>
       </section>
+      )}
 
       {/* FREE vs PRO DATA ACCESS */}
       <motion.section
