@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useMemo, useState } from 'react';
-import { ArrowRight, Store, Zap, Globe, Sparkles, TrendingUp, Star, Repeat, BarChart3, MapPin, CheckCircle2, ShieldCheck, Bitcoin } from 'lucide-react';
+import { ArrowRight, Store, Zap, Globe, Sparkles, TrendingUp, Star, Repeat, BarChart3, MapPin, CheckCircle2, ShieldCheck, Bitcoin, Plus, Layers, Check, Database, Lock } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
@@ -74,6 +75,14 @@ const HERO_IMAGE = heroImage;
 const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = false }: { topSlot?: React.ReactNode; hideHero?: boolean; compactHero?: boolean; gated?: boolean } = {}) => {
   const [filter, setFilter] = useState<FilterId>('featured');
   const { data, isLoading } = useQuery({ queryKey: ['communities-stats'], queryFn: fetchAllCommunitiesWithStats });
+  const { data: verifiedTxns } = useQuery({
+    queryKey: ['homepage-verified-txns'],
+    queryFn: async () => {
+      const { count } = await supabase.from('blink_transactions').select('*', { count: 'exact', head: true });
+      return count ?? 0;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
   const list: Economy[] = data || [];
   const heroHeight = compactHero ? 320 : 520;
   const heroHeightMobile = compactHero ? 260 : 380;
@@ -154,7 +163,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
             >
               <motion.div variants={fadeUp} custom={0} className="inline-flex items-center gap-2 rounded-full border border-score-amber/40 bg-score-amber/10 px-3 py-1 text-[11px] font-mono uppercase tracking-wider text-score-amber mb-6">
                 <Sparkles className="h-3 w-3" />
-                Bitcoin Circular Economy
+                The verified Bitcoin economy network
               </motion.div>
               <motion.h1 variants={fadeUp} custom={1} className={`${compactHero ? 'text-2xl sm:text-3xl md:text-4xl mb-3' : 'text-3xl sm:text-5xl md:text-6xl mb-4 md:mb-5'} font-extrabold tracking-tight leading-[1.1] text-foreground`}>
                 See where Bitcoin
@@ -163,7 +172,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
               </motion.h1>
               {!compactHero && (
                 <motion.p variants={fadeUp} custom={2} className="text-base md:text-lg text-muted-foreground max-w-lg leading-relaxed mb-6 md:mb-8">
-                  Track, measure and compare Bitcoin circular economies worldwide. Real data from real communities. No funds held. Ever.
+                  The open standard for measuring real Bitcoin adoption. Validator-verified data from circular economies on every continent — free for anyone to read, share, and build on.
                 </motion.p>
               )}
               {!compactHero && (
@@ -173,9 +182,9 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
                       Explore Economies <ArrowRight className="h-4 w-4" />
                     </Button>
                   </Link>
-                  <Link to="/leaderboard" className="w-full sm:w-auto">
-                    <Button variant="outline" size="lg" className="w-full sm:w-auto rounded-full px-6 h-12 border-foreground/20 hover:bg-foreground/5">
-                      View Leaderboard
+                  <Link to="/register" className="w-full sm:w-auto">
+                    <Button variant="outline" size="lg" className="w-full sm:w-auto rounded-full px-6 h-12 border-foreground/20 hover:bg-foreground/5 gap-2">
+                      Register your economy <ArrowRight className="h-4 w-4" />
                     </Button>
                   </Link>
                 </motion.div>
@@ -233,6 +242,23 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
         )}
       </section>
       )}
+
+      {/* TRUST STRIP */}
+      <section className="border-b border-border bg-card/40">
+        <div className="container py-3">
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
+            <TrustItem Icon={Globe} label={countries ? `${countries} countries` : '—'} />
+            <Dot />
+            <TrustItem Icon={Store} label={totalMerchants ? `${totalMerchants.toLocaleString()} merchants` : '—'} />
+            <Dot />
+            <TrustItem Icon={CheckCircle2} label={verifiedTxns != null ? `${verifiedTxns.toLocaleString()} verified txns` : '—'} />
+            <Dot />
+            <TrustItem Icon={ShieldCheck} label="2-of-3 validator consensus" />
+            <Dot />
+            <TrustItem Icon={Lock} label="Non-custodial — no funds held" />
+          </div>
+        </div>
+      </section>
 
       {topSlot}
 
@@ -496,24 +522,64 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
       {!gated && list.length > 0 && <GlobalEconomiesMap economies={list as any} />}
 
       {/* WHAT IS CIRCULARITY */}
+      {/* HOW IT WORKS — 3-STEP FLOW */}
+      <section className="border-t border-border">
+        <div className="container py-16">
+          <div className="text-center mb-10 max-w-2xl mx-auto">
+            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-4">
+              <Sparkles className="h-3 w-3" />
+              How it works
+            </div>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">From wallet to world stage in 3 steps</h2>
+            <p className="text-sm text-muted-foreground mt-2">A repeatable, validator-backed process. No funds held. Ever.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
+            {[
+              { n: 1, icon: <Plus className="h-5 w-5" />, title: 'Register your economy', desc: 'Tell us your name, region, and contact. Takes 2 minutes.', chip: 'Free forever' },
+              { n: 2, icon: <ShieldCheck className="h-5 w-5" />, title: 'Get validated', desc: '2 of 3 independent validators confirm real circular activity.', chip: 'Tamper-proof' },
+              { n: 3, icon: <BarChart3 className="h-5 w-5" />, title: 'Track & share', desc: 'Live dashboard, public profile, embeddable widget, open CSV.', chip: 'Public proof' },
+            ].map(s => (
+              <div key={s.n} className="relative rounded-2xl border border-border bg-card p-6 hover:border-score-amber/40 transition-colors">
+                <div className="absolute -top-3 left-6 h-7 w-7 rounded-full bg-score-amber text-background font-bold text-sm flex items-center justify-center">
+                  {s.n}
+                </div>
+                <div className="h-10 w-10 rounded-xl bg-score-amber/10 border border-score-amber/30 text-score-amber flex items-center justify-center mb-4 mt-2">
+                  {s.icon}
+                </div>
+                <div className="font-semibold text-base mb-1.5">{s.title}</div>
+                <div className="text-sm text-muted-foreground mb-4">{s.desc}</div>
+                <span className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full border border-border bg-background text-muted-foreground">
+                  <CheckCircle2 className="h-3 w-3 text-score-green" />
+                  {s.chip}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* PILLARS */}
       <section className="border-t border-border bg-card/40">
         <div className="container py-16">
           <div className="text-center mb-10">
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight">What makes an economy circular?</h2>
-            <p className="text-sm text-muted-foreground mt-2">Five pillars. One score. Zero guesswork.</p>
+            <p className="text-sm text-muted-foreground mt-2">Five pillars. One score. Validator-verified.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 max-w-6xl mx-auto">
             {[
-              { icon: <Repeat className="h-5 w-5" />, title: 'Retention', desc: 'Sats earned stay local.' },
-              { icon: <Zap className="h-5 w-5" />, title: 'Velocity', desc: 'How fast sats move.' },
-              { icon: <TrendingUp className="h-5 w-5" />, title: 'Growth', desc: 'New merchant adoption.' },
+              { icon: <Repeat className="h-5 w-5" />, title: 'Retention', desc: 'Sats earned stay local.', weight: '20 pts' },
+              { icon: <Zap className="h-5 w-5" />, title: 'Velocity', desc: 'How fast sats move between hands.', weight: '20 pts' },
+              { icon: <TrendingUp className="h-5 w-5" />, title: 'Growth', desc: 'New merchants and earners onboarded.', weight: '20 pts' },
+              { icon: <Layers className="h-5 w-5" />, title: 'Diversity', desc: 'Spread across categories and regions.', weight: '20 pts' },
+              { icon: <ShieldCheck className="h-5 w-5" />, title: 'Resilience', desc: 'Activity sustained over time.', weight: '20 pts' },
             ].map(p => (
-              <div key={p.title} className="rounded-2xl border border-border bg-card p-6 hover:border-score-amber/40 transition-colors">
-                <div className="h-10 w-10 rounded-xl bg-score-amber/10 border border-score-amber/30 text-score-amber flex items-center justify-center mb-4">
+              <div key={p.title} className="relative rounded-2xl border border-border bg-card p-5 hover:border-score-amber/40 transition-colors">
+                <span className="absolute top-3 right-3 text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{p.weight}</span>
+                <div className="h-10 w-10 rounded-xl bg-score-amber/10 border border-score-amber/30 text-score-amber flex items-center justify-center mb-3">
                   {p.icon}
                 </div>
-                <div className="font-semibold text-base mb-1">{p.title}</div>
-                <div className="text-sm text-muted-foreground">{p.desc}</div>
+                <div className="font-semibold text-sm mb-1">{p.title}</div>
+                <div className="text-xs text-muted-foreground leading-relaxed">{p.desc}</div>
               </div>
             ))}
           </div>
@@ -524,6 +590,67 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
           </div>
         </div>
       </section>
+
+      {/* FREE vs PRO DATA ACCESS */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-80px' }}
+        transition={{ duration: 0.5 }}
+        className="container py-16"
+      >
+        <div className="text-center mb-10 max-w-2xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Built for explorers. Trusted by researchers.</h2>
+          <p className="text-sm text-muted-foreground mt-2">Open by default. Premium where it matters.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+          {/* Free */}
+          <div className="rounded-2xl border border-border bg-card p-6 flex flex-col">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Free</div>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Anyone with an account</span>
+            </div>
+            <div className="text-xl font-bold text-foreground mb-1">Public Data</div>
+            <div className="text-2xl font-extrabold text-foreground mb-4">$0</div>
+            <ul className="space-y-2 mb-5 text-sm text-muted-foreground flex-1">
+              {['Live leaderboard & economy profiles', 'CSV snapshot download', 'Embeddable economy widget', 'Methodology + verified sources'].map(f => (
+                <li key={f} className="flex items-start gap-2">
+                  <Check className="h-4 w-4 text-score-green shrink-0 mt-0.5" />
+                  <span>{f}</span>
+                </li>
+              ))}
+            </ul>
+            <Link to="/data">
+              <Button variant="outline" className="w-full rounded-lg border-foreground/20">
+                Explore data <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </Link>
+          </div>
+          {/* Pro */}
+          <div className="relative rounded-2xl border border-score-amber/60 bg-gradient-to-br from-score-amber/[0.06] to-card p-6 flex flex-col">
+            <div className="absolute top-4 right-4 text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full bg-score-amber text-background font-bold">Pro</div>
+            <div className="flex items-center gap-2 mb-1">
+              <div className="text-[10px] uppercase tracking-widest text-score-amber font-semibold">Premium</div>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-score-amber/10 text-score-amber">Researchers · NGOs · Bitcoin cos</span>
+            </div>
+            <div className="text-xl font-bold text-foreground mb-1">Research & Partner Access</div>
+            <div className="text-2xl font-extrabold text-foreground mb-4">Apply / Contact</div>
+            <ul className="space-y-2 mb-5 text-sm text-muted-foreground flex-1">
+              {['Full historical dataset', 'Economy-level time series', 'API feeds & white-label', 'Custom exports & due diligence'].map(f => (
+                <li key={f} className="flex items-start gap-2">
+                  <Check className="h-4 w-4 text-score-amber shrink-0 mt-0.5" />
+                  <span>{f}</span>
+                </li>
+              ))}
+            </ul>
+            <Link to="/data">
+              <Button className="w-full rounded-lg bg-score-amber text-background hover:bg-score-amber/90 font-semibold">
+                Request access <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </motion.section>
 
       {/* REGISTER YOUR ECONOMY CTA */}
       {!gated && (
@@ -547,13 +674,13 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
             <div className="relative max-w-2xl">
               <div className="inline-flex items-center gap-2 rounded-full border border-score-amber/40 bg-score-amber/10 px-3 py-1 text-[11px] font-mono uppercase tracking-wider text-score-amber mb-4">
                 <Bitcoin className="h-3 w-3" />
-                Add your community
+                Add your economy
               </div>
               <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight text-foreground mb-3">
-                Is your Bitcoin community missing?
+                Is your Bitcoin economy missing from the map?
               </h2>
               <p className="text-sm md:text-base text-muted-foreground mb-6 leading-relaxed">
-                Join the global network of circular economies. Track your sats flow and prove real adoption.
+                Join the verified economies already proving real circulation on-chain. Free, non-custodial, takes 2 minutes.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link to="/register" className="w-full sm:w-auto">
@@ -679,5 +806,14 @@ const FooterCol = ({ title, links }: { title: string; links: [string, string][] 
     </ul>
   </div>
 );
+
+const TrustItem = ({ Icon, label }: { Icon: typeof Globe; label: string }) => (
+  <span className="inline-flex items-center gap-1.5">
+    <Icon className="h-3.5 w-3.5 text-score-amber" />
+    <span className="text-foreground/80">{label}</span>
+  </span>
+);
+
+const Dot = () => <span className="text-border">·</span>;
 
 export default Homepage;
