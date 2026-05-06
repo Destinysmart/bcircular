@@ -505,24 +505,64 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
       {!gated && list.length > 0 && <GlobalEconomiesMap economies={list as any} />}
 
       {/* WHAT IS CIRCULARITY */}
+      {/* HOW IT WORKS — 3-STEP FLOW */}
+      <section className="border-t border-border">
+        <div className="container py-16">
+          <div className="text-center mb-10 max-w-2xl mx-auto">
+            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-4">
+              <Sparkles className="h-3 w-3" />
+              How it works
+            </div>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">From wallet to world stage in 3 steps</h2>
+            <p className="text-sm text-muted-foreground mt-2">A repeatable, validator-backed process. No funds held. Ever.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
+            {[
+              { n: 1, icon: <Plus className="h-5 w-5" />, title: 'Register your economy', desc: 'Tell us your name, region, and contact. Takes 2 minutes.', chip: 'Free forever' },
+              { n: 2, icon: <ShieldCheck className="h-5 w-5" />, title: 'Get validated', desc: '2 of 3 independent validators confirm real circular activity.', chip: 'Tamper-proof' },
+              { n: 3, icon: <BarChart3 className="h-5 w-5" />, title: 'Track & share', desc: 'Live dashboard, public profile, embeddable widget, open CSV.', chip: 'Public proof' },
+            ].map(s => (
+              <div key={s.n} className="relative rounded-2xl border border-border bg-card p-6 hover:border-score-amber/40 transition-colors">
+                <div className="absolute -top-3 left-6 h-7 w-7 rounded-full bg-score-amber text-background font-bold text-sm flex items-center justify-center">
+                  {s.n}
+                </div>
+                <div className="h-10 w-10 rounded-xl bg-score-amber/10 border border-score-amber/30 text-score-amber flex items-center justify-center mb-4 mt-2">
+                  {s.icon}
+                </div>
+                <div className="font-semibold text-base mb-1.5">{s.title}</div>
+                <div className="text-sm text-muted-foreground mb-4">{s.desc}</div>
+                <span className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full border border-border bg-background text-muted-foreground">
+                  <CheckCircle2 className="h-3 w-3 text-score-green" />
+                  {s.chip}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* PILLARS */}
       <section className="border-t border-border bg-card/40">
         <div className="container py-16">
           <div className="text-center mb-10">
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight">What makes an economy circular?</h2>
-            <p className="text-sm text-muted-foreground mt-2">Five pillars. One score. Zero guesswork.</p>
+            <p className="text-sm text-muted-foreground mt-2">Five pillars. One score. Validator-verified.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 max-w-6xl mx-auto">
             {[
-              { icon: <Repeat className="h-5 w-5" />, title: 'Retention', desc: 'Sats earned stay local.' },
-              { icon: <Zap className="h-5 w-5" />, title: 'Velocity', desc: 'How fast sats move.' },
-              { icon: <TrendingUp className="h-5 w-5" />, title: 'Growth', desc: 'New merchant adoption.' },
+              { icon: <Repeat className="h-5 w-5" />, title: 'Retention', desc: 'Sats earned stay local.', weight: '20 pts' },
+              { icon: <Zap className="h-5 w-5" />, title: 'Velocity', desc: 'How fast sats move between hands.', weight: '20 pts' },
+              { icon: <TrendingUp className="h-5 w-5" />, title: 'Growth', desc: 'New merchants and earners onboarded.', weight: '20 pts' },
+              { icon: <Layers className="h-5 w-5" />, title: 'Diversity', desc: 'Spread across categories and regions.', weight: '20 pts' },
+              { icon: <ShieldCheck className="h-5 w-5" />, title: 'Resilience', desc: 'Activity sustained over time.', weight: '20 pts' },
             ].map(p => (
-              <div key={p.title} className="rounded-2xl border border-border bg-card p-6 hover:border-score-amber/40 transition-colors">
-                <div className="h-10 w-10 rounded-xl bg-score-amber/10 border border-score-amber/30 text-score-amber flex items-center justify-center mb-4">
+              <div key={p.title} className="relative rounded-2xl border border-border bg-card p-5 hover:border-score-amber/40 transition-colors">
+                <span className="absolute top-3 right-3 text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{p.weight}</span>
+                <div className="h-10 w-10 rounded-xl bg-score-amber/10 border border-score-amber/30 text-score-amber flex items-center justify-center mb-3">
                   {p.icon}
                 </div>
-                <div className="font-semibold text-base mb-1">{p.title}</div>
-                <div className="text-sm text-muted-foreground">{p.desc}</div>
+                <div className="font-semibold text-sm mb-1">{p.title}</div>
+                <div className="text-xs text-muted-foreground leading-relaxed">{p.desc}</div>
               </div>
             ))}
           </div>
