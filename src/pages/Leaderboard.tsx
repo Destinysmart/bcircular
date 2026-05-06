@@ -212,8 +212,34 @@ const Leaderboard = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="container py-10">
-        <div className="mb-6 rounded-xl border border-score-amber/30 bg-foreground px-5 py-4 font-mono text-sm font-semibold text-score-amber shadow-[0_0_24px_hsl(var(--score-amber)/0.10)] flex items-center gap-2">
-          <Globe className="w-4 h-4" /> {list.length} Bitcoin circular economies tracked globally
+        {/* Hero header */}
+        <div className="mb-8 rounded-2xl border border-border bg-gradient-to-br from-score-amber/[0.06] via-background to-background p-6 sm:p-8">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5">
+            <div className="space-y-3 max-w-2xl">
+              <div className="inline-flex items-center gap-2 rounded-full border border-score-amber/30 bg-score-amber/10 px-3 py-1 font-mono text-xs font-semibold text-score-amber">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-score-amber opacity-60" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-score-amber" />
+                </span>
+                <Globe className="h-3 w-3" />
+                {list.length} {list.length === 1 ? 'economy' : 'economies'} tracked globally
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Global Leaderboard</h1>
+              <p className="text-sm sm:text-base text-muted-foreground">
+                Explore, filter, and compare Bitcoin circular economies worldwide — ranked by real on-chain activity, not vibes.
+              </p>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <Link to="/compare">
+                <Button variant="outline" size="sm" className="rounded-full gap-1.5">
+                  <Scale className="h-3.5 w-3.5" /> Compare
+                </Button>
+              </Link>
+              <Button variant="outline" size="sm" className="rounded-full gap-1.5 lg:hidden" onClick={() => setSidebarOpen(o => !o)}>
+                <SlidersHorizontal className="h-3.5 w-3.5" /> Filters
+              </Button>
+            </div>
+          </div>
         </div>
 
         {mostImproved && (mostImproved.weeklyChange ?? 0) >= 3 && (
@@ -224,21 +250,6 @@ const Leaderboard = () => {
             <span className="text-muted-foreground">+{mostImproved.weeklyChange} score points</span>
           </div>
         )}
-
-        <div className="flex items-end justify-between mb-6 gap-4 flex-wrap">
-          <div>
-            <h1 className="text-2xl font-bold mb-1">Global Leaderboard</h1>
-            <p className="text-sm text-muted-foreground">Explore, filter, and compare Bitcoin economies worldwide.</p>
-          </div>
-          <div className="flex gap-2">
-            <Link to="/compare">
-              <Button variant="outline" size="sm" className="rounded-full gap-1.5"><Scale className="h-3.5 w-3.5" /> Compare</Button>
-            </Link>
-            <Button variant="outline" size="sm" className="rounded-full gap-1.5 lg:hidden" onClick={() => setSidebarOpen(o => !o)}>
-              <SlidersHorizontal className="h-3.5 w-3.5" /> Filters
-            </Button>
-          </div>
-        </div>
 
         {/* Search + sort row */}
         <div className="flex gap-3 mb-4 flex-wrap items-center sticky top-14 z-30 bg-background py-2 -mx-1 px-1 md:static md:bg-transparent md:py-0 md:mx-0 md:px-0">
