@@ -522,7 +522,8 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
       {!gated && list.length > 0 && <GlobalEconomiesMap economies={list as any} />}
 
       {/* WHAT IS CIRCULARITY */}
-      {/* HOW IT WORKS — 3-STEP FLOW */}
+      {/* HOW IT WORKS — 3-STEP FLOW (landing only) */}
+      {gated && (
       <section className="border-t border-border">
         <div className="container py-16">
           <div className="text-center mb-10 max-w-2xl mx-auto">
