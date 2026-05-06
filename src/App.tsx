@@ -30,6 +30,7 @@ import ConnectWallet from "./pages/ConnectWallet";
 import WalletDashboard from "./pages/WalletDashboard";
 import JoinAsEarner from "./pages/JoinAsEarner";
 import PublicData from "./pages/PublicData";
+import Pricing from "./pages/Pricing";
 import NotFound from "./pages/NotFound";
 import MyDashboardRedirect from "./pages/MyDashboardRedirect";
 import CircularAssistant from "./components/CircularAssistant";
