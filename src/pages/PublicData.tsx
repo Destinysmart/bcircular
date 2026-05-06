@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { fetchAllCommunitiesWithStats } from '@/lib/api';
 import { supabase } from '@/integrations/supabase/client';
+import AuthGate from '@/components/AuthGate';
+import { useAuth } from '@/contexts/AuthContext';
 
 type AccessTier = 'researcher' | 'organization' | 'partner';
 
