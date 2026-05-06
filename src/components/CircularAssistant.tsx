@@ -48,12 +48,20 @@ export default function CircularAssistant() {
     const slug = m[1];
     let cancel = false;
     (async () => {
-      const { data } = await supabase
+      const { data: comm } = await supabase
         .from('communities')
-        .select('name, latest_score')
+        .select('id, name')
         .eq('slug', slug)
         .maybeSingle();
-      if (!cancel && data) setEconomy({ name: data.name, latest_score: data.latest_score });
+      if (cancel || !comm) return;
+      const { data: score } = await supabase
+        .from('circularity_scores')
+        .select('total_score')
+        .eq('community_id', comm.id)
+        .order('calculated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!cancel) setEconomy({ name: comm.name, latest_score: (score as { total_score: number } | null)?.total_score ?? null });
     })();
     return () => { cancel = true; };
   }, [location.pathname]);
