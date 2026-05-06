@@ -626,7 +626,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
                 </li>
               ))}
             </ul>
-            <Link to="/data">
+            <Link to="/pricing">
               <Button className="w-full rounded-lg bg-score-amber text-background hover:bg-score-amber/90 font-semibold">
                 Request access <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
