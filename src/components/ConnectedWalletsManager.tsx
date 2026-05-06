@@ -17,6 +17,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { walletApi, fetchEconomyWalletMetrics } from '@/lib/walletApi';
 import { shareUrl } from '@/lib/shareUrl';
+import { friendlyError, friendlyToast } from '@/lib/friendlyError';
 import { toast } from '@/hooks/use-toast';
 
 interface Props { communityId: string }
@@ -145,9 +146,10 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
       await refetchMetrics(); await refetchTxStats();
       await invalidateAllStats();
     } catch (err: any) {
-      const message = err.message || 'Sync failed';
+      const f = friendlyError(err);
+      const message = f.hint ? `${f.description} ${f.hint}` : f.description;
       setResultById(prev => ({ ...prev, [id]: { type: 'error', message } }));
-      toast({ title: 'Sync failed', description: message, variant: 'destructive' });
+      toast(friendlyToast(err));
     } finally { setBusyId(null); }
   }
 
@@ -159,9 +161,10 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
       setResultById(prev => ({ ...prev, [id]: { type: 'success', message } }));
       toast({ title: 'Connection test passed', description: message });
     } catch (err: any) {
-      const message = err.message || 'Connection test failed';
+      const f = friendlyError(err);
+      const message = f.hint ? `${f.description} ${f.hint}` : f.description;
       setResultById(prev => ({ ...prev, [id]: { type: 'error', message } }));
-      toast({ title: 'Connection test failed', description: message, variant: 'destructive' });
+      toast(friendlyToast(err));
     } finally { setBusyId(null); }
   }
 
@@ -202,7 +205,7 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
       await Promise.all([refetch(), refetchMetrics(), refetchTxStats()]);
       await invalidateAllStats();
     } catch (err: any) {
-      toast({ title: 'Failed to disconnect', description: err.message, variant: 'destructive' });
+      toast(friendlyToast(err));
     } finally {
       setBusyId(null);
       setDisconnectTarget(null);
@@ -227,7 +230,7 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
       await refetchMetrics(); await refetchTxStats();
       await invalidateAllStats();
     } catch (err: any) {
-      toast({ title: 'Failed to delete', description: err.message, variant: 'destructive' });
+      toast(friendlyToast(err));
     } finally {
       setBusyId(null);
       setDeleteTarget(null);
