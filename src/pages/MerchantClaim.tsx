@@ -67,15 +67,15 @@ const MerchantClaim = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="container py-10 max-w-md">
+      <div className="container px-4 sm:px-6 py-8 sm:py-10 max-w-md">
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2 mb-1">
               <Wallet className="h-5 w-5 text-primary" />
               <CardTitle className="text-xl">Link your wallet</CardTitle>
             </div>
-            <CardDescription>
-              Merchant ID <span className="font-mono text-foreground">{publicId}</span>. No personal info required —
+            <CardDescription className="break-words">
+              Merchant ID <span className="font-mono text-foreground break-all">{publicId}</span>. No personal info required —
               we only link your Blink wallet to this anonymous ID.
             </CardDescription>
           </CardHeader>
@@ -89,7 +89,7 @@ const MerchantClaim = () => {
                   onChange={e => setToken(e.target.value)}
                   placeholder="From the link your admin sent"
                   required
-                  className="font-mono text-xs"
+                  className="font-mono text-base sm:text-xs h-11 sm:h-10"
                 />
               </div>
               <div>
@@ -100,7 +100,7 @@ const MerchantClaim = () => {
                   onChange={e => setWalletId(e.target.value)}
                   placeholder="Find this in your Blink app"
                   required
-                  className="font-mono text-xs"
+                  className="font-mono text-base sm:text-xs h-11 sm:h-10"
                 />
                 <a
                   href="https://www.blink.sv"
@@ -120,7 +120,7 @@ const MerchantClaim = () => {
                   onChange={e => setApiKey(e.target.value)}
                   placeholder="blink_…"
                   required
-                  className="font-mono text-xs"
+                  className="font-mono text-base sm:text-xs h-11 sm:h-10"
                   autoComplete="off"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
@@ -135,7 +135,7 @@ const MerchantClaim = () => {
                   How to get your API key <ExternalLink className="h-3 w-3" />
                 </a>
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="w-full h-11" disabled={loading}>
                 {loading ? 'Linking…' : 'Link wallet'}
               </Button>
               <p className="text-xs text-muted-foreground flex items-start gap-1.5">
