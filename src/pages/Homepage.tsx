@@ -714,35 +714,6 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
             <FooterCol title="Community" links={[['Register Economy', '/register'], ['Validate Data', '/validate'], ['Contact', 'mailto:hello@circular.app']]} />
           </div>
 
-          {/* Trust signals */}
-          <div className="border-t border-border pt-6 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-0 md:divide-x divide-border">
-              <a
-                href="https://btcmap.org"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2.5 px-4 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors group"
-              >
-                <MapPin className="h-4 w-4 text-score-amber" />
-                <span>
-                  Verified merchant data from <span className="font-semibold text-foreground group-hover:text-score-amber transition-colors">BTCMap</span>
-                </span>
-              </a>
-              <div className="flex items-center justify-center gap-2.5 px-4 py-2 text-xs text-muted-foreground">
-                <Bitcoin className="h-4 w-4 text-score-amber" />
-                <span>Built on Bitcoin. <span className="text-foreground font-medium">No custodial risk.</span> Ever.</span>
-              </div>
-              <Link
-                to="/methodology"
-                className="flex items-center justify-center gap-2.5 px-4 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors group"
-              >
-                <ShieldCheck className="h-4 w-4 text-score-amber" />
-                <span>
-                  <span className="font-semibold text-foreground group-hover:text-score-amber transition-colors">Open data.</span> Transparent methodology.
-                </span>
-              </Link>
-            </div>
-          </div>
 
           <div className="border-t border-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1">Built with <Zap className="w-3.5 h-3.5" style={{ color: '#F7931A' }} /> by the Bitcoin community · Open source</span>
