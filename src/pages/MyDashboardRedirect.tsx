@@ -29,6 +29,10 @@ const MyDashboardRedirect = () => {
       return data;
     },
     enabled: !!user,
+    refetchInterval: (q) => {
+      const d: any = q.state.data;
+      return d && d.status !== 'active' ? 30_000 : false;
+    },
   });
 
   // If active or super admin, jump straight in
