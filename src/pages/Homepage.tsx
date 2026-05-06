@@ -598,7 +598,6 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
       )}
 
       {/* FREE vs PRO DATA ACCESS */}
-      {gated && (
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -608,9 +607,9 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
       >
         <div className="text-center mb-10 max-w-2xl mx-auto">
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Built for explorers. Trusted by researchers.</h2>
-          <p className="text-sm text-muted-foreground mt-2">Open by default. Premium where it matters.</p>
+          <p className="text-sm text-muted-foreground mt-2">Open by default{gated ? '. Premium where it matters.' : '.'}</p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+        <div className={`grid grid-cols-1 ${gated ? 'md:grid-cols-2' : ''} gap-4 ${gated ? 'max-w-4xl' : 'max-w-xl'} mx-auto`}>
           {/* Free */}
           <div className="rounded-2xl border border-border bg-card p-6 flex flex-col">
             <div className="flex items-center gap-2 mb-1">
@@ -619,7 +618,28 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
             </div>
             <div className="text-xl font-bold text-foreground mb-1">Public Data</div>
             <div className="text-2xl text-foreground mb-4 font-bold">$0</div>
-...
+            <ul className="space-y-2 mb-5 text-sm text-muted-foreground flex-1">
+              {['Live leaderboard & economy profiles', 'CSV snapshot download', 'Embeddable economy widget', 'Methodology + verified sources'].map(f => (
+                <li key={f} className="flex items-start gap-2">
+                  <Check className="h-4 w-4 text-score-green shrink-0 mt-0.5" />
+                  <span>{f}</span>
+                </li>
+              ))}
+            </ul>
+            <Link to="/data">
+              <Button variant="outline" className="w-full rounded-lg border-foreground/20">
+                Explore data <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </Link>
+          </div>
+          {/* Pro - landing page only */}
+          {gated && (
+          <div className="rounded-2xl border border-score-amber/40 bg-card p-6 flex flex-col">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="text-[10px] uppercase tracking-widest text-score-amber font-semibold">Pro</div>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-score-amber/10 text-score-amber">Researchers · NGOs · Partners</span>
+            </div>
+            <div className="text-xl font-bold text-foreground mb-1">Full Access</div>
             <div className="text-2xl text-foreground mb-4 font-bold">Apply / Contact</div>
             <ul className="space-y-2 mb-5 text-sm text-muted-foreground flex-1">
               {['Full historical dataset', 'Economy-level time series', 'API feeds & white-label', 'Custom exports & due diligence'].map(f => (
@@ -635,9 +655,9 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
               </Button>
             </Link>
           </div>
+          )}
         </div>
       </motion.section>
-      )}
 
       {/* REGISTER YOUR ECONOMY CTA */}
       {!gated && (
