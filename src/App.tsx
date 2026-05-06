@@ -31,6 +31,7 @@ import WalletDashboard from "./pages/WalletDashboard";
 import JoinAsEarner from "./pages/JoinAsEarner";
 import PublicData from "./pages/PublicData";
 import NotFound from "./pages/NotFound";
+import MyDashboardRedirect from "./pages/MyDashboardRedirect";
 import CircularAssistant from "./components/CircularAssistant";
 
 const queryClient = new QueryClient();
@@ -62,6 +63,7 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/validate" element={<ValidatorDashboard />} />
               <Route path="/methodology" element={<Methodology />} />
+              <Route path="/dashboard" element={<MyDashboardRedirect />} />
               <Route path="/dashboard/economy/:id" element={<EconomyAdminDashboard />} />
               <Route path="/admin" element={<SuperAdminDashboard />} />
               <Route path="/settings" element={<Settings />} />
