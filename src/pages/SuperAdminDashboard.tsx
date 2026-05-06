@@ -123,6 +123,7 @@ const SuperAdminDashboard = () => {
   }, [communitiesUpdatedAt]);
 
   const handleCommunityAction = async (communityId: string, status: 'active' | 'suspended') => {
+    const community = communities?.find((c: any) => c.id === communityId);
     const { error } = await supabase.from('communities').update({ status }).eq('id', communityId);
     if (error) {
       toast({ title: 'Failed', description: error.message, variant: 'destructive' });
@@ -130,6 +131,27 @@ const SuperAdminDashboard = () => {
     }
     queryClient.invalidateQueries({ queryKey: ['admin-communities'] });
     toast({ title: `Economy ${status}` });
+
+    // Notify the economy admin by email when transitioning to active.
+    // The in-app alert is created automatically by the DB trigger.
+    if (status === 'active' && community?.contact_email) {
+      try {
+        await supabase.functions.invoke('send-transactional-email', {
+          body: {
+            templateName: 'economy-approved',
+            recipientEmail: community.contact_email,
+            idempotencyKey: `economy-approved-${communityId}`,
+            templateData: {
+              economyName: community.name,
+              dashboardUrl: `https://bitcoincircular.com/dashboard/economy/${communityId}`,
+            },
+          },
+        });
+      } catch (e) {
+        // Email infra may not be set up yet — never block the approval.
+        console.warn('approval email skipped', e);
+      }
+    }
   };
 
   const handleDeleteCommunity = async (communityId: string, communityName: string) => {
