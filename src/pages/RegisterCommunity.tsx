@@ -7,28 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { registerCommunity } from '@/lib/api';
-
-const countries = [
-  { name: 'El Salvador', code: 'SV', region: 'Latin America' },
-  { name: 'Nigeria', code: 'NG', region: 'Africa' },
-  { name: 'South Africa', code: 'ZA', region: 'Africa' },
-  { name: 'Costa Rica', code: 'CR', region: 'Latin America' },
-  { name: 'Guatemala', code: 'GT', region: 'Latin America' },
-  { name: 'Switzerland', code: 'CH', region: 'Europe' },
-  { name: 'Philippines', code: 'PH', region: 'Asia' },
-  { name: 'Senegal', code: 'SN', region: 'Africa' },
-  { name: 'Brazil', code: 'BR', region: 'Latin America' },
-  { name: 'Colombia', code: 'CO', region: 'Latin America' },
-  { name: 'Kenya', code: 'KE', region: 'Africa' },
-  { name: 'Ghana', code: 'GH', region: 'Africa' },
-  { name: 'Mexico', code: 'MX', region: 'Latin America' },
-  { name: 'Argentina', code: 'AR', region: 'Latin America' },
-];
+import { countries } from '@/lib/countries';
+import CountrySelect from '@/components/CountrySelect';
 
 const STEP_LABELS = ['Your Economy', 'Your Area', 'Your Story', 'Your Contact'] as const;
 
@@ -230,12 +214,7 @@ const RegisterCommunity = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <Label>Country</Label>
-                        <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-                          <SelectTrigger className="h-11"><SelectValue placeholder="Select country" /></SelectTrigger>
-                          <SelectContent>
-                            {countries.map((c) => <SelectItem key={c.code} value={c.name}>{c.name}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
+                        <CountrySelect value={selectedCountry} onChange={setSelectedCountry} />
                         {errors.country && <p className="text-xs text-destructive mt-1">{errors.country}</p>}
                       </div>
                       <div>
