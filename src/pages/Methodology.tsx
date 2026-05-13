@@ -1,5 +1,5 @@
 import Navbar from '@/components/Navbar';
-import { ExternalLink, Zap, MapPin, Trophy, type LucideIcon } from 'lucide-react';
+import { ExternalLink, Zap, MapPin, Trophy, Code, FileText, Lock, Github, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import circularLogo from '@/assets/circular-logo.png';
 
