@@ -298,7 +298,7 @@ const Methodology = () => (
           </p>
           <div className="mt-auto flex flex-wrap gap-2">
             <a
-              href="https://github.com/example/circular"
+              href="https://github.com/Destinysmart/bcircular"
               target="_blank"
               rel="noopener noreferrer"
             >
