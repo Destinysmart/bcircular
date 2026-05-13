@@ -1,5 +1,5 @@
 import Navbar from '@/components/Navbar';
-import { ExternalLink, Zap, MapPin, Trophy, type LucideIcon } from 'lucide-react';
+import { ExternalLink, Zap, MapPin, Trophy, Code, FileText, Lock, Github, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import circularLogo from '@/assets/circular-logo.png';
 
@@ -277,6 +277,85 @@ const Methodology = () => (
           are stored. Circular tracks <em>aggregate economic activity</em>, not individual financial
           behavior. No funds are held. Ever.
         </p>
+      </div>
+
+      {/* CODE TRANSPARENCY */}
+      <h2 className="text-2xl font-bold mb-2">Code Transparency</h2>
+      <p className="text-muted-foreground mb-6 max-w-3xl">
+        Every line of code that powers Circular is open source and available for public audit.
+        No black boxes. No hidden logic. Trust through verification.
+      </p>
+
+      <div className="grid md:grid-cols-2 gap-5 mb-10">
+        <div className="rounded-lg border border-border bg-card p-5 flex flex-col">
+          <div className="flex items-center gap-2 mb-3">
+            <Github className="w-5 h-5 text-foreground" />
+            <h3 className="font-semibold">Open Source Repository</h3>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            The entire application frontend, backend functions, and database schema are published
+            under an open-source license. Anyone can inspect, fork, or contribute.
+          </p>
+          <div className="mt-auto flex flex-wrap gap-2">
+            <a
+              href="https://github.com/example/circular"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button variant="outline" size="sm" className="gap-1.5">
+                <ExternalLink className="h-3.5 w-3.5" /> View on GitHub
+              </Button>
+            </a>
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-border bg-card p-5 flex flex-col">
+          <div className="flex items-center gap-2 mb-3">
+            <Code className="w-5 h-5 text-foreground" />
+            <h3 className="font-semibold">Auditable Scoring</h3>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            The circularity score algorithm, validator consensus logic, and all calculations are
+            implemented in open-source edge functions. No proprietary formulas.
+          </p>
+          <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside mt-auto">
+            <li>Score calculation functions</li>
+            <li>Validator consensus rules</li>
+            <li>Wallet sync & aggregation logic</li>
+          </ul>
+        </div>
+
+        <div className="rounded-lg border border-border bg-card p-5 flex flex-col">
+          <div className="flex items-center gap-2 mb-3">
+            <FileText className="w-5 h-5 text-foreground" />
+            <h3 className="font-semibold">Public Documentation</h3>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Methodology, API references, and integration guides are maintained as public
+            documentation. Changes are tracked and community-reviewed.
+          </p>
+          <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside mt-auto">
+            <li>Scoring methodology (this page)</li>
+            <li>API endpoint documentation</li>
+            <li>Database schema & RLS policies</li>
+          </ul>
+        </div>
+
+        <div className="rounded-lg border border-border bg-card p-5 flex flex-col">
+          <div className="flex items-center gap-2 mb-3">
+            <Lock className="w-5 h-5 text-foreground" />
+            <h3 className="font-semibold">Privacy by Design</h3>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Privacy claims are enforced in code, not just policy. All data handling is visible
+            in the open-source repository for independent verification.
+          </p>
+          <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside mt-auto">
+            <li>SHA-256 hashing implementation</li>
+            <li>Row-level security policies</li>
+            <li>No wallet address storage</li>
+          </ul>
+        </div>
       </div>
 
       <div className="flex items-center gap-3">
