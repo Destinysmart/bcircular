@@ -298,7 +298,7 @@ const Methodology = () => (
           </p>
           <div className="mt-auto flex flex-wrap gap-2">
             <a
-              href="https://github.com/example/circular"
+              href="https://github.com/Destinysmart/bcircular"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -359,7 +359,7 @@ const Methodology = () => (
       </div>
 
       <div className="flex items-center gap-3">
-        <a href="https://github.com/example/circular/issues/new" target="_blank" rel="noopener noreferrer">
+        <a href="https://github.com/Destinysmart/bcircular/issues/new" target="_blank" rel="noopener noreferrer">
           <Button variant="outline" size="sm" className="gap-1.5">
             <ExternalLink className="h-3.5 w-3.5" /> Suggest an improvement
           </Button>
