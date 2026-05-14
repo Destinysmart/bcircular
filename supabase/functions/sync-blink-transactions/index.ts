@@ -1,7 +1,25 @@
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+const ALLOWED_ORIGINS = [
+  'https://bitcoincircular.com',
+  'https://www.bitcoincircular.com',
+  'https://bcircular.lovable.app',
+]
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get('Origin') || ''
+  let allowed = ALLOWED_ORIGINS.includes(origin)
+  if (!allowed && origin) {
+    try {
+      const host = new URL(origin).hostname
+      if (/\.lovable\.app$|\.lovableproject\.dev$|\.lovable\.dev$/.test(host)) allowed = true
+    } catch {}
+  }
+  return {
+    'Access-Control-Allow-Origin': allowed ? origin : ALLOWED_ORIGINS[0],
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+    'Vary': 'Origin',
+  }
 }
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { z } from 'https://esm.sh/zod@3.25.76'
 
@@ -137,6 +155,7 @@ function humanBlinkError(err: unknown): { message: string; code: string; status:
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req)
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
