@@ -4,6 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Tag, CreditCard, ExternalLink } from 'lucide-react';
+import { useMapboxToken } from '@/hooks/useMapboxToken';
 
 interface Merchant {
   id: string;
@@ -20,8 +21,6 @@ interface MerchantMapProps {
   fallbackCenter?: { lat: number | null; lng: number | null } | null;
 }
 
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
-
 // Color tokens (mapbox needs literal hex; mirror our semantic palette)
 const COLOR_VERIFIED = '#818cf8'; // primary indigo
 const COLOR_BTCMAP = '#f59e0b'; // score-amber
@@ -34,6 +33,7 @@ const MerchantMap = ({ merchants, fallbackCenter }: MerchantMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const { data: MAPBOX_TOKEN } = useMapboxToken();
 
   const [activeCat, setActiveCat] = useState<string>('all');
   const [selected, setSelected] = useState<Merchant | null>(null);
@@ -94,7 +94,7 @@ const MerchantMap = ({ merchants, fallbackCenter }: MerchantMapProps) => {
       map.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [MAPBOX_TOKEN]);
 
   // Re-render markers when filtered list changes
   useEffect(() => {
@@ -139,7 +139,7 @@ const MerchantMap = ({ merchants, fallbackCenter }: MerchantMapProps) => {
   if (!MAPBOX_TOKEN) {
     return (
       <div className="h-[400px] bg-secondary/30 flex items-center justify-center text-muted-foreground text-sm">
-        <span className="font-mono">Set VITE_MAPBOX_TOKEN to enable map</span>
+        <span className="font-mono">Loading map…</span>
       </div>
     );
   }
