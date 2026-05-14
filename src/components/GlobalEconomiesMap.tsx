@@ -4,6 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { RotateCcw } from 'lucide-react';
+import { useMapboxToken } from '@/hooks/useMapboxToken';
 
 interface EconomyPin {
   id: string;
@@ -39,6 +40,7 @@ const GlobalEconomiesMap = ({ economies }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const initialBoundsRef = useRef<mapboxgl.LngLatBounds | null>(null);
+  const { data: MAPBOX_TOKEN } = useMapboxToken();
 
   useEffect(() => {
     if (!containerRef.current || !MAPBOX_TOKEN) return;
@@ -164,7 +166,7 @@ const GlobalEconomiesMap = ({ economies }: Props) => {
       mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, [economies]);
+  }, [economies, MAPBOX_TOKEN]);
 
   const handleReset = () => {
     if (!mapRef.current) return;
@@ -191,7 +193,7 @@ const GlobalEconomiesMap = ({ economies }: Props) => {
       <div className="relative rounded-2xl border border-border overflow-hidden bg-card">
         {!MAPBOX_TOKEN ? (
           <div className="h-[300px] md:h-[450px] flex items-center justify-center text-muted-foreground text-sm">
-            <span className="font-mono">Set VITE_MAPBOX_TOKEN to enable map</span>
+            <span className="font-mono">Loading map…</span>
           </div>
         ) : (
           <>
