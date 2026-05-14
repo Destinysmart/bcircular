@@ -193,7 +193,7 @@ Deno.serve(async (req) => {
     // 1. Get the Blink API key for this economy
     const { data: apiKeyRow, error: keyError } = await supabase
       .from('blink_api_keys')
-      .select('api_key_encrypted, id')
+      .select('api_key, id')
       .eq('community_id', community_id)
       .eq('is_active', true)
       .single()
@@ -205,7 +205,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    const blinkApiKey = apiKeyRow.api_key_encrypted
+    const blinkApiKey = apiKeyRow.api_key
 
     // 2. Fetch wallets from Blink
     const walletsData = await blinkGraphQL(blinkApiKey, WALLETS_QUERY)
