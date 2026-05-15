@@ -1,25 +1,7 @@
-const ALLOWED_ORIGINS = [
-  'https://bitcoincircular.com',
-  'https://www.bitcoincircular.com',
-  'https://bcircular.lovable.app',
-]
-function getCorsHeaders(req: Request) {
-  const origin = req.headers.get('Origin') || ''
-  let allowed = ALLOWED_ORIGINS.includes(origin)
-  if (!allowed && origin) {
-    try {
-      const host = new URL(origin).hostname
-      if (/\.lovable\.app$|\.lovableproject\.dev$|\.lovable\.dev$/.test(host)) allowed = true
-    } catch {}
-  }
-  return {
-    'Access-Control-Allow-Origin': allowed ? origin : ALLOWED_ORIGINS[0],
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-    'Vary': 'Origin',
-  }
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { z } from 'https://esm.sh/zod@3.25.76'
 
@@ -155,7 +137,6 @@ function humanBlinkError(err: unknown): { message: string; code: string; status:
 }
 
 Deno.serve(async (req) => {
-  const corsHeaders = getCorsHeaders(req)
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -212,7 +193,7 @@ Deno.serve(async (req) => {
     // 1. Get the Blink API key for this economy
     const { data: apiKeyRow, error: keyError } = await supabase
       .from('blink_api_keys')
-      .select('api_key, id')
+      .select('api_key_encrypted, id')
       .eq('community_id', community_id)
       .eq('is_active', true)
       .single()
@@ -224,7 +205,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    const blinkApiKey = apiKeyRow.api_key
+    const blinkApiKey = apiKeyRow.api_key_encrypted
 
     // 2. Fetch wallets from Blink
     const walletsData = await blinkGraphQL(blinkApiKey, WALLETS_QUERY)

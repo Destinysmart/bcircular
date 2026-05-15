@@ -1,1 +1,0 @@
-ALTER TABLE public.blink_api_keys RENAME COLUMN api_key_encrypted TO api_key;

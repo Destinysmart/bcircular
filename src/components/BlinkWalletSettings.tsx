@@ -76,7 +76,7 @@ const BlinkWalletSettings = ({ communityId, isAdmin }: BlinkWalletSettingsProps)
       // Upsert — if one exists, update it
       const { error } = await supabase.from('blink_api_keys').upsert({
         community_id: communityId,
-        api_key: apiKey.trim(),
+        api_key_encrypted: apiKey.trim(),
         is_active: true,
       }, { onConflict: 'community_id' });
       if (error) throw error;

@@ -16,7 +16,7 @@ export type Database = {
     Tables: {
       blink_api_keys: {
         Row: {
-          api_key: string
+          api_key_encrypted: string
           community_id: string
           created_at: string
           id: string
@@ -25,7 +25,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          api_key: string
+          api_key_encrypted: string
           community_id: string
           created_at?: string
           id?: string
@@ -34,7 +34,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          api_key?: string
+          api_key_encrypted?: string
           community_id?: string
           created_at?: string
           id?: string

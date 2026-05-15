@@ -1,26 +1,9 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
-const ALLOWED_ORIGINS = [
-  'https://bitcoincircular.com',
-  'https://www.bitcoincircular.com',
-  'https://bcircular.lovable.app',
-]
-function getCorsHeaders(req: Request) {
-  const origin = req.headers.get('Origin') || ''
-  let allowed = ALLOWED_ORIGINS.includes(origin)
-  if (!allowed && origin) {
-    try {
-      const host = new URL(origin).hostname
-      if (/\.lovable\.app$|\.lovableproject\.dev$|\.lovable\.dev$/.test(host)) allowed = true
-    } catch {}
-  }
-  return {
-    'Access-Control-Allow-Origin': allowed ? origin : ALLOWED_ORIGINS[0],
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-    'Vary': 'Origin',
-  }
-}
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 async function sha256Hex(input: string): Promise<string> {
   const buf = new TextEncoder().encode(input.trim().toLowerCase());
@@ -43,7 +26,6 @@ async function encrypt(plain: string, secret: string): Promise<string> {
 }
 
 Deno.serve(async (req) => {
-  const corsHeaders = getCorsHeaders(req)
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   try {
     const { owner_type, owner_id, api_key, ln_address } = await req.json();
