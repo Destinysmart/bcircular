@@ -508,23 +508,38 @@ const Leaderboard = () => {
                       </div>
 
                       {/* MOBILE card layout */}
-                      <div className="md:hidden p-3 space-y-3">
-                        <div className="flex items-center gap-3">
-                          <span
-                            className={`font-mono text-sm shrink-0 w-7 ${accentBorder ? rankClass : 'text-muted-foreground'}`}
-                            style={accentBorder ? { color: accentBorder } : undefined}
-                          >
+                      <div className="md:hidden p-4 space-y-3.5">
+                        {/* Header: rank pill + logo + name + score badge */}
+                        <div className="flex items-start gap-3">
+                          <span className={`shrink-0 inline-flex items-center justify-center h-6 px-2 rounded-full border font-mono text-[11px] font-semibold ${rankPillClass}`}>
                             #{rank}
                           </span>
                           <EconomyLogo economy={c as any} size="sm" className="!h-10 !w-10 shrink-0" />
                           <div className="min-w-0 flex-1">
-                            <div className="font-medium text-sm truncate">{c.name}</div>
-                            <div className="text-xs text-muted-foreground truncate">{c.city}, {c.country}</div>
+                            <div className="font-semibold text-sm truncate leading-tight">{c.name}</div>
+                            <div className="text-xs text-muted-foreground truncate mt-0.5 flex items-center gap-1">
+                              <span className="text-sm leading-none">{getFlagEmoji(c.countryCode || '')}</span>
+                              <span className="truncate">{c.city}, {c.country}</span>
+                            </div>
                           </div>
-                          <span className="text-lg shrink-0">{getFlagEmoji(c.countryCode || '')}</span>
+                          <div className="shrink-0 flex flex-col items-end gap-0.5">
+                            <div className={`inline-flex items-center justify-center h-11 w-11 rounded-full border-2 font-mono text-base font-bold tabular-nums ${getScoreColor(score)}`}
+                              style={{ borderColor: `hsl(var(--${score > 75 ? 'score-green' : score >= 50 ? 'score-amber' : 'score-red'}) / 0.5)`, background: `hsl(var(--${score > 75 ? 'score-green' : score >= 50 ? 'score-amber' : 'score-red'}) / 0.08)` }}
+                            >
+                              {score}
+                            </div>
+                            {delta !== 0 && (
+                              <span className={`inline-flex items-center gap-0.5 font-mono text-[10px] ${deltaColor}`}>
+                                <DeltaIcon className="h-2.5 w-2.5" />
+                                {delta > 0 ? '+' : ''}{delta}
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        {(c.fbce_tier || c.dataSource === 'btcmap' || c.dataSource === 'combined' || c.proofCount >= 0) && (
-                          <div className="flex items-center justify-center gap-1.5 flex-wrap">
+
+                        {/* Badges row, left-aligned */}
+                        {(c.fbce_tier || c.dataSource === 'btcmap' || c.dataSource === 'combined') && (
+                          <div className="flex items-center gap-1.5 flex-wrap">
                             {c.fbce_tier && <TierBadge tier={c.fbce_tier} verified={c.fbce_tier_verified} showSelfReported={false} />}
                             {(c.dataSource === 'btcmap' || c.dataSource === 'combined') && (
                               <Badge variant="outline" className="font-mono text-[10px] rounded-full">BTCMap</Badge>
@@ -533,15 +548,24 @@ const Leaderboard = () => {
                             <CoverageChip connected={(c as any).connectedWallets ?? 0} merchants={c.merchants ?? 0} earners={c.earners ?? 0} />
                           </div>
                         )}
+
+                        {/* Metrics grid */}
                         <div className="grid grid-cols-2 gap-2">
-                          <MobileMetric label="TXNS" value={(c.monthlyTransactions ?? 0).toLocaleString()} valueClass="text-score-amber" leadingIcon={<Zap className="w-3.5 h-3.5" style={{ color: '#F7931A' }} />} />
-                          <MobileMetric label="ACTIVITY" value={`${c.activityRate ?? 0}%`} />
-                          <MobileMetric label="MERCHANTS" value={String(c.merchants ?? 0)} />
-                          <MobileMetric label="CIRCULARITY" value={String(c.score ?? 0)} valueClass={getScoreColor(c.score ?? 0)} />
+                          <MobileMetric icon={<Zap className="w-3.5 h-3.5" style={{ color: '#F7931A' }} />} label="Txns / mo" value={(c.monthlyTransactions ?? 0).toLocaleString()} valueClass="text-score-amber" />
+                          <MobileMetric icon={<ActivityIcon className="w-3.5 h-3.5 text-muted-foreground" />} label="Active" value={`${c.activityRate ?? 0}%`} />
+                          <MobileMetric icon={<Store className="w-3.5 h-3.5 text-muted-foreground" />} label="Merchants" value={String(c.merchants ?? 0)} />
+                          <MobileMetric icon={<Gauge className="w-3.5 h-3.5 text-muted-foreground" />} label="Score" value={String(score)} valueClass={getScoreColor(score)} progress={score} progressClass={getScoreBgColor(score)} />
                         </div>
-                        <Button variant="outline" size="sm" className="w-full rounded-full" onClick={(e) => { e.stopPropagation(); navigate(`/c/${c.slug}`); }}>
-                          View
-                        </Button>
+
+                        {/* CTAs */}
+                        <div className="flex gap-2 pt-0.5">
+                          <Button size="sm" className="flex-1 rounded-full bg-score-amber text-background hover:bg-score-amber/90 font-semibold" onClick={(e) => { e.stopPropagation(); navigate(`/c/${c.slug}`); }}>
+                            View
+                          </Button>
+                          <Button variant="outline" size="sm" className="rounded-full gap-1.5" onClick={(e) => { e.stopPropagation(); navigate(`/compare?a=${c.slug}`); }}>
+                            <Scale className="h-3.5 w-3.5" /> Compare
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   );
