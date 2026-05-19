@@ -509,11 +509,87 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false }: { topSlot?
         )}
       </section>
 
+      {/* HOW THE DATA WORKS */}
+      <section className="border-t border-border bg-card/30">
+        <div className="container py-16">
+          <div className="max-w-2xl mb-10">
+            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-4">
+              <Database className="h-3 w-3" /> How the data works
+            </div>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-3">
+              Honest about where the numbers come from.
+            </h2>
+            <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+              We collect data we&apos;re allowed to collect, show what we can verify, and label everything else clearly.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { Icon: FlaskConical, title: 'Sample data, labelled', desc: 'A meaningful portion of what you see today is demo data used to test the platform. Real economies are clearly marked.' },
+              { Icon: CheckCircle2, title: 'Opt-in integrations', desc: 'Wallet sync (Blink) and merchant maps (BTCMap) are voluntary. Communities choose what to connect.' },
+              { Icon: Users, title: 'Aggregate, not personal', desc: 'We surface ecosystem-level counts and trends. Individual transactions are never publicly displayed.' },
+              { Icon: Globe, title: 'Ecosystem insight, not surveillance', desc: 'The goal is helping circular economies understand themselves — not tracking people.' },
+            ].map(card => (
+              <div key={card.title} className="rounded-2xl border border-border bg-card p-5">
+                <div className="h-10 w-10 rounded-xl bg-score-amber/10 border border-score-amber/30 text-score-amber flex items-center justify-center mb-3">
+                  <card.Icon className="h-5 w-5" />
+                </div>
+                <div className="font-semibold text-sm mb-1.5">{card.title}</div>
+                <div className="text-xs text-muted-foreground leading-relaxed">{card.desc}</div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-8">
+            <Link to="/methodology" className="inline-flex items-center gap-1 text-sm text-score-amber hover:underline">
+              Read the full methodology <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* PRIVACY FIRST */}
+      <section className="border-t border-border">
+        <div className="container py-16">
+          <div className="max-w-2xl mb-10">
+            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-4">
+              <Shield className="h-3 w-3" /> Privacy first
+            </div>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-3">
+              Show what Bitcoin does. Never who does it.
+            </h2>
+            <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+              Privacy isn&apos;t a feature we&apos;ll add later — it&apos;s the starting point.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { Icon: ShieldCheck, title: 'Built with consent', desc: 'Communities decide what to share and when.' },
+              { Icon: Users, title: 'Community-controlled', desc: 'Each economy owns its own data and integrations.' },
+              { Icon: EyeOff, title: 'Not surveillance', desc: 'Ecosystem activity only — never individual tracking.' },
+              { Icon: Lock, title: 'Disconnect = deletion', desc: 'Leaving permanently removes the associated data.' },
+            ].map(card => (
+              <div key={card.title} className="rounded-2xl border border-border bg-card p-5">
+                <div className="h-10 w-10 rounded-xl bg-score-green/10 border border-score-green/30 text-score-green flex items-center justify-center mb-3">
+                  <card.Icon className="h-5 w-5" />
+                </div>
+                <div className="font-semibold text-sm mb-1.5">{card.title}</div>
+                <div className="text-xs text-muted-foreground leading-relaxed">{card.desc}</div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-8">
+            <Link to="/privacy" className="inline-flex items-center gap-1 text-sm text-score-green hover:underline">
+              Read the full privacy philosophy <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* RECENT ACTIVITY (collapsible) */}
-      {!gated && list.length > 0 && <RecentActivityFeed />}
+      {list.length > 0 && <RecentActivityFeed />}
 
       {/* GLOBAL ECONOMIES MAP */}
-      {!gated && list.length > 0 && <GlobalEconomiesMap economies={list as any} />}
+      {list.length > 0 && <GlobalEconomiesMap economies={list as any} />}
 
       {/* WHAT IS CIRCULARITY */}
       {/* HOW IT WORKS — 3-STEP FLOW (landing only) */}
