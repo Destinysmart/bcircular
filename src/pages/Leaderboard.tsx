@@ -596,12 +596,36 @@ const Metric = ({ label, value, valueClass = 'text-foreground', leadingIcon }: {
   </div>
 );
 
-const MobileMetric = ({ icon, label, value, valueClass = 'text-foreground', progress, progressClass }: { icon?: React.ReactNode; label: string; value: string; valueClass?: string; progress?: number; progressClass?: string }) => (
+const MobileMetric = ({ icon, label, value, valueClass = 'text-foreground', progress, progressClass, hint }: { icon?: React.ReactNode; label: string; value: string; valueClass?: string; progress?: number; progressClass?: string; hint?: React.ReactNode }) => (
   <div className="rounded-lg border border-border bg-background/50 px-3 py-2 flex flex-col gap-1">
-    <span className="text-[10px] text-muted-foreground uppercase tracking-wider inline-flex items-center gap-1">
-      {icon}
-      {label}
-    </span>
+    {hint ? (
+      <Popover>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            onClick={(e) => e.stopPropagation()}
+            className="text-[10px] text-muted-foreground uppercase tracking-wider inline-flex items-center gap-1 self-start hover:text-foreground transition-colors"
+          >
+            {icon}
+            {label}
+            <Info className="w-2.5 h-2.5 opacity-60" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent
+          side="top"
+          align="start"
+          className="w-64 text-xs leading-relaxed"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {hint}
+        </PopoverContent>
+      </Popover>
+    ) : (
+      <span className="text-[10px] text-muted-foreground uppercase tracking-wider inline-flex items-center gap-1">
+        {icon}
+        {label}
+      </span>
+    )}
     <span className={`font-mono text-base font-bold tabular-nums ${valueClass}`}>
       {value}
     </span>
