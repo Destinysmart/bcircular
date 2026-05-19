@@ -36,13 +36,19 @@ import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
 import MyDashboardRedirect from "./pages/MyDashboardRedirect";
 import CircularAssistant from "./components/CircularAssistant";
+import InstallAppPrompt from "./components/InstallAppPrompt";
 
 const queryClient = new QueryClient();
 
 function AssistantGate() {
   const { pathname } = useLocation();
   if (pathname.startsWith('/widget/') || pathname === '/widget') return null;
-  return <CircularAssistant />;
+  return (
+    <>
+      <CircularAssistant />
+      <InstallAppPrompt />
+    </>
+  );
 }
 
 const App = () => (

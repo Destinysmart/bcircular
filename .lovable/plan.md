@@ -1,57 +1,52 @@
-## Manifest-only PWA (installable, no service worker)
+# Smart "Install App" CTA
 
-Goal: make Bitcoin Circular installable to the home screen on iOS and Android with the official logo, standalone display, and brand-themed splash — without any service worker, offline cache, or background sync. Data stays always-fresh from Lovable Cloud.
+Add a non-intrusive, dismissible prompt that helps users install Bitcoin Circular to their home screen — using the native Android prompt when available, and showing iOS Safari "Share → Add to Home Screen" steps otherwise.
 
-### What ships
+## Behavior
 
-1. **`public/manifest.webmanifest`** — new file
-   - `name`: "Bitcoin Circular"
-   - `short_name`: "Circular"
-   - `description`: same as site meta description
-   - `start_url`: `/`
-   - `scope`: `/`
-   - `display`: `standalone`
-   - `orientation`: `portrait`
-   - `theme_color`: brand indigo (from `index.css` `--primary`)
-   - `background_color`: brand background (from `index.css` `--background`)
-   - `icons`: 192×192 and 512×512 PNGs (both `purpose: "any"` and a `maskable` 512 variant) sourced from the existing brand kit
-   - `categories`: `["finance", "productivity"]`
+**When it shows (smart triggers, all must pass):**
+- App is NOT already installed (no `display-mode: standalone`, no iOS `navigator.standalone`)
+- Not inside an iframe (skips Lovable preview entirely)
+- On a mobile device (Android Chrome/Edge or iOS Safari) — desktop hidden
+- User has visited at least 2 times OR spent >20s on current visit (avoids first-impression spam)
+- Not dismissed in the last 14 days (stored in `localStorage`)
+- Not permanently dismissed ("Don't show again")
 
-2. **Icon files in `public/`** — reuse the official logo PNGs already in the brand assets kit. Add if missing:
-   - `icon-192.png`
-   - `icon-512.png`
-   - `icon-maskable-512.png` (logo with safe-zone padding so Android adaptive masks don't crop it)
-   - `apple-touch-icon.png` (180×180, opaque background so iOS doesn't show transparency)
+**How it appears:**
+- Slide-up bottom sheet/banner above the mobile nav, with brand logo, "Install Bitcoin Circular", short value line ("One tap from your home screen — always fresh data"), an **Install** button, and a small **×** close button.
+- Subtle entrance animation (framer-motion, already in stack).
 
-3. **`index.html`** — add inside `<head>`:
-   - `<link rel="manifest" href="/manifest.webmanifest" />`
-   - `<link rel="apple-touch-icon" href="/apple-touch-icon.png" />`
-   - `<meta name="theme-color" content="<brand indigo hsl→hex>" />`
-   - `<meta name="apple-mobile-web-app-capable" content="yes" />`
-   - `<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />`
-   - `<meta name="apple-mobile-web-app-title" content="Circular" />`
-   - `<meta name="mobile-web-app-capable" content="yes" />`
+**Interactions:**
+- **Android** (when `beforeinstallprompt` fires): tapping **Install** calls `prompt()`. If accepted → hide forever. If dismissed → snooze 14 days.
+- **iOS Safari**: tapping **Install** opens a small modal/sheet with illustrated 3-step instructions (Tap Share icon → Scroll → "Add to Home Screen"). Includes a "Got it" button that snoozes 14 days.
+- **× / Cancel**: snoozes 14 days.
+- **"Don't show again"** link inside the iOS modal: permanent dismiss.
 
-### What is explicitly NOT included
+## Files
 
-- No `vite-plugin-pwa`, no `sw.js`, no `service-worker.js`
-- No offline cache, no runtime caching, no precache
-- No install-prompt UI / `beforeinstallprompt` handler
-- No push notifications
-- No version-polling endpoints or cache-busting meta tags
+**New: `src/hooks/useInstallPrompt.ts`**
+- Captures the `beforeinstallprompt` event (calls `preventDefault`, stashes it).
+- Detects platform: `isIOS`, `isAndroid`, `isStandalone`, `isInIframe`.
+- Exposes `{ canPromptNative, isIOSInstallable, promptInstall, dismiss(days), permanentlyDismiss, shouldShow }`.
+- Tracks visit count + first-visit timestamp in `localStorage` under `bc_install_*` keys.
+- Listens for `appinstalled` event to mark permanently installed.
 
-### Why this is safe for the Lovable preview
+**New: `src/components/InstallAppPrompt.tsx`**
+- Bottom banner using existing design tokens (card bg, border, score-amber accent for the Install button to match the brand CTA in `Navbar`/`Home`).
+- iOS instructions rendered inside the existing `Sheet` or `Dialog` component (already in `components/ui/`).
+- Uses `lucide-react` icons: `Download`, `Share`, `PlusSquare`, `X`.
+- Pure presentation — no business logic, no Supabase calls.
 
-No service worker is registered, so there is nothing to intercept iframe navigations or serve stale shells. The manifest itself is inert until a user taps "Add to Home Screen" on a real device on the published domain.
+**Edit: `src/App.tsx`**
+- Mount `<InstallAppPrompt />` once at the app root (next to `<AssistantGate />`), so it works on every page.
+- Hidden on `/widget/*` routes (same pattern as `AssistantGate`).
 
-### Verification
+## Out of scope
+- No service worker, no offline cache (manifest-only PWA stays intact).
+- No backend tracking of installs.
+- No changes to `index.html` or `manifest.webmanifest` (already configured).
 
-After implementation:
-- Confirm `manifest.webmanifest` is reachable and valid JSON
-- Confirm `index.html` head includes the new tags
-- Note to user: install only works on the published URL (bitcoincircular.com), not inside the editor preview iframe
-
-### Caveats to flag to the user
-
-- Manifest fields (`name`, `start_url`, `display`, icons) are pinned at install time per device. Picking good values now matters because existing installs won't update them later.
-- "Add to Home Screen" on iOS is a manual user action in Safari's share sheet — there is no install prompt.
+## Notes / caveats
+- iOS Safari does not expose `beforeinstallprompt`, so the only path on iOS is the instruction sheet — this is expected and matches Apple's platform.
+- The prompt is entirely invisible inside the Lovable editor preview (iframe guard), so this won't clutter your editing experience. You'll only see it on `bitcoincircular.com` on a real phone.
+- `localStorage` keys are namespaced `bc_install_*` so they're easy to clear during testing.
