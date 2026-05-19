@@ -5,7 +5,7 @@ import Home from '@/pages/Home';
 const RootRedirect = () => {
   const { user, loading } = useAuth();
   if (loading) return null;
-  return user ? <Home /> : <Homepage gated />;
+  return user ? <Home /> : <Homepage />;
 };
 
 export default RootRedirect;

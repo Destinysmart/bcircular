@@ -3,8 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowUpRight, Globe, Scale, Search, SlidersHorizontal, X, Zap, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import Navbar from '@/components/Navbar';
-import AuthGate from '@/components/AuthGate';
-import { useAuth } from '@/contexts/AuthContext';
 import ConfidenceBadge from '@/components/ConfidenceBadge';
 import EconomyLogo from '@/components/EconomyLogo';
 import { TierBadge } from '@/components/TierBadge';
@@ -43,7 +41,6 @@ const scoreBorderColor = (score: number) => {
 
 const Leaderboard = () => {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
 
   const [search, setSearch] = useState('');
   const [region, setRegion] = useState('All');
@@ -199,14 +196,6 @@ const Leaderboard = () => {
     return [...list].filter(c => (c.weeklyChange ?? 0) > 0).sort((a, b) => (b.weeklyChange ?? 0) - (a.weeklyChange ?? 0))[0];
   }, [list]);
 
-  if (!authLoading && !user) {
-    return (
-      <AuthGate
-        title="Unlock the full leaderboard"
-        message="Sign up to access the full leaderboard, compare economies, and track your Bitcoin circular economy."
-      />
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">
