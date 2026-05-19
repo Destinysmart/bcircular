@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LogOut, Menu, Shield, Settings, X, Sun, Moon, Home, Trophy, BarChart2, PlusCircle, CheckCircle, Database } from 'lucide-react';
+import { LogOut, Menu, Shield, Settings, X, Sun, Moon, Home, Trophy, BarChart2, PlusCircle, CheckCircle, Database, BookOpen, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
@@ -26,10 +26,10 @@ const Navbar = () => {
 
   const navLinks = [
     { to: '/', label: 'Home', Icon: Home },
-    { to: '/leaderboard', label: 'Leaderboard', Icon: Trophy },
-    { to: '/compare', label: 'Compare', Icon: BarChart2 },
+    { to: '/leaderboard', label: 'Explore', Icon: Trophy },
+    { to: '/methodology', label: 'Methodology', Icon: BookOpen },
+    { to: '/privacy', label: 'Privacy', Icon: ShieldCheck },
     { to: '/data', label: 'Data', Icon: Database },
-    { to: '/register', label: 'Register', Icon: PlusCircle },
     ...(user ? [{ to: '/validate', label: 'Validate', Icon: CheckCircle }] : []),
   ];
 
