@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowUpRight, Globe, Scale, Search, SlidersHorizontal, X, Zap, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { ArrowUpRight, Globe, Scale, Search, SlidersHorizontal, X, Zap, TrendingUp, TrendingDown, Minus, Circle } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import ConfidenceBadge from '@/components/ConfidenceBadge';
 import EconomyLogo from '@/components/EconomyLogo';
