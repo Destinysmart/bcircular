@@ -18,6 +18,7 @@ import EconomyGrowthPanel from '@/components/EconomyGrowthPanel';
 import TransactionActivityChart from '@/components/charts/TransactionActivityChart';
 import EcosystemGrowthChart from '@/components/charts/EcosystemGrowthChart';
 import EconomyLogo from '@/components/EconomyLogo';
+import WidgetEmbedBuilder from '@/components/WidgetEmbedBuilder';
 import { TierBadge, TIER_CHECKLIST, getTierMeta, type FbceTier } from '@/components/TierBadge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -219,7 +220,7 @@ const CommunityDashboard = () => {
     { label: 'Growth', value: latestScore?.growth_score ?? 0 },
   ];
 
-  const widgetCode = `<iframe src="${window.location.origin}/widget/${slug}" width="280" height="120" frameborder="0"></iframe>`;
+  
 
   return (
     <div className="min-h-screen bg-background">
@@ -528,11 +529,7 @@ const CommunityDashboard = () => {
         </div>
 
         {/* Embed Widget */}
-        <div className="rounded-xl border border-border bg-card p-5">
-          <h3 className="text-xs uppercase tracking-wider text-muted-foreground mb-3">Embed Widget</h3>
-          <p className="text-sm text-muted-foreground mb-3">Paste this on your website to show your economy's circularity score.</p>
-          <pre className="bg-secondary rounded-lg p-4 text-xs font-mono text-foreground overflow-x-auto">{widgetCode}</pre>
-        </div>
+        <WidgetEmbedBuilder slug={community.slug} />
       </div>
     </div>
   );
