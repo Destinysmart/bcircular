@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowUpRight, Globe, Scale, Search, SlidersHorizontal, X, Zap, TrendingUp, TrendingDown, Minus, Circle } from 'lucide-react';
+import { ArrowUpRight, Globe, Scale, Search, SlidersHorizontal, X, Zap, TrendingUp, TrendingDown, Minus, Circle, Activity as ActivityIcon, Store, Gauge } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import ConfidenceBadge from '@/components/ConfidenceBadge';
 import EconomyLogo from '@/components/EconomyLogo';
@@ -452,11 +452,21 @@ const Leaderboard = () => {
                   const rankClass =
                     rank === 1 ? 'font-bold' : rank === 2 ? 'font-bold' : rank === 3 ? 'font-bold' : '';
 
+                  const score = c.score ?? 0;
+                  const delta = c.weeklyChange ?? 0;
+                  const DeltaIcon = delta > 0 ? TrendingUp : delta < 0 ? TrendingDown : Minus;
+                  const deltaColor = delta > 0 ? 'text-score-green' : delta < 0 ? 'text-destructive' : 'text-muted-foreground';
+                  const rankPillClass =
+                    rank === 1 ? 'bg-score-amber/15 text-score-amber border-score-amber/40'
+                    : rank === 2 ? 'bg-muted-foreground/15 text-muted-foreground border-muted-foreground/40'
+                    : rank === 3 ? 'bg-[#92400E]/15 text-[#B8732D] border-[#92400E]/40'
+                    : 'bg-muted/40 text-muted-foreground border-border';
+
                   return (
                     <div
                       key={c.id || i}
                       onClick={() => navigate(`/c/${c.slug}`)}
-                      className={`group rounded-xl border border-border md:border-0 md:border-l-4 ${scoreBorderColor(c.score ?? 0)} cursor-pointer transition-all hover:bg-secondary/60 hover:shadow-[0_0_24px_hsl(var(--score-amber)/0.12)]`}
+                      className={`group rounded-xl border border-border border-l-4 ${scoreBorderColor(score)} cursor-pointer transition-all hover:bg-secondary/60 hover:shadow-[0_0_24px_hsl(var(--score-amber)/0.12)] active:scale-[0.99]`}
                       style={accentBorder ? { borderLeftColor: accentBorder, borderLeftWidth: 4 } : undefined}
                     >
                       {/* DESKTOP layout */}
