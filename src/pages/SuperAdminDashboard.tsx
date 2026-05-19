@@ -207,7 +207,7 @@ const SuperAdminDashboard = () => {
       const { data, error } = await supabase.functions.invoke('calculate-score', { body: { recalculate_all: true } });
       if (error) throw error;
       const n = data?.results?.length ?? 0;
-      toast({ title: `Recalculated scores for ${n} economies ✓` });
+      toast({ title: `Recalculated scores for ${n} economies` });
       queryClient.invalidateQueries();
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });

@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { submitMerchant, submitEarner, fetchCommunityBySlug } from '@/lib/api';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import { Zap } from 'lucide-react';
+import { Zap, Check, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type Tab = 'merchant' | 'earner';
@@ -93,8 +93,8 @@ const WalletTrackingBlock = ({
       />
     </div>
     <div className="text-[11px] text-muted-foreground space-y-0.5">
-      <div>✓ Read-only · ✓ No personal data · ✓ Encrypted</div>
-      {showDisconnectNote && <div>✓ You can disconnect at any time</div>}
+      <div className="inline-flex items-center gap-1 flex-wrap"><Check className="h-3 w-3 text-score-green" /> Read-only · <Check className="h-3 w-3 text-score-green" /> No personal data · <Check className="h-3 w-3 text-score-green" /> Encrypted</div>
+      {showDisconnectNote && <div className="inline-flex items-center gap-1"><Check className="h-3 w-3 text-score-green" /> You can disconnect at any time</div>}
     </div>
   </div>
 );
@@ -206,7 +206,7 @@ const SubmitPage = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="container py-16 max-w-lg text-center">
-          <div className="text-4xl mb-4 text-score-amber">✓</div>
+          <CheckCircle2 className="h-12 w-12 mx-auto mb-4 text-score-amber" />
           <h2 className="text-xl font-semibold mb-2">Submitted successfully</h2>
           <p className="text-muted-foreground text-sm">
             Your submission is being reviewed by validators.

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Wallet, RefreshCw, Eye, EyeOff, Zap, Shield, Unlink } from 'lucide-react';
+import { Wallet, RefreshCw, Eye, EyeOff, Zap, Shield, Unlink, Check } from 'lucide-react';
 
 interface BlinkWalletSettingsProps {
   communityId: string;
@@ -192,8 +192,8 @@ const BlinkWalletSettings = ({ communityId, isAdmin }: BlinkWalletSettingsProps)
             Get your key from <a href="https://dashboard.blink.sv" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">dashboard.blink.sv</a>.
           </p>
           <div className="flex items-center gap-2 mb-2">
-            <Badge variant={hasApiKey ? 'default' : 'secondary'} className="text-xs">
-              {checkingKey ? '...' : hasApiKey ? '✓ Key configured' : 'No key set'}
+            <Badge variant={hasApiKey ? 'default' : 'secondary'} className="text-xs inline-flex items-center gap-1">
+              {checkingKey ? '...' : hasApiKey ? <><Check className="h-3 w-3" /> Key configured</> : 'No key set'}
             </Badge>
           </div>
           <div className="flex gap-2">

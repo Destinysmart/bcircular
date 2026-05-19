@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Zap, ArrowRight, Wallet } from 'lucide-react';
+import { Zap, ArrowRight, Wallet, Recycle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -63,7 +63,7 @@ export default function CircularFlowSpotlight({ communityId, slug }: Props) {
         <span className="ml-auto text-muted-foreground normal-case tracking-normal">last 30 days</span>
       </div>
 
-      <div className="text-3xl font-bold text-foreground mb-1">🔄 {data.internalCount} circular transaction{data.internalCount === 1 ? '' : 's'} detected</div>
+      <div className="text-3xl font-bold text-foreground mb-1 flex items-center gap-2"><Recycle className="h-6 w-6 text-score-green" /> {data.internalCount} circular transaction{data.internalCount === 1 ? '' : 's'} detected</div>
       <p className="text-sm text-muted-foreground mb-4">
         <span className="font-mono text-foreground">{data.pct}%</span> of monitored sats stayed inside this economy
         {' · '}<span className="font-mono text-foreground">{data.circularSats.toLocaleString()}</span> sats circular volume

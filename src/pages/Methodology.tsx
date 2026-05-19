@@ -216,7 +216,7 @@ const Methodology = () => (
           <ul className="space-y-2 text-sm">
             <li className="flex items-start gap-2">
               <span className="text-score-green mt-0.5">→</span>
-              <span><strong className="text-foreground">If both are connected to this economy:</strong> Tagged as <span className="font-mono text-score-green">INTERNAL FLOW ✓</span></span>
+              <span><strong className="text-foreground">If both are connected to this economy:</strong> Tagged as <span className="font-mono text-score-green">INTERNAL FLOW</span></span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-score-amber mt-0.5">→</span>

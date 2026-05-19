@@ -26,7 +26,7 @@ const ValidatorEmptyState = () => (
         <button
           onClick={() => {
             navigator.clipboard.writeText(`${window.location.origin}/quick-submit`);
-            sonnerToast.success('Link copied ✓');
+            sonnerToast.success('Link copied');
           }}
           style={{ background: '#F59E0B', color: '#0A0F1E', border: 'none', borderRadius: 6, padding: '4px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}
         >

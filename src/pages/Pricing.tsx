@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { z } from 'zod';
-import { ArrowRight, Check, ShieldCheck, Database, Sparkles, Globe, BarChart3, Mail } from 'lucide-react';
+import { ArrowRight, Check, ShieldCheck, Database, Sparkles, Globe, BarChart3, Mail, ChevronDown } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -313,7 +313,7 @@ const Pricing = () => {
               <details key={q} className="group rounded-xl border border-border bg-card p-4">
                 <summary className="cursor-pointer font-medium text-foreground flex items-center justify-between">
                   {q}
-                  <span className="text-muted-foreground group-open:rotate-180 transition-transform">⌄</span>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground group-open:rotate-180 transition-transform" />
                 </summary>
                 <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{a}</p>
               </details>
