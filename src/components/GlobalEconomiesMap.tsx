@@ -4,6 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { RotateCcw } from 'lucide-react';
+import { useMapboxToken } from '@/hooks/useMapboxToken';
 
 interface EconomyPin {
   id: string;
