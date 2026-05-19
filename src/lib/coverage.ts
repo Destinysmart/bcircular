@@ -9,7 +9,7 @@
  *   1–2    → limited   (red,    "Very Limited")
  *   3–9    → partial   (amber,  "Partial")
  *   10–19  → good      (green,  "Good")
- *   20+    → high      (green,  "High ✓")
+ *   20+    → high      (green,  "High")
  */
 export type CoverageTier = 'none' | 'limited' | 'partial' | 'good' | 'high';
 

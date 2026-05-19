@@ -601,7 +601,7 @@ const CoverageChip = ({ connected, merchants, earners }: { connected: number; me
         backgroundColor: `hsl(var(--${cov.colorToken}) / 0.08)`,
       }}
     >
-      <span aria-hidden>{cov.emoji}</span>
+      <Circle className="h-1.5 w-1.5 fill-current" aria-hidden />
       {cov.label}
     </span>
   );
