@@ -52,13 +52,8 @@ const GlobalEconomiesMap = ({ economies }: Props) => {
       .filter((x): x is { eco: EconomyPin; coords: [number, number] } => x.coords !== null);
 
     const isMobile = window.innerWidth < 768;
-
-    // Desktop only: force explicit pixel dimensions on the container before init
-    // so Mapbox doesn't read a 0px height during section reorder/animation.
-    if (!isMobile && containerRef.current) {
-      containerRef.current.style.width = '100%';
-      containerRef.current.style.height = '450px';
-    }
+    // Container height comes from Tailwind class h-[300px] md:h-[450px]. Do NOT
+    // override inline styles — that breaks the responsive breakpoint flip.
 
     mapRef.current = new mapboxgl.Map({
       container: containerRef.current,
