@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -38,6 +38,12 @@ import MyDashboardRedirect from "./pages/MyDashboardRedirect";
 import CircularAssistant from "./components/CircularAssistant";
 
 const queryClient = new QueryClient();
+
+function AssistantGate() {
+  const { pathname } = useLocation();
+  if (pathname.startsWith('/widget/') || pathname === '/widget') return null;
+  return <CircularAssistant />;
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -85,7 +91,7 @@ const App = () => (
               <Route path="/earner/dashboard" element={<WalletDashboard ownerType="earner" />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-            <CircularAssistant />
+            <AssistantGate />
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>
