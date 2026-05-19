@@ -41,6 +41,7 @@ const GlobalEconomiesMap = ({ economies }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const initialBoundsRef = useRef<mapboxgl.LngLatBounds | null>(null);
+  const { token: MAPBOX_TOKEN } = useMapboxToken();
 
   useEffect(() => {
     if (!containerRef.current || !MAPBOX_TOKEN) return;
