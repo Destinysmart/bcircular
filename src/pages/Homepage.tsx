@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom';
 import { useMemo, useState } from 'react';
-import { ArrowRight, Store, Zap, Globe, Sparkles, TrendingUp, Star, Repeat, BarChart3, MapPin, CheckCircle2, ShieldCheck, Bitcoin, Plus, Layers, Check, Database, Lock } from 'lucide-react';
+import { ArrowRight, Store, Zap, Globe, Sparkles, TrendingUp, Star, Repeat, BarChart3, MapPin, CheckCircle2, ShieldCheck, Bitcoin, Plus, Layers, Check, Database, Lock, Shield, EyeOff, Users, FlaskConical } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
+import TransparencyBanner from '@/components/TransparencyBanner';
 import GlobalEconomiesMap from '@/components/GlobalEconomiesMap';
 import RecentActivityFeed from '@/components/RecentActivityFeed';
 import { useCountUp } from '@/hooks/useCountUp';
@@ -72,7 +73,7 @@ type FilterId = typeof FILTERS[number]['id'];
 
 const HERO_IMAGE = heroImage;
 
-const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = false }: { topSlot?: React.ReactNode; hideHero?: boolean; compactHero?: boolean; gated?: boolean } = {}) => {
+const Homepage = ({ topSlot, hideHero = false, compactHero = false }: { topSlot?: React.ReactNode; hideHero?: boolean; compactHero?: boolean } = {}) => {
   const [filter, setFilter] = useState<FilterId>('featured');
   const { data, isLoading } = useQuery({ queryKey: ['communities-stats'], queryFn: fetchAllCommunitiesWithStats });
   const { data: verifiedTxns } = useQuery({
