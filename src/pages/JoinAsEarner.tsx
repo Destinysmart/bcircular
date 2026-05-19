@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, ArrowRight, Check, Copy, MessageCircle, Lock, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Copy, MessageCircle, Lock, Sparkles, Zap, Wrench, Store, Briefcase, Palette, Car, GraduationCap, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,13 +13,13 @@ import { shareUrl } from '@/lib/shareUrl';
 import { useToast } from '@/hooks/use-toast';
 
 const ROLES = [
-  { id: 'freelancer', label: 'Freelancer', emoji: '🛠️' },
-  { id: 'vendor', label: 'Vendor / Seller', emoji: '🏪' },
-  { id: 'employee', label: 'Employee', emoji: '👔' },
-  { id: 'creator', label: 'Creator', emoji: '🎨' },
-  { id: 'transport', label: 'Transport', emoji: '🚗' },
-  { id: 'educator', label: 'Educator', emoji: '📚' },
-  { id: 'other', label: 'Other', emoji: '➕' },
+  { id: 'freelancer', label: 'Freelancer', icon: Wrench },
+  { id: 'vendor', label: 'Vendor / Seller', icon: Store },
+  { id: 'employee', label: 'Employee', icon: Briefcase },
+  { id: 'creator', label: 'Creator', icon: Palette },
+  { id: 'transport', label: 'Transport', icon: Car },
+  { id: 'educator', label: 'Educator', icon: GraduationCap },
+  { id: 'other', label: 'Other', icon: Plus },
 ] as const;
 
 const FREQUENCIES = [
@@ -93,7 +93,7 @@ const JoinAsEarner = () => {
 
       setEarnerCode(earner.earner_code || earner.id);
       setStep(5);
-      toast({ title: 'Welcome to the economy ⚡', description: 'Your earner registration was submitted.' });
+      toast({ title: 'Welcome to the economy', description: 'Your earner registration was submitted.' });
     } catch (err: any) {
       toast({ title: 'Submission failed', description: err.message, variant: 'destructive' });
     } finally {
@@ -109,7 +109,7 @@ const JoinAsEarner = () => {
   };
 
   const handleWhatsApp = async () => {
-    const message = `I just joined ${community?.name} on Bitcoin Circular ⚡ My dashboard: ${dashboardUrl}`;
+    const message = `I just joined ${community?.name} on Bitcoin Circular. My dashboard: ${dashboardUrl}`;
     const text = encodeURIComponent(message);
     window.location.href = `https://wa.me/?text=${text}`;
   };
@@ -180,7 +180,7 @@ const JoinAsEarner = () => {
                         : 'border-border bg-card hover:border-score-amber/40'
                     }`}
                   >
-                    <span className="text-2xl">{r.emoji}</span>
+                    <r.icon className="h-5 w-5 text-score-amber shrink-0" />
                     <span className="text-sm font-medium">{r.label}</span>
                   </button>
                 ))}
@@ -332,7 +332,7 @@ const JoinAsEarner = () => {
               <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-score-green/20 text-score-green mb-4">
                 <Check className="h-8 w-8" />
               </div>
-              <h1 className="text-3xl font-bold mb-2">Welcome to {community.name} ⚡</h1>
+              <h1 className="text-3xl font-bold mb-2 inline-flex items-center gap-2">Welcome to {community.name} <Zap className="h-6 w-6 text-score-amber" fill="currentColor" /></h1>
               <p className="text-sm text-muted-foreground mb-6">
                 Your registration is pending validator approval. Save your dashboard link below — it's how you'll access your data.
               </p>
