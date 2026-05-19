@@ -59,7 +59,8 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <Routes>
+            <main id="main" role="main">
+              <Routes>
               <Route path="/" element={<RootRedirect />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/c/:slug" element={<CommunityDashboard />} />
@@ -96,7 +97,8 @@ const App = () => (
               <Route path="/earner/connect" element={<ConnectWallet ownerType="earner" />} />
               <Route path="/earner/dashboard" element={<WalletDashboard ownerType="earner" />} />
               <Route path="*" element={<NotFound />} />
-            </Routes>
+              </Routes>
+            </main>
             <AssistantGate />
           </BrowserRouter>
         </TooltipProvider>

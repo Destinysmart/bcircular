@@ -4,6 +4,7 @@ import { Share2, Store, Zap, ChevronDown, Info, ExternalLink, Shield, Scale, Wal
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
+import Seo from '@/components/Seo';
 import ScoreRing from '@/components/ScoreRing';
 import ScoreBar from '@/components/ScoreBar';
 import MerchantMap from '@/components/MerchantMap';
@@ -224,6 +225,27 @@ const CommunityDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        title={`${community.name} — Bitcoin Circular Economy in ${community.city}, ${community.country}`}
+        includesBrand
+        description={`Live Circularity Score, merchant count, transaction activity and growth for ${community.name} — the Bitcoin circular economy in ${community.city}, ${community.country}.`}
+        path={`/c/${community.slug}`}
+        image={bannerUrl || logoUrl || undefined}
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'Organization',
+          name: community.name,
+          url: `https://bitcoincircular.com/c/${community.slug}`,
+          description: `Bitcoin circular economy tracked on Bitcoin Circular. ${displayMerchants} merchants, ${displayEarners} earners, Circularity Score ${displayScore}.`,
+          address: {
+            '@type': 'PostalAddress',
+            addressLocality: community.city,
+            addressCountry: community.country,
+          },
+          ...(logoUrl ? { logo: logoUrl } : {}),
+          ...(websiteUrl ? { sameAs: [websiteUrl] } : {}),
+        }}
+      />
       <Navbar />
       <div className="container py-10">
         {/* Header */}

@@ -15,7 +15,9 @@ import { getFlagEmoji } from '@/lib/mock-data';
 import { getCoverage } from '@/lib/coverage';
 import { TierBadge } from '@/components/TierBadge';
 import circularLogo from '@/assets/circular-logo.png';
-import heroImage from '@/assets/hero-image.jpg';
+// Hero served from /public for stable LCP preload URL (see index.html)
+const HERO_IMAGE_PUBLIC = '/hero-image.jpg';
+import Seo from '@/components/Seo';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -71,7 +73,7 @@ const FILTERS = [
 
 type FilterId = typeof FILTERS[number]['id'];
 
-const HERO_IMAGE = heroImage;
+const HERO_IMAGE = HERO_IMAGE_PUBLIC;
 
 const Homepage = ({ topSlot, hideHero = false, compactHero = false }: { topSlot?: React.ReactNode; hideHero?: boolean; compactHero?: boolean } = {}) => {
   const gated = false;
@@ -139,8 +141,15 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false }: { topSlot?
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        title="Bitcoin Circular | Bitcoin Circular Economy Tracker"
+        includesBrand
+        description="Track and measure Bitcoin circular economies worldwide. Live merchant data, transaction flows, and a transparent Circularity Score for every community."
+        path="/"
+      />
       <Navbar />
       <TransparencyBanner />
+
 
       {/* HERO */}
       {!hideHero && (

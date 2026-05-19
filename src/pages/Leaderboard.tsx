@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowUpRight, Globe, Scale, Search, SlidersHorizontal, X, Zap, TrendingUp, TrendingDown, Minus, Circle, Activity as ActivityIcon, Store, Gauge, Info } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import Seo from '@/components/Seo';
 import Navbar from '@/components/Navbar';
 import ConfidenceBadge from '@/components/ConfidenceBadge';
 import EconomyLogo from '@/components/EconomyLogo';
@@ -200,8 +201,14 @@ const Leaderboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        title="Leaderboard"
+        description="Live ranking of Bitcoin circular economies worldwide — Circularity Score, merchant counts, transaction volume, and growth, ranked across regions."
+        path="/leaderboard"
+      />
       <Navbar />
       <div className="container py-10">
+
         {/* Hero header */}
         <div className="mb-8 rounded-2xl border border-border bg-gradient-to-br from-score-amber/[0.06] via-background to-background p-6 sm:p-8">
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5">

@@ -1,11 +1,17 @@
 import { Link } from 'react-router-dom';
 import { Shield, EyeOff, Users, Lock, ArrowRight, CheckCircle2, XCircle } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import Seo from '@/components/Seo';
 import { Button } from '@/components/ui/button';
 
 const Privacy = () => {
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        title="Privacy"
+        description="Show what Bitcoin does, never who does it. Bitcoin Circular is non-custodial, hashes everything, and never stores wallet addresses or real names."
+        path="/privacy"
+      />
       <Navbar />
       <main className="container py-12 md:py-16 max-w-3xl">
         <div className="inline-flex items-center gap-2 rounded-full border border-score-amber/40 bg-score-amber/10 px-3 py-1 text-[11px] font-mono uppercase tracking-wider text-score-amber mb-5">

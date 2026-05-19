@@ -1,0 +1,22 @@
+# Bitcoin Circular
+
+> The world's first intelligence platform for Bitcoin circular economies — communities where Bitcoin is earned and spent locally, creating a self-sustaining loop.
+
+Bitcoin Circular tracks and measures Bitcoin circular economies worldwide. It combines BTCMap merchant data, Blink wallet read-only transaction data, and the FBCE 5-tier framework to compute a transparent Circularity Score (0–100) for each economy across five pillars: Merchant Saturation, Retention, Earner Penetration, Transaction Velocity, and Growth Momentum.
+
+The platform is privacy-first and non-custodial. Wallet addresses, payment hashes, and real names are never stored. Validation uses a 2-of-3 community-validator consensus model.
+
+## Pages
+
+- [Home](/): What Bitcoin Circular is and how it works.
+- [Leaderboard](/leaderboard): Live ranking of Bitcoin circular economies worldwide.
+- [Methodology](/methodology): How the Circularity Score is calculated, pillar by pillar.
+- [Privacy](/privacy): The platform's privacy and anonymity philosophy.
+- [Public Data](/data): Open research data access for academics, NGOs, and partners.
+- [Pricing](/pricing): Access tiers for researchers, organizations, and data partners.
+- [Register an Economy](/register): Add a new Bitcoin circular economy to the platform.
+- [Compare](/compare): Side-by-side comparison of economies.
+
+## Optional
+
+- [Validator Dashboard](/validate): For community validators reviewing submissions.

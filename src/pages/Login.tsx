@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
+import Seo from '@/components/Seo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -58,6 +59,12 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        title={isSignup ? 'Sign Up' : isForgot ? 'Reset Password' : 'Log In'}
+        description="Sign in to Bitcoin Circular to manage your economy, validate submissions, and track real-time circular flow data."
+        path="/login"
+        noIndex
+      />
       <Navbar />
       <div className="container flex items-center justify-center py-20">
         <div className="w-full max-w-sm space-y-6">
