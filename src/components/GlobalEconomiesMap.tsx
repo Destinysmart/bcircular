@@ -167,7 +167,7 @@ const GlobalEconomiesMap = ({ economies }: Props) => {
       mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, [economies]);
+  }, [economies, MAPBOX_TOKEN]);
 
   const handleReset = () => {
     if (!mapRef.current) return;
