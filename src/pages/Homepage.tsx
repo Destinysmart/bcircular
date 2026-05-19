@@ -74,6 +74,7 @@ type FilterId = typeof FILTERS[number]['id'];
 const HERO_IMAGE = heroImage;
 
 const Homepage = ({ topSlot, hideHero = false, compactHero = false }: { topSlot?: React.ReactNode; hideHero?: boolean; compactHero?: boolean } = {}) => {
+  const gated = false;
   const [filter, setFilter] = useState<FilterId>('featured');
   const { data, isLoading } = useQuery({ queryKey: ['communities-stats'], queryFn: fetchAllCommunitiesWithStats });
   const { data: verifiedTxns } = useQuery({
