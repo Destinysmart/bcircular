@@ -96,7 +96,7 @@ const MerchantMap = ({ merchants, fallbackCenter }: MerchantMapProps) => {
       map.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [MAPBOX_TOKEN]);
 
   // Re-render markers when filtered list changes
   useEffect(() => {
