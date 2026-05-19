@@ -1,89 +1,58 @@
-# Open up Bitcoin Circular: public-first homepage & auth flow
+Sweep the app to replace decorative emoji with `lucide-react` icons for a more consistent, professional UI. **Country flag emojis stay** — they carry cultural/semantic meaning no lucide icon can replace.
 
-Based on direct feedback ("forced to create an account before looking at anything" and "how do you collect the data?"), the platform needs to feel like an open exploration tool, not a gated SaaS dashboard. Authentication should be optional until the user wants to *participate*.
+## What gets converted (by file)
 
-## 1. Kill the auth wall
+**Economy Admin Dashboard (`src/pages/EconomyAdminDashboard.tsx`)** — primary focus
+- L411 `🔴` (no-wallets warning) → `<AlertCircle className="h-5 w-5 text-score-red" />`
+- L585 `⚠` (validators warning) → `<AlertTriangle className="h-3.5 w-3.5 text-score-amber" />` inline with text
+- L676 `✗ Community not found` → `<XCircle className="h-4 w-4 text-destructive" />` + text
+- L682 `⚠ 0 merchants found` → `<AlertTriangle className="h-4 w-4 text-score-amber" />` + text
+- L688 `✓ Synced successfully` → `<CheckCircle2 className="h-4 w-4 text-primary" />` + text
+- L182 toast `Uploaded successfully ✓` → drop the `✓` (toast already has its own success styling)
 
-- `RootRedirect.tsx`: stop passing `gated` for logged-out visitors. The full Homepage renders for everyone. Logged-in users still get `Home` (their personal dashboard above the public homepage).
-- `Homepage.tsx`: remove the `gated` prop entirely (and the blurred 2-card teaser). The filter pills, full economy grid, map, and activity feed are public.
-- `Leaderboard.tsx`: remove the `AuthGate` wrapper. Public.
-- `Compare.tsx`: remove the `AuthGate` wrapper. Public.
-- Keep auth required for: `/register`, `/dashboard/*`, `/admin`, `/validate`, `/c/:slug/submit`, `/settings`, `/connect`, merchant claim flows. (Already enforced inside those pages — no change.)
-- `AuthGate.tsx` is no longer used; leave the file for now but unimport it.
+**Community Dashboard (`src/pages/CommunityDashboard.tsx`)**
+- L280 verified-admin `✓` chip → `<BadgeCheck className="h-3.5 w-3.5 text-primary" />`
+- L359 tier-checklist `✓` → `<Check className="h-3 w-3" />` (already inside a styled square, just swap the glyph)
 
-## 2. Reposition the hero
+**Homepage (`src/pages/Homepage.tsx`)**
+- L486 modal `⚡` decorative glyph → `<Zap className="h-7 w-7 text-score-amber mx-auto mb-3" />`
 
-Edit the hero block in `Homepage.tsx`:
-- Headline: "Visualizing Bitcoin Circular Economies"
-- Subheadline: "Explore how Bitcoin moves across communities through transparent, privacy-conscious activity metrics."
-- Primary CTA: **Explore Economies** → `/leaderboard`
-- Secondary CTA: **How It Works** → `/methodology`
-- Demote "Register your economy" to a tertiary text link below the CTAs.
-- Replace the "verified Bitcoin economy network" chip with a softer "Early-stage · Open · Privacy-first" chip.
+**Leaderboard (`src/pages/Leaderboard.tsx`)**
+- L236 `🚀` next to a heading → `<TrendingUp className="h-4 w-4 text-score-amber" />`
 
-## 3. Transparency banner
+**Wallet Dashboard (`src/pages/WalletDashboard.tsx`)**
+- L76 `⚡ {rate}% …` and L81 `📈 {n} transactions …` insight banners → render the icon as a sibling `<Zap />` / `<TrendingUp />` next to the text instead of inlining the emoji into the string. Refactor the helper to return `{ icon, text }`.
 
-Thin dismissible banner directly under the navbar (new component `TransparencyBanner.tsx`, mounted in `Homepage.tsx`):
+**Join as Earner (`src/pages/JoinAsEarner.tsx`)**
+- Role picker `emoji: '🏪' | '🎨' | …` (L17-19) → swap the `emoji` field for a lucide `icon` component reference (`Store`, `Palette`, `Briefcase`, etc.), render via `<role.icon />` in the picker.
+- L96 toast `Welcome to the economy ⚡` → drop the `⚡`.
+- L112 share text `… on Bitcoin Circular ⚡` → drop the `⚡` (plain text shared off-platform — emoji-free reads cleaner).
+- L335 welcome heading `Welcome to {name} ⚡` → render a `<Zap className="inline h-6 w-6 text-score-amber ml-2" />` next to the heading instead.
 
-> "Bitcoin Circular is an early-stage experiment exploring better ways to visualize Bitcoin circular economy activity while respecting privacy and consent."
+**Circular Assistant (`src/components/CircularAssistant.tsx`)**
+- All `Sats ⚡` persona strings (L17, L23, L28, L190) → replace the trailing `⚡` with a `<Zap className="inline h-3.5 w-3.5 text-score-amber" />` next to the name. The persona stays; only the glyph swaps.
+- The greeting strings need to become JSX fragments instead of raw strings — small refactor of the helper to return JSX.
 
-Stored dismissal in `localStorage` so it doesn't nag returning visitors.
+## What stays as-is (deliberate)
 
-## 4. New "How the data works" section
+- `getFlagEmoji()` everywhere (CommunityDashboard, Home, Homepage, Leaderboard, Compare, ProofOfCircularity, Widget) — country flags are not decorative.
+- `src/lib/coverage.ts` emoji fields (🔴🟡🟢) — these are data, not rendered directly anywhere I could see; if they are rendered the consumer should be updated separately. Out of scope for this pass.
 
-New section on `Homepage.tsx` between the economy grid and the existing map. Four cards explaining:
-1. Most current data is **demo / sample data** for testing.
-2. Real integrations (Blink wallet sync, BTCMap) are **opt-in only** — communities choose.
-3. We show **aggregate activity**, never personal transaction detail.
-4. Goal is **ecosystem insight, not surveillance**.
+## Lucide icons to add to imports
+`AlertCircle`, `AlertTriangle`, `CheckCircle2`, `XCircle`, `BadgeCheck`, `Check`, `Zap`, `TrendingUp`, `Store`, `Palette`, `Briefcase` (final role icon set decided when reading the file).
 
-Honest, plain-language tone. Links to `/methodology` for full detail.
+## Verification
 
-## 5. New "Privacy first" section
+After implementation:
+1. Visit `/dashboard/economy/:id` as an admin user — confirm warning banner, validators warning, BTCMap sync result states all render lucide icons with proper semantic color tokens.
+2. Visit `/c/:slug` — confirm verified-admin badge + tier checklist checks render as lucide.
+3. Visit `/leaderboard`, `/` (homepage), `/connect/dashboard`, `/c/:slug/join-as-earner` — confirm no stray emoji remain in those views.
+4. Screenshot at desktop + mobile widths to confirm icon sizes are visually balanced (no oversized glyphs).
+5. Console clean.
 
-Follows the data section. Four trust pillars with lucide icons (`Shield`, `EyeOff`, `Users`, `Lock`):
-- Built with consent in mind
-- Communities choose what to share
-- Focused on ecosystem activity, not individual surveillance
-- Transparency without compromising privacy
+## Out of scope
 
-Closes with a link to a new public `/privacy` page.
-
-## 6. New `/privacy` page
-
-New file `src/pages/Privacy.tsx` + route in `App.tsx`. Long-form version of the privacy philosophy: what we collect, what we don't, how opt-in works, how to disconnect (irreversible deletion). Plain language, no legalese. Reuses `Navbar`.
-
-## 7. Navigation refresh (`Navbar.tsx`)
-
-New link order: **Home · Explore · Methodology · Privacy · Leaderboard**. Drop "Compare", "Register", "Validate", "Data" from the primary nav for logged-out users (they're still routable; just declutter). Logged-in users keep Validate and a dedicated "Create Economy" button on the right, with "Sign in" replaced by avatar.
-
-For logged-out users on the right side:
-- Small ghost "Sign in" link
-- Primary outline "Create Economy" button → `/register` (auth required at next step)
-
-## 8. Language pass
-
-Search/replace across homepage and methodology copy:
-- "tracking" → "visualizing activity"
-- "monitoring" → "aggregating activity"
-- "wallet surveillance" → never used; replace with "consent-based wallet integrations"
-- "real Bitcoin adoption" stays, but de-emphasize "verified" maximalism.
-
-Scope: `Homepage.tsx`, `Methodology.tsx`, hero subheadlines. Not touching DB/UI labels like "economy" / "community" (already governed by memory).
-
-## Technical notes
-
-- Pure frontend work. No DB migrations, no edge function changes, no schema changes.
-- `RootRedirect` becomes: `user ? <Home /> : <Homepage />` (no `gated` prop).
-- `Homepage` prop signature loses `gated`; `Home.tsx` already calls it without `gated`, so safe.
-- New components: `TransparencyBanner`, `HowDataWorks` section (inline in Homepage), `PrivacyPillars` section (inline in Homepage), new page `Privacy.tsx`.
-- New route: `<Route path="/privacy" element={<Privacy />} />` in `App.tsx`.
-- Preserve existing semantic tokens (`score-amber`, `score-green`, `border`, `card`, `muted-foreground`). No raw hex.
-- Verify by viewing `/` logged-out (full homepage visible, banner shows, no blur), `/leaderboard` logged-out (no gate), `/privacy` (new page renders), `/register` logged-out (still redirects to login — already handled inside `RegisterCommunity`).
-
-## Out of scope (explicitly)
-
-- No changes to scoring algorithm, validator logic, or wallet sync.
-- No changes to `Home.tsx` personal dashboard structure beyond what `Homepage` removes.
-- No redesign of `/c/:slug` economy pages (already public).
-- No pricing/monetization copy rewrites beyond removing "tracking" language.
+- Country flags (kept by design).
+- Emoji in seed/mock data files unless rendered.
+- Wholesale dashboard redesign — this is a glyph-swap pass with tight semantic-token usage, not a layout refactor.
+- Toast `variant` overhaul (only stripping cosmetic emoji from existing toast titles).
