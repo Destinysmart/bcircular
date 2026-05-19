@@ -35,6 +35,7 @@ const MerchantMap = ({ merchants, fallbackCenter }: MerchantMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const { token: MAPBOX_TOKEN } = useMapboxToken();
 
   const [activeCat, setActiveCat] = useState<string>('all');
   const [selected, setSelected] = useState<Merchant | null>(null);
