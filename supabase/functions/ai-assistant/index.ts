@@ -7,6 +7,9 @@ const corsHeaders = {
 };
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+const CLAUDE_MODEL = 'claude-3-5-sonnet-20241022';
+const GEMINI_MODEL = 'google/gemini-2.5-flash';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
