@@ -3,6 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- PWA -->
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="theme-color" content="#6366f1" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -10,35 +12,54 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Circular" />
-    <title>Bitcoin Circular | Bitcoin Circular Economy Tracker</title>
-    <meta name="description" content="Track and measure Bitcoin circular economies worldwide. Community-driven credibility scores.">
-    <meta name="author" content="Circular" />
 
-    
-    
+    <!-- LCP preload for homepage hero -->
+    <link rel="preload" as="image" href="/hero-image.jpg" fetchpriority="high" />
+
+    <!-- Sitewide fallback head — per-route Helmet overrides these for JS crawlers -->
+    <title>Bitcoin Circular | Bitcoin Circular Economy Tracker</title>
+    <meta name="description" content="Track and measure Bitcoin circular economies worldwide. Live merchant data, transaction flows, and a transparent Circularity Score for every community." />
+    <meta name="author" content="Bitcoin Circular" />
+
+    <meta property="og:site_name" content="Bitcoin Circular" />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/3zwD6Z3gBjbo0Ld564p6VOwPUJC3/social-images/social-1777497358347-Bitcoin_Circular_Header.webp">
+    <meta property="og:title" content="Bitcoin Circular | Bitcoin Circular Economy Tracker" />
+    <meta property="og:description" content="Track and measure Bitcoin circular economies worldwide. Live merchant data, transaction flows, and a transparent Circularity Score for every community." />
+    <meta property="og:url" content="https://bitcoincircular.com/" />
+    <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/3zwD6Z3gBjbo0Ld564p6VOwPUJC3/social-images/social-1777497358347-Bitcoin_Circular_Header.webp" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@Lovable" />
-    <meta name="twitter:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/3zwD6Z3gBjbo0Ld564p6VOwPUJC3/social-images/social-1777497358347-Bitcoin_Circular_Header.webp">
-    
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  <meta property="og:title" content="Bitcoin Circular | Bitcoin Circular Economy Tracker">
-  <meta name="twitter:title" content="Bitcoin Circular | Bitcoin Circular Economy Tracker">
-  <meta property="og:description" content="Track and measure Bitcoin circular economies worldwide. Community-driven credibility scores.">
-  <meta name="twitter:description" content="Track and measure Bitcoin circular economies worldwide. Community-driven credibility scores.">
-</head>
+    <meta name="twitter:site" content="@bitcoincircular" />
+    <meta name="twitter:title" content="Bitcoin Circular | Bitcoin Circular Economy Tracker" />
+    <meta name="twitter:description" content="Track and measure Bitcoin circular economies worldwide." />
+    <meta name="twitter:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/3zwD6Z3gBjbo0Ld564p6VOwPUJC3/social-images/social-1777497358347-Bitcoin_Circular_Header.webp" />
+
+    <!-- Sitewide structured data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Bitcoin Circular",
+        "url": "https://bitcoincircular.com",
+        "logo": "https://bitcoincircular.com/icon-512.png",
+        "description": "Intelligence platform for Bitcoin circular economies worldwide.",
+        "sameAs": []
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Bitcoin Circular",
+        "url": "https://bitcoincircular.com",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://bitcoincircular.com/leaderboard?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      }
+    </script>
+  </head>
 
   <body>
     <div id="root"></div>
