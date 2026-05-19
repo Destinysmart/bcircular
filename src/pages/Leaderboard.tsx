@@ -552,10 +552,46 @@ const Leaderboard = () => {
 
                         {/* Metrics grid */}
                         <div className="grid grid-cols-2 gap-2">
-                          <MobileMetric icon={<Zap className="w-3.5 h-3.5" style={{ color: '#F7931A' }} />} label="Txns / mo" value={(c.monthlyTransactions ?? 0).toLocaleString()} valueClass="text-score-amber" />
-                          <MobileMetric icon={<ActivityIcon className="w-3.5 h-3.5 text-muted-foreground" />} label="Active" value={`${c.activityRate ?? 0}%`} />
-                          <MobileMetric icon={<Store className="w-3.5 h-3.5 text-muted-foreground" />} label="Merchants" value={String(c.merchants ?? 0)} />
-                          <MobileMetric icon={<Gauge className="w-3.5 h-3.5 text-muted-foreground" />} label="Score" value={String(score)} valueClass={getScoreColor(score)} progress={score} progressClass={getScoreBgColor(score)} />
+                          <MobileMetric
+                            icon={<Zap className="w-3.5 h-3.5" style={{ color: '#F7931A' }} />}
+                            label="Txns / mo"
+                            value={(c.monthlyTransactions ?? 0).toLocaleString()}
+                            valueClass="text-score-amber"
+                            hint={<><strong className="text-foreground">Transactions per month.</strong> Bitcoin payments observed on connected wallets in the last 30 days. Higher means more real-world circulation.</>}
+                          />
+                          <MobileMetric
+                            icon={<ActivityIcon className="w-3.5 h-3.5 text-muted-foreground" />}
+                            label="Active"
+                            value={`${c.activityRate ?? 0}%`}
+                            hint={<><strong className="text-foreground">Activity rate.</strong> Share of merchants and earners with at least one transaction in the last 30 days.</>}
+                          />
+                          <MobileMetric
+                            icon={<Store className="w-3.5 h-3.5 text-muted-foreground" />}
+                            label="Merchants"
+                            value={String(c.merchants ?? 0)}
+                            hint={<><strong className="text-foreground">Approved merchants.</strong> Businesses accepting Bitcoin in this economy, validated by community or BTCMap data.</>}
+                          />
+                          <MobileMetric
+                            icon={<Gauge className="w-3.5 h-3.5 text-muted-foreground" />}
+                            label="Score"
+                            value={String(score)}
+                            valueClass={getScoreColor(score)}
+                            progress={score}
+                            progressClass={getScoreBgColor(score)}
+                            hint={
+                              <div className="space-y-2">
+                                <div><strong className="text-foreground">Circularity Score (0–100)</strong> — weighted average of 5 pillars:</div>
+                                <ul className="space-y-1 font-mono text-[11px]">
+                                  <li className="flex justify-between gap-2"><span>Merchant Saturation</span><span className="text-score-amber">25%</span></li>
+                                  <li className="flex justify-between gap-2"><span>Retention Rate</span><span className="text-score-amber">25%</span></li>
+                                  <li className="flex justify-between gap-2"><span>Earner Penetration</span><span className="text-score-amber">20%</span></li>
+                                  <li className="flex justify-between gap-2"><span>Transaction Velocity</span><span className="text-score-amber">15%</span></li>
+                                  <li className="flex justify-between gap-2"><span>Growth Momentum</span><span className="text-score-amber">15%</span></li>
+                                </ul>
+                                <Link to="/methodology" onClick={(e) => e.stopPropagation()} className="text-score-amber hover:underline inline-block pt-1">Read the full methodology →</Link>
+                              </div>
+                            }
+                          />
                         </div>
 
                         {/* CTAs */}
