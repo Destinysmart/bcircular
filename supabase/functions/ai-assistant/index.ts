@@ -7,6 +7,9 @@ const corsHeaders = {
 };
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+const CLAUDE_MODEL = 'claude-3-5-sonnet-20241022';
+const GEMINI_MODEL = 'google/gemini-2.5-flash';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -217,69 +220,131 @@ OUTPUT RULES:
 - Never invent features. Never give financial advice. Never promise scores or timelines.
 - If asked "are you human?": "I'm Sats — Bitcoin Circular's AI support agent. Not human, but I know this platform inside out. What do you need help with?"`;
 
-    const conversation: any[] = [
-      { role: 'system', content: system },
-      ...messages,
-    ];
+    // Anthropic tool schema (different shape from OpenAI-compatible)
+    const anthropicTools = tools.map((t) => ({
+      name: t.function.name,
+      description: t.function.description,
+      input_schema: t.function.parameters,
+    }));
 
-    // Tool-calling loop (max 4 hops)
-    for (let hop = 0; hop < 4; hop++) {
-      const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Lovable-API-Key': LOVABLE_API_KEY,
-        },
-        body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
-          messages: conversation,
-          tools,
-          tool_choice: 'auto',
-        }),
-      });
+    // --- Claude path (primary) ---
+    async function runClaude(): Promise<string> {
+      if (!ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY missing');
+      const anthMessages: any[] = messages.map((m: any) => ({ role: m.role, content: m.content }));
 
-      if (!res.ok) {
-        const txt = await res.text();
-        if (res.status === 429) {
-          return new Response(JSON.stringify({ reply: "I'm getting a lot of questions right now — try again in a few seconds." }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+      for (let hop = 0; hop < 4; hop++) {
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': ANTHROPIC_API_KEY,
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify({
+            model: CLAUDE_MODEL,
+            max_tokens: 1024,
+            system,
+            messages: anthMessages,
+            tools: anthropicTools,
+          }),
+        });
+
+        if (!res.ok) {
+          const txt = await res.text();
+          throw new Error(`anthropic ${res.status}: ${txt}`);
         }
-        if (res.status === 402) {
-          return new Response(JSON.stringify({ reply: "AI credits are exhausted on the workspace. Ping Destiny at " + SUPPORT_EMAIL + " to top up." }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+
+        const data = await res.json();
+        const toolUses = (data.content || []).filter((b: any) => b.type === 'tool_use');
+        const textBlocks = (data.content || []).filter((b: any) => b.type === 'text');
+
+        if (toolUses.length && data.stop_reason === 'tool_use') {
+          anthMessages.push({ role: 'assistant', content: data.content });
+          const toolResults: any[] = [];
+          for (const tu of toolUses) {
+            const result = await runTool(tu.name, tu.input || {});
+            toolResults.push({
+              type: 'tool_result',
+              tool_use_id: tu.id,
+              content: JSON.stringify(result),
+            });
+          }
+          anthMessages.push({ role: 'user', content: toolResults });
+          continue;
         }
-        throw new Error(`gateway ${res.status}: ${txt}`);
+
+        return textBlocks.map((b: any) => b.text).join('\n').trim();
       }
-
-      const data = await res.json();
-      const msg = data?.choices?.[0]?.message;
-      if (!msg) throw new Error('no message in response');
-
-      const toolCalls = msg.tool_calls;
-      if (toolCalls?.length) {
-        conversation.push(msg);
-        for (const call of toolCalls) {
-          let parsedArgs: Record<string, unknown> = {};
-          try { parsedArgs = JSON.parse(call.function.arguments || '{}'); } catch { /* ignore */ }
-          const result = await runTool(call.function.name, parsedArgs);
-          conversation.push({
-            role: 'tool',
-            tool_call_id: call.id,
-            content: JSON.stringify(result),
-          });
-        }
-        continue;
-      }
-
-      return new Response(JSON.stringify({ reply: msg.content ?? '' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      throw new Error('claude tool loop exhausted');
     }
 
-    return new Response(JSON.stringify({ reply: "I went a few rounds but couldn't land an answer. Try rephrasing, or email " + SUPPORT_EMAIL + "." }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // --- Gemini path (fallback) ---
+    async function runGemini(): Promise<string> {
+      if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY missing');
+      const conversation: any[] = [
+        { role: 'system', content: system },
+        ...messages,
+      ];
+
+      for (let hop = 0; hop < 4; hop++) {
+        const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Lovable-API-Key': LOVABLE_API_KEY,
+          },
+          body: JSON.stringify({
+            model: GEMINI_MODEL,
+            messages: conversation,
+            tools,
+            tool_choice: 'auto',
+          }),
+        });
+
+        if (!res.ok) {
+          const txt = await res.text();
+          if (res.status === 429) return "I'm getting a lot of questions right now — try again in a few seconds.";
+          if (res.status === 402) return `AI credits are exhausted on the workspace. Ping Destiny at ${SUPPORT_EMAIL} to top up.`;
+          throw new Error(`gateway ${res.status}: ${txt}`);
+        }
+
+        const data = await res.json();
+        const msg = data?.choices?.[0]?.message;
+        if (!msg) throw new Error('no message in response');
+
+        const toolCalls = msg.tool_calls;
+        if (toolCalls?.length) {
+          conversation.push(msg);
+          for (const call of toolCalls) {
+            let parsedArgs: Record<string, unknown> = {};
+            try { parsedArgs = JSON.parse(call.function.arguments || '{}'); } catch { /* ignore */ }
+            const result = await runTool(call.function.name, parsedArgs);
+            conversation.push({
+              role: 'tool',
+              tool_call_id: call.id,
+              content: JSON.stringify(result),
+            });
+          }
+          continue;
+        }
+
+        return msg.content ?? '';
+      }
+      return `I went a few rounds but couldn't land an answer. Try rephrasing, or email ${SUPPORT_EMAIL}.`;
+    }
+
+    let reply = '';
+    let brain: 'claude' | 'gemini' = 'claude';
+    try {
+      reply = await runClaude();
+    } catch (claudeErr) {
+      console.warn('Claude failed, falling back to Gemini:', claudeErr instanceof Error ? claudeErr.message : claudeErr);
+      brain = 'gemini';
+      reply = await runGemini();
+    }
+
+    return new Response(JSON.stringify({ reply, brain }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json', 'x-ask-sats-brain': brain },
     });
   } catch (e) {
     console.error('ai-assistant error:', e);
