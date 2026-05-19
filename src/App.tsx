@@ -31,6 +31,7 @@ import WalletDashboard from "./pages/WalletDashboard";
 import JoinAsEarner from "./pages/JoinAsEarner";
 import PublicData from "./pages/PublicData";
 import Pricing from "./pages/Pricing";
+import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
 import MyDashboardRedirect from "./pages/MyDashboardRedirect";
 import CircularAssistant from "./components/CircularAssistant";
@@ -56,6 +57,7 @@ const App = () => (
               <Route path="/c/:slug/proofs" element={<Proofs />} />
               <Route path="/data" element={<PublicData />} />
               <Route path="/pricing" element={<Pricing />} />
+              <Route path="/privacy" element={<Privacy />} />
               <Route path="/widget/:slug" element={<Widget />} />
               <Route path="/quick-submit" element={<QuickSubmit />} />
               <Route path="/compare" element={<Compare />} />
