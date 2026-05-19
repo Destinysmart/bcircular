@@ -89,7 +89,36 @@ const MerchantMap = ({ merchants, fallbackCenter }: MerchantMapProps) => {
     });
     map.current.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
 
+    const triggerResize = () => map.current?.resize();
+    // Nudge after mount in case container started at 0px (tabs, accordions, route fade-in)
+    const t1 = window.setTimeout(triggerResize, 100);
+    const t2 = window.setTimeout(triggerResize, 400);
+    map.current.once('load', triggerResize);
+
+    // Container size changes (tab switch, sidebar collapse, drawer open)
+    let ro: ResizeObserver | null = null;
+    if (mapContainer.current && typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(triggerResize);
+      ro.observe(mapContainer.current);
+    }
+
+    // Visibility changes (tab becomes active after being display:none)
+    let io: IntersectionObserver | null = null;
+    if (mapContainer.current && typeof IntersectionObserver !== 'undefined') {
+      io = new IntersectionObserver((entries) => {
+        if (entries.some(e => e.isIntersecting)) triggerResize();
+      }, { threshold: 0.01 });
+      io.observe(mapContainer.current);
+    }
+
+    window.addEventListener('resize', triggerResize);
+
     return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      ro?.disconnect();
+      io?.disconnect();
+      window.removeEventListener('resize', triggerResize);
       markersRef.current.forEach(m => m.remove());
       markersRef.current = [];
       map.current?.remove();
