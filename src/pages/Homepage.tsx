@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom';
 import { useMemo, useState } from 'react';
-import { ArrowRight, Store, Zap, Globe, Sparkles, TrendingUp, Star, Repeat, BarChart3, MapPin, CheckCircle2, ShieldCheck, Bitcoin, Plus, Layers, Check, Database, Lock } from 'lucide-react';
+import { ArrowRight, Store, Zap, Globe, Sparkles, TrendingUp, Star, Repeat, BarChart3, MapPin, CheckCircle2, ShieldCheck, Bitcoin, Plus, Layers, Check, Database, Lock, Shield, EyeOff, Users, FlaskConical } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
+import TransparencyBanner from '@/components/TransparencyBanner';
 import GlobalEconomiesMap from '@/components/GlobalEconomiesMap';
 import RecentActivityFeed from '@/components/RecentActivityFeed';
 import { useCountUp } from '@/hooks/useCountUp';
@@ -72,7 +73,8 @@ type FilterId = typeof FILTERS[number]['id'];
 
 const HERO_IMAGE = heroImage;
 
-const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = false }: { topSlot?: React.ReactNode; hideHero?: boolean; compactHero?: boolean; gated?: boolean } = {}) => {
+const Homepage = ({ topSlot, hideHero = false, compactHero = false }: { topSlot?: React.ReactNode; hideHero?: boolean; compactHero?: boolean } = {}) => {
+  const gated = false;
   const [filter, setFilter] = useState<FilterId>('featured');
   const { data, isLoading } = useQuery({ queryKey: ['communities-stats'], queryFn: fetchAllCommunitiesWithStats });
   const { data: verifiedTxns } = useQuery({
@@ -138,6 +140,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
+      <TransparencyBanner />
 
       {/* HERO */}
       {!hideHero && (
@@ -163,16 +166,16 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
             >
               <motion.div variants={fadeUp} custom={0} className="inline-flex items-center gap-2 rounded-full border border-score-amber/40 bg-score-amber/10 px-3 py-1 text-[11px] font-mono uppercase tracking-wider text-score-amber mb-6">
                 <Sparkles className="h-3 w-3" />
-                The verified Bitcoin economy network
+                Early-stage · Open · Privacy-first
               </motion.div>
               <motion.h1 variants={fadeUp} custom={1} className={`${compactHero ? 'text-2xl sm:text-3xl md:text-4xl mb-3' : 'text-3xl sm:text-5xl md:text-6xl mb-4 md:mb-5'} font-extrabold tracking-tight leading-[1.1] text-foreground`}>
-                See where Bitcoin
+                Visualizing Bitcoin
                 <br />
-                <span className="text-score-amber">actually circulates.</span>
+                <span className="text-score-amber">Circular Economies</span>
               </motion.h1>
               {!compactHero && (
                 <motion.p variants={fadeUp} custom={2} className="text-base md:text-lg text-muted-foreground max-w-lg leading-relaxed mb-6 md:mb-8">
-                  The open standard for measuring real Bitcoin adoption. Validator-verified data from circular economies on every continent — free for anyone to read, share, and build on.
+                  Explore how Bitcoin moves across communities through transparent, privacy-conscious activity metrics. No signup required.
                 </motion.p>
               )}
               {!compactHero && (
@@ -182,11 +185,17 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
                       Explore Economies <ArrowRight className="h-4 w-4" />
                     </Button>
                   </Link>
-                  <Link to="/register" className="w-full sm:w-auto">
+                  <Link to="/methodology" className="w-full sm:w-auto">
                     <Button variant="outline" size="lg" className="w-full sm:w-auto rounded-full px-6 h-12 border-foreground/20 hover:bg-foreground/5 gap-2">
-                      Register your economy <ArrowRight className="h-4 w-4" />
+                      How it works <ArrowRight className="h-4 w-4" />
                     </Button>
                   </Link>
+                </motion.div>
+              )}
+              {!compactHero && (
+                <motion.div variants={fadeUp} custom={4} className="mt-5 text-xs text-muted-foreground">
+                  Running a Bitcoin community?{' '}
+                  <Link to="/register" className="text-score-amber hover:underline">Add your economy →</Link>
                 </motion.div>
               )}
             </motion.div>
@@ -500,11 +509,87 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false, gated = fals
         )}
       </section>
 
+      {/* HOW THE DATA WORKS */}
+      <section className="border-t border-border bg-card/30">
+        <div className="container py-16">
+          <div className="max-w-2xl mb-10">
+            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-4">
+              <Database className="h-3 w-3" /> How the data works
+            </div>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-3">
+              Honest about where the numbers come from.
+            </h2>
+            <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+              We collect data we&apos;re allowed to collect, show what we can verify, and label everything else clearly.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { Icon: FlaskConical, title: 'Sample data, labelled', desc: 'A meaningful portion of what you see today is demo data used to test the platform. Real economies are clearly marked.' },
+              { Icon: CheckCircle2, title: 'Opt-in integrations', desc: 'Wallet sync (Blink) and merchant maps (BTCMap) are voluntary. Communities choose what to connect.' },
+              { Icon: Users, title: 'Aggregate, not personal', desc: 'We surface ecosystem-level counts and trends. Individual transactions are never publicly displayed.' },
+              { Icon: Globe, title: 'Ecosystem insight, not surveillance', desc: 'The goal is helping circular economies understand themselves — not tracking people.' },
+            ].map(card => (
+              <div key={card.title} className="rounded-2xl border border-border bg-card p-5">
+                <div className="h-10 w-10 rounded-xl bg-score-amber/10 border border-score-amber/30 text-score-amber flex items-center justify-center mb-3">
+                  <card.Icon className="h-5 w-5" />
+                </div>
+                <div className="font-semibold text-sm mb-1.5">{card.title}</div>
+                <div className="text-xs text-muted-foreground leading-relaxed">{card.desc}</div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-8">
+            <Link to="/methodology" className="inline-flex items-center gap-1 text-sm text-score-amber hover:underline">
+              Read the full methodology <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* PRIVACY FIRST */}
+      <section className="border-t border-border">
+        <div className="container py-16">
+          <div className="max-w-2xl mb-10">
+            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-4">
+              <Shield className="h-3 w-3" /> Privacy first
+            </div>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-3">
+              Show what Bitcoin does. Never who does it.
+            </h2>
+            <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+              Privacy isn&apos;t a feature we&apos;ll add later — it&apos;s the starting point.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { Icon: ShieldCheck, title: 'Built with consent', desc: 'Communities decide what to share and when.' },
+              { Icon: Users, title: 'Community-controlled', desc: 'Each economy owns its own data and integrations.' },
+              { Icon: EyeOff, title: 'Not surveillance', desc: 'Ecosystem activity only — never individual tracking.' },
+              { Icon: Lock, title: 'Disconnect = deletion', desc: 'Leaving permanently removes the associated data.' },
+            ].map(card => (
+              <div key={card.title} className="rounded-2xl border border-border bg-card p-5">
+                <div className="h-10 w-10 rounded-xl bg-score-green/10 border border-score-green/30 text-score-green flex items-center justify-center mb-3">
+                  <card.Icon className="h-5 w-5" />
+                </div>
+                <div className="font-semibold text-sm mb-1.5">{card.title}</div>
+                <div className="text-xs text-muted-foreground leading-relaxed">{card.desc}</div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-8">
+            <Link to="/privacy" className="inline-flex items-center gap-1 text-sm text-score-green hover:underline">
+              Read the full privacy philosophy <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* RECENT ACTIVITY (collapsible) */}
-      {!gated && list.length > 0 && <RecentActivityFeed />}
+      {list.length > 0 && <RecentActivityFeed />}
 
       {/* GLOBAL ECONOMIES MAP */}
-      {!gated && list.length > 0 && <GlobalEconomiesMap economies={list as any} />}
+      {list.length > 0 && <GlobalEconomiesMap economies={list as any} />}
 
       {/* WHAT IS CIRCULARITY */}
       {/* HOW IT WORKS — 3-STEP FLOW (landing only) */}
