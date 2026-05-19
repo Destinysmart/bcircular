@@ -1,86 +1,89 @@
-## Premium SaaS landing refresh — `src/pages/Homepage.tsx`
+# Open up Bitcoin Circular: public-first homepage & auth flow
 
-Goal: turn the landing page into a confident, premium SaaS flow that mirrors what BCE has actually become — a verified, multi-economy, validator-backed network with public open data.
+Based on direct feedback ("forced to create an account before looking at anything" and "how do you collect the data?"), the platform needs to feel like an open exploration tool, not a gated SaaS dashboard. Authentication should be optional until the user wants to *participate*.
 
-All work stays in `src/pages/Homepage.tsx` and uses existing semantic tokens (`score-amber`, `border`, `card`, `muted-foreground`, etc). No backend changes, no new routes.
+## 1. Kill the auth wall
 
----
+- `RootRedirect.tsx`: stop passing `gated` for logged-out visitors. The full Homepage renders for everyone. Logged-in users still get `Home` (their personal dashboard above the public homepage).
+- `Homepage.tsx`: remove the `gated` prop entirely (and the blurred 2-card teaser). The filter pills, full economy grid, map, and activity feed are public.
+- `Leaderboard.tsx`: remove the `AuthGate` wrapper. Public.
+- `Compare.tsx`: remove the `AuthGate` wrapper. Public.
+- Keep auth required for: `/register`, `/dashboard/*`, `/admin`, `/validate`, `/c/:slug/submit`, `/settings`, `/connect`, merchant claim flows. (Already enforced inside those pages — no change.)
+- `AuthGate.tsx` is no longer used; leave the file for now but unimport it.
 
-### 1. Hero (refresh, not rebuild)
+## 2. Reposition the hero
 
-Keep the hero image, layout, and live stat pills. Update copy + CTAs only:
+Edit the hero block in `Homepage.tsx`:
+- Headline: "Visualizing Bitcoin Circular Economies"
+- Subheadline: "Explore how Bitcoin moves across communities through transparent, privacy-conscious activity metrics."
+- Primary CTA: **Explore Economies** → `/leaderboard`
+- Secondary CTA: **How It Works** → `/methodology`
+- Demote "Register your economy" to a tertiary text link below the CTAs.
+- Replace the "verified Bitcoin economy network" chip with a softer "Early-stage · Open · Privacy-first" chip.
 
-- Pill: `Bitcoin Circular Economy` → **`The verified Bitcoin economy network`**
-- H1: keep "See where Bitcoin actually circulates."
-- Subhead → **"The open standard for measuring real Bitcoin adoption. Validator-verified data from circular economies on every continent — free for anyone to read, share, and build on."**
-- Buttons: `Explore Economies` (primary, `/leaderboard`) + new secondary **`Register your economy →`** (`/register`) replacing the duplicate "View Leaderboard". Logged-in users (gated=false case) is unchanged path-wise.
+## 3. Transparency banner
 
-### 2. NEW — Trust strip (right under hero, above filters)
+Thin dismissible banner directly under the navbar (new component `TransparencyBanner.tsx`, mounted in `Homepage.tsx`):
 
-Thin full-width band: `border-y border-border bg-card/40`. Single row, wraps on mobile.
+> "Bitcoin Circular is an early-stage experiment exploring better ways to visualize Bitcoin circular economy activity while respecting privacy and consent."
 
-```
-✓ {countries} countries  ·  ✓ {totalMerchants} merchants  ·  ✓ {verifiedTxns} verified txns  ·  ✓ 2-of-3 validator consensus  ·  ✓ Non-custodial — no funds held
-```
+Stored dismissal in `localStorage` so it doesn't nag returning visitors.
 
-Numbers reuse the values already computed in Homepage (`countries`, `totalMerchants`) plus a new lightweight count from `blink_transactions` (head: true) — same query pattern as `PublicData.tsx`. Loading shows `—`. Hidden when `gated` is false-and-not-logged-in? No — show always; it builds trust on the gated landing too.
+## 4. New "How the data works" section
 
-### 3. NEW — "How it works" 3-step flow (above pillars)
+New section on `Homepage.tsx` between the economy grid and the existing map. Four cards explaining:
+1. Most current data is **demo / sample data** for testing.
+2. Real integrations (Blink wallet sync, BTCMap) are **opt-in only** — communities choose.
+3. We show **aggregate activity**, never personal transaction detail.
+4. Goal is **ecosystem insight, not surveillance**.
 
-Section title: **"From wallet to world stage in 3 steps"**.
+Honest, plain-language tone. Links to `/methodology` for full detail.
 
-Three numbered cards in a 3-col grid (stacks on mobile), each with an icon, step number badge, title, one-line desc, and a tiny outcome chip:
+## 5. New "Privacy first" section
 
-1. **Register your economy** — `Plus` icon — "Tell us your name, region, and contact. 2 min." — chip: `Free forever`
-2. **Get validated** — `ShieldCheck` icon — "2 of 3 independent validators confirm real activity." — chip: `Tamper-proof`
-3. **Track & share** — `BarChart3` icon — "Live dashboard, public profile, embeddable widget, open CSV." — chip: `Public proof`
+Follows the data section. Four trust pillars with lucide icons (`Shield`, `EyeOff`, `Users`, `Lock`):
+- Built with consent in mind
+- Communities choose what to share
+- Focused on ecosystem activity, not individual surveillance
+- Transparency without compromising privacy
 
-Connect cards with a subtle dashed line on `md:` (pseudo-element on the section), amber accent on the active step number badge.
+Closes with a link to a new public `/privacy` page.
 
-### 4. Pillars (expand to all 5, premium polish)
+## 6. New `/privacy` page
 
-Replace the 3-pillar grid with the full **5 pillars** that match the score algorithm memory:
+New file `src/pages/Privacy.tsx` + route in `App.tsx`. Long-form version of the privacy philosophy: what we collect, what we don't, how opt-in works, how to disconnect (irreversible deletion). Plain language, no legalese. Reuses `Navbar`.
 
-- Retention · `Repeat` · "Sats earned stay local."
-- Velocity · `Zap` · "How fast sats move between hands."
-- Growth · `TrendingUp` · "New merchants and earners onboarded."
-- Diversity · `Layers` · "Spread across categories and regions."
-- Resilience · `ShieldCheck` · "Activity sustained over time."
+## 7. Navigation refresh (`Navbar.tsx`)
 
-Layout: `md:grid-cols-3 lg:grid-cols-5`, each card gets a tiny `0–20 pts` weight chip in the corner. Section sub-line becomes **"Five pillars. One score. Validator-verified."**
+New link order: **Home · Explore · Methodology · Privacy · Leaderboard**. Drop "Compare", "Register", "Validate", "Data" from the primary nav for logged-out users (they're still routable; just declutter). Logged-in users keep Validate and a dedicated "Create Economy" button on the right, with "Sign in" replaced by avatar.
 
-### 5. NEW — "Free vs Pro data access" comparison (above Register CTA)
+For logged-out users on the right side:
+- Small ghost "Sign in" link
+- Primary outline "Create Economy" button → `/register` (auth required at next step)
 
-Two-card teaser linking to `/data`. Cards use `border-border` (Free) and `border-score-amber/60` (Pro accent).
+## 8. Language pass
 
-| | **Free — Public Data** | **Pro — Research & Partner Access** |
-|---|---|---|
-| Who | Anyone with an account | Researchers, NGOs, Bitcoin companies |
-| Includes | Live leaderboard, economy profiles, CSV snapshot, embeddable widget | Full historical dataset, time series, API feeds, custom exports |
-| Price | $0 | Apply / contact |
-| CTA | `Explore data →` (/data) | `Request access →` (/data#access) |
+Search/replace across homepage and methodology copy:
+- "tracking" → "visualizing activity"
+- "monitoring" → "aggregating activity"
+- "wallet surveillance" → never used; replace with "consent-based wallet integrations"
+- "real Bitcoin adoption" stays, but de-emphasize "verified" maximalism.
 
-Heading: **"Built for explorers. Trusted by researchers."** Subhead: "Open by default. Premium where it matters."
+Scope: `Homepage.tsx`, `Methodology.tsx`, hero subheadlines. Not touching DB/UI labels like "economy" / "community" (already governed by memory).
 
-### 6. Register CTA section
+## Technical notes
 
-Keep existing amber gradient block but tighten copy:
-- Pill: `Add your economy`
-- H2: **"Is your Bitcoin economy missing from the map?"**
-- Body: **"Join 10+ verified economies across 5 countries already proving real circulation. Free, non-custodial, takes 2 minutes."** (numbers stay static strings since this is the marketing block — no live binding needed.)
-- Buttons unchanged.
+- Pure frontend work. No DB migrations, no edge function changes, no schema changes.
+- `RootRedirect` becomes: `user ? <Home /> : <Homepage />` (no `gated` prop).
+- `Homepage` prop signature loses `gated`; `Home.tsx` already calls it without `gated`, so safe.
+- New components: `TransparencyBanner`, `HowDataWorks` section (inline in Homepage), `PrivacyPillars` section (inline in Homepage), new page `Privacy.tsx`.
+- New route: `<Route path="/privacy" element={<Privacy />} />` in `App.tsx`.
+- Preserve existing semantic tokens (`score-amber`, `score-green`, `border`, `card`, `muted-foreground`). No raw hex.
+- Verify by viewing `/` logged-out (full homepage visible, banner shows, no blur), `/leaderboard` logged-out (no gate), `/privacy` (new page renders), `/register` logged-out (still redirects to login — already handled inside `RegisterCommunity`).
 
-### 7. Footer — no change.
+## Out of scope (explicitly)
 
----
-
-### Technical notes
-
-- New icons to import from lucide-react: `Plus`, `ShieldCheck`, `BarChart3`, `Layers`, `Check`.
-- Verified txn count: add a small `useQuery(['homepage-verified-txns'])` calling `supabase.from('blink_transactions').select('*', { count: 'exact', head: true })`. Cache for the session.
-- All new sections wrapped in `motion.section` using existing `fadeUp` / `stagger` variants for consistency.
-- All sections respect the existing `gated` prop the same way the current "Register your economy CTA" does — i.e. the new How-it-works, Trust strip, and Free-vs-Pro show on both gated and ungated landing because they're marketing, not data.
-- Strict use of semantic tokens — no raw colors.
-- Mobile: every grid collapses to single column; trust strip wraps; pillars become `grid-cols-2` then `grid-cols-1`.
-
-Estimated diff: ~250 lines added, ~30 modified, 0 removed structurally. One file.
+- No changes to scoring algorithm, validator logic, or wallet sync.
+- No changes to `Home.tsx` personal dashboard structure beyond what `Homepage` removes.
+- No redesign of `/c/:slug` economy pages (already public).
+- No pricing/monetization copy rewrites beyond removing "tracking" language.
