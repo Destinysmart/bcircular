@@ -90,9 +90,16 @@ const Navbar = () => {
               </Button>
             </>
           ) : (
-            <Link to="/login">
-              <Button size="sm" variant="outline">Log in</Button>
-            </Link>
+            <>
+              <Link to="/login" className="hidden sm:inline-flex">
+                <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-foreground">Sign in</Button>
+              </Link>
+              <Link to="/register">
+                <Button size="sm" className="bg-score-amber text-background hover:bg-score-amber/90 font-semibold">
+                  Create Economy
+                </Button>
+              </Link>
+            </>
           )}
           <button
             className="md:hidden p-2 rounded-md hover:bg-secondary transition-colors"
