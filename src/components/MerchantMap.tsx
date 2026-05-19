@@ -4,6 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Tag, CreditCard, ExternalLink } from 'lucide-react';
+import { useMapboxToken } from '@/hooks/useMapboxToken';
 
 interface Merchant {
   id: string;
