@@ -1,4 +1,5 @@
 import Navbar from '@/components/Navbar';
+import Seo from '@/components/Seo';
 import { ExternalLink, Zap, MapPin, Trophy, Code, FileText, Lock, Github, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import circularLogo from '@/assets/circular-logo.png';
@@ -112,8 +113,14 @@ const pillarCards: Array<{
 
 const Methodology = () => (
   <div className="min-h-screen bg-background">
+    <Seo
+      title="Methodology"
+      description="How the Circularity Score is calculated — five pillars, transparent formulas, and the verified data sources behind every Bitcoin economy ranking."
+      path="/methodology"
+    />
     <Navbar />
     <div className="container py-12 max-w-5xl">
+
       <div className="flex items-center gap-3 text-primary text-sm font-mono mb-4">
         <img src={circularLogo} alt="Circular" className="h-12 w-auto object-contain" />
         <span>METHODOLOGY</span>

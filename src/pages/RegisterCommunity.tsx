@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Check, Zap } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import Seo from '@/components/Seo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -146,6 +147,11 @@ const RegisterCommunity = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        title="Register your Bitcoin Economy"
+        description="Add your community to the world's first Bitcoin circular economy intelligence platform. Free, privacy-first, validator-reviewed in 48 hours."
+        path="/register"
+      />
       <Navbar />
       <div className="container px-4 sm:px-6 py-8 sm:py-12 max-w-[560px]">
         {!user && (

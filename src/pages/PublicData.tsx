@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Download, Database, Mail, Globe, Store, Users, Zap, Layers, Coins, CheckCircle2, Calendar, ShieldCheck, Radio, BookOpen } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import Seo from '@/components/Seo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -143,6 +144,11 @@ const PublicData = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        title="Open Bitcoin Circular Economy Data"
+        description="Free CSV downloads and research datasets for every Bitcoin circular economy on the platform. For academics, NGOs, funders, and data partners."
+        path="/data"
+      />
       <Navbar />
       <div className="container py-10 max-w-5xl">
         <div className="mb-2 text-xs uppercase tracking-widest text-score-amber font-semibold">Open Data</div>

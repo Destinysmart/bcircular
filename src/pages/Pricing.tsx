@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { z } from 'zod';
 import { ArrowRight, Check, ShieldCheck, Database, Sparkles, Globe, BarChart3, Mail, ChevronDown } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import Seo from '@/components/Seo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -114,6 +115,11 @@ const Pricing = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        title="Pricing & Data Access"
+        description="Open leaderboard forever. Apply for Research or Pro access for API feeds, custom exports, white-label widgets, and partner integrations."
+        path="/pricing"
+      />
       <Navbar />
       <main className="container py-14 max-w-6xl">
         {/* Hero */}

@@ -17,6 +17,7 @@ import { TierBadge } from '@/components/TierBadge';
 import circularLogo from '@/assets/circular-logo.png';
 // Hero served from /public for stable LCP preload URL (see index.html)
 const HERO_IMAGE_PUBLIC = '/hero-image.jpg';
+import Seo from '@/components/Seo';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -140,8 +141,15 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false }: { topSlot?
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        title="Bitcoin Circular | Bitcoin Circular Economy Tracker"
+        includesBrand
+        description="Track and measure Bitcoin circular economies worldwide. Live merchant data, transaction flows, and a transparent Circularity Score for every community."
+        path="/"
+      />
       <Navbar />
       <TransparencyBanner />
+
 
       {/* HERO */}
       {!hideHero && (
