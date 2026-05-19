@@ -26,7 +26,8 @@ interface Props {
   economies: EconomyPin[];
 }
 
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
+
+
 
 const getCenter = (e: EconomyPin): [number, number] | null => {
   if (e.lat != null && e.lng != null) return [Number(e.lng), Number(e.lat)];
