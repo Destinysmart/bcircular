@@ -21,7 +21,7 @@ interface MerchantMapProps {
   fallbackCenter?: { lat: number | null; lng: number | null } | null;
 }
 
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
+
 
 // Color tokens (mapbox needs literal hex; mirror our semantic palette)
 const COLOR_VERIFIED = '#818cf8'; // primary indigo
