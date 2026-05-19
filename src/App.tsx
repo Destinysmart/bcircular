@@ -12,6 +12,7 @@ import Leaderboard from "./pages/Leaderboard";
 import CommunityDashboard from "./pages/CommunityDashboard";
 import SubmitPage from "./pages/SubmitPage";
 import Widget from "./pages/Widget";
+import WidgetTest from "./pages/WidgetTest";
 import RegisterCommunity from "./pages/RegisterCommunity";
 import Login from "./pages/Login";
 import ValidatorDashboard from "./pages/ValidatorDashboard";
@@ -59,6 +60,7 @@ const App = () => (
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/widget/:slug" element={<Widget />} />
+              <Route path="/widget-test" element={<WidgetTest />} />
               <Route path="/quick-submit" element={<QuickSubmit />} />
               <Route path="/compare" element={<Compare />} />
               <Route path="/register" element={<RegisterCommunity />} />
