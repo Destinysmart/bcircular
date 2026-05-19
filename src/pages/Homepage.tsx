@@ -157,7 +157,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false }: { topSlot?
                 'linear-gradient(to right, hsl(var(--background) / 0.95) 0%, hsl(var(--background) / 0.7) 50%, hsl(var(--background) / 0.25) 100%)',
             }}
           />
-          <div className="container relative h-full flex items-center pt-8 pb-24 md:py-0">
+          <div className="container relative h-full flex items-center pt-8 pb-24 md:pt-16 md:pb-36">
             <motion.div
               variants={stagger}
               initial="hidden"
