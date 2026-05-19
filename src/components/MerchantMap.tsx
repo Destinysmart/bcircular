@@ -141,7 +141,7 @@ const MerchantMap = ({ merchants, fallbackCenter }: MerchantMapProps) => {
   if (!MAPBOX_TOKEN) {
     return (
       <div className="h-[400px] bg-secondary/30 flex items-center justify-center text-muted-foreground text-sm">
-        <span className="font-mono">Set VITE_MAPBOX_TOKEN to enable map</span>
+        <span className="font-mono">Loading map…</span>
       </div>
     );
   }
