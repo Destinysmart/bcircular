@@ -157,7 +157,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false }: { topSlot?
                 'linear-gradient(to right, hsl(var(--background) / 0.95) 0%, hsl(var(--background) / 0.7) 50%, hsl(var(--background) / 0.25) 100%)',
             }}
           />
-          <div className="container relative h-full flex items-center pt-8 pb-24 md:pt-16 md:pb-36">
+          <div className="container relative h-full flex items-center pt-8 pb-24 md:pt-16 md:pb-16 lg:pb-36">
             <motion.div
               variants={stagger}
               initial="hidden"
@@ -206,7 +206,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false }: { topSlot?
             variants={stagger}
             initial="hidden"
             animate="visible"
-            className="absolute left-0 right-0 bottom-6 container hidden md:block"
+            className="container hidden md:block md:relative md:mt-6 md:pb-8 lg:mt-0 lg:pb-0 lg:absolute lg:left-0 lg:right-0 lg:bottom-6"
           >
             <div className="flex items-center gap-2 mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
               <span className="relative flex h-1.5 w-1.5">
