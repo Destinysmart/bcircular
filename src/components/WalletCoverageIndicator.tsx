@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { BarChart3, Wallet, ArrowRight } from 'lucide-react';
+import { BarChart3, Wallet, ArrowRight, Circle } from 'lucide-react';
 import { getCoverage } from '@/lib/coverage';
 
 interface Props {
@@ -70,7 +70,7 @@ export default function WalletCoverageIndicator({
               backgroundColor: `hsl(var(--${cov.colorToken}) / 0.1)`,
             }}
           >
-            <span aria-hidden>{cov.emoji}</span>
+            <Circle className="h-2 w-2 fill-current" aria-hidden />
             {cov.label}
           </span>
           <div className="w-full md:w-44">

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useMemo, useState } from 'react';
-import { ArrowRight, Store, Zap, Globe, Sparkles, TrendingUp, Star, Repeat, BarChart3, MapPin, CheckCircle2, ShieldCheck, Bitcoin, Plus, Layers, Check, Database, Lock, Shield, EyeOff, Users, FlaskConical } from 'lucide-react';
+import { ArrowRight, Store, Zap, Globe, Sparkles, TrendingUp, Star, Repeat, BarChart3, MapPin, CheckCircle2, ShieldCheck, Bitcoin, Plus, Layers, Check, Database, Lock, Shield, EyeOff, Users, FlaskConical, Circle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -446,7 +446,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false }: { topSlot?
                                     backgroundColor: `hsl(var(--${cov.colorToken}) / 0.08)`,
                                   }}
                                 >
-                                  <span aria-hidden>{cov.emoji}</span>
+                                  <Circle className="h-1.5 w-1.5 fill-current" aria-hidden />
                                   {cov.label}
                                 </span>
                               );

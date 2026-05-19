@@ -156,7 +156,7 @@ export default function ConnectWallet({ ownerType }: Props) {
           {alreadyConnected ? (
             <div className="space-y-3">
               <div className="rounded-md border border-score-green/40 bg-score-green/10 p-4 text-sm">
-                ✓ Your wallet API key is already on file
+                <span className="inline-flex items-center gap-1.5"><Check className="h-4 w-4 text-score-green" /> Your wallet API key is already on file</span>
                 {owner.wallet?.wallet_status === 'pending' ? ' (saved during signup)' : ''}.
                 You don't need to enter it again.
               </div>

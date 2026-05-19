@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Zap } from 'lucide-react';
+import { Zap, Recycle, ArrowDownToLine, ArrowUpFromLine, type LucideIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Props { communityId: string }
@@ -114,26 +114,26 @@ export default function VerifiedCircularityBlock({ communityId }: Props) {
         </div>
       </div>
 
-      <div className="text-4xl font-bold mb-5">🔄 {pctCircular}% circularity rate</div>
+      <div className="text-4xl font-bold mb-5 flex items-center gap-2"><Recycle className="h-7 w-7 text-score-green" /> {pctCircular}% circularity rate</div>
 
       {/* Four-way flow breakdown */}
       <div className="space-y-3 mb-4">
         <FlowBar
-          icon="🔄"
+          Icon={Recycle}
           label="Circular — earner ↔ merchant, earner ↔ earner"
           pct={pctCircular}
           sats={circularVolume}
           color="bg-score-green"
         />
         <FlowBar
-          icon="📥"
+          Icon={ArrowDownToLine}
           label="External inflow — sats entering economy"
           pct={pctInflow}
           sats={externalInflow}
           color="bg-primary"
         />
         <FlowBar
-          icon="📤"
+          Icon={ArrowUpFromLine}
           label="Offramp — sats leaving to fiat / outside"
           pct={pctOfframp}
           sats={offrampVolume}
@@ -149,14 +149,14 @@ export default function VerifiedCircularityBlock({ communityId }: Props) {
   );
 }
 
-function FlowBar({ icon, label, pct, sats, color }: {
-  icon: string; label: string; pct: number; sats: number; color: string;
+function FlowBar({ Icon, label, pct, sats, color }: {
+  Icon: LucideIcon; label: string; pct: number; sats: number; color: string;
 }) {
   return (
     <div>
       <div className="flex items-center justify-between text-xs mb-1.5">
-        <span className="text-foreground">
-          <span className="mr-1.5">{icon}</span>{label}
+        <span className="text-foreground inline-flex items-center gap-1.5">
+          <Icon className="h-3.5 w-3.5 text-muted-foreground" />{label}
         </span>
         <span className="font-mono tabular-nums text-muted-foreground">
           {pct}% · {sats.toLocaleString()} sats

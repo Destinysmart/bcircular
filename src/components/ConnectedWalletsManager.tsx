@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Copy, RefreshCcw, Loader2, Zap, Trash2, KeyRound } from 'lucide-react';
+import { Copy, RefreshCcw, Loader2, Zap, Trash2, KeyRound, Circle, AlertTriangle, Recycle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -257,8 +257,8 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
             <div className="font-medium truncate">{row.label}</div>
             <div className="text-xs text-muted-foreground">
               <code>{row.code}</code> ·{' '}
-              <Badge variant={conn ? 'default' : authErr ? 'destructive' : 'secondary'} className={conn ? 'bg-score-green text-background' : ''}>
-                {conn ? '● Connected' : authErr ? '⚠ Re-connect required' : hasWallet ? '○ Saved, not synced' : '○ Pending'}
+              <Badge variant={conn ? 'default' : authErr ? 'destructive' : 'secondary'} className={`inline-flex items-center gap-1 ${conn ? 'bg-score-green text-background' : ''}`}>
+                {conn ? <><Circle className="h-2 w-2 fill-current" /> Connected</> : authErr ? <><AlertTriangle className="h-3 w-3" /> Re-connect required</> : hasWallet ? <><Circle className="h-2 w-2" /> Saved, not synced</> : <><Circle className="h-2 w-2" /> Pending</>}
               </Badge>{' '}
               {hasWallet && `· last sync ${timeAgo(row.wallet.last_synced_at)}`}
             </div>
@@ -334,7 +334,7 @@ export default function ConnectedWalletsManager({ communityId }: Props) {
       <CardContent className="space-y-6">
         {txStats && (
           <div className={`rounded-md border p-4 ${txStats.circularityRate > 0 ? 'border-score-green/40 bg-score-green/5' : 'border-score-amber/40 bg-score-amber/5'}`}>
-            <div className={`text-xs uppercase tracking-wide font-medium mb-1 ${txStats.circularityRate > 0 ? 'text-score-green' : 'text-score-amber'}`}>🔄 Circularity rate</div>
+            <div className={`text-xs uppercase tracking-wide font-medium mb-1 inline-flex items-center gap-1.5 ${txStats.circularityRate > 0 ? 'text-score-green' : 'text-score-amber'}`}><Recycle className="h-3.5 w-3.5" /> Circularity rate</div>
             <div className={`text-3xl font-bold ${txStats.circularityRate > 0 ? 'text-score-green' : 'text-score-amber'}`}>{txStats.circularityRate}%</div>
             <div className="text-xs text-muted-foreground mt-1">
               {txStats.circularTxnCount} circular transaction{txStats.circularTxnCount === 1 ? '' : 's'} · {txStats.circularVolume.toLocaleString()} sats stayed in economy

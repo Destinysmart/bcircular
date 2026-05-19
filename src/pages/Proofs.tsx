@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { FileText, ImageIcon, Upload, Video, Zap } from 'lucide-react';
+import { FileText, ImageIcon, Upload, Video, Zap, Recycle } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -128,7 +128,7 @@ const Proofs = () => {
                 </div>
                 <div className="p-4">
                   <div className="mb-2 flex flex-wrap items-center gap-2">
-                    {proof.is_circular && <Badge className="rounded-full">Circular transaction ✓</Badge>}
+                    {proof.is_circular && <Badge className="rounded-full inline-flex items-center gap-1"><Recycle className="h-3 w-3" /> Circular transaction</Badge>}
                     {proof.amount_sats ? <span className="font-mono text-xs text-score-amber inline-flex items-center gap-1"><Zap className="w-3 h-3" style={{ color: '#F7931A' }} />{Number(proof.amount_sats).toLocaleString()} sats</span> : null}
                   </div>
                   <h2 className="font-semibold mb-1">{proof.title}</h2>

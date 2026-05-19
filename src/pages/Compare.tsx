@@ -76,7 +76,7 @@ const MiniMap = ({ merchants }: { merchants: any[] }) => {
   return <div ref={containerRef} className="h-56 rounded-lg" aria-label="Merchant map" />;
 };
 
-const confidence = (proofCount: number) => proofCount >= 5 ? 'High ✓' : proofCount >= 1 ? 'Medium' : 'Low';
+const confidence = (proofCount: number) => proofCount >= 5 ? 'High' : proofCount >= 1 ? 'Medium' : 'Low';
 
 const generateInsights = (a: any, b: any, aDetails: any, bDetails: any): string[] => {
   if (!a || !b) return [];
@@ -147,7 +147,7 @@ const Compare = () => {
   const share = async () => {
     const url = `${window.location.origin}/compare?a=${a?.slug}&b=${b?.slug}`;
     await navigator.clipboard.writeText(url);
-    toast.success('Comparison link copied ✓');
+    toast.success('Comparison link copied');
   };
 
   return (
