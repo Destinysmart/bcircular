@@ -1,4 +1,4 @@
-import Anthropic from 'npm:@anthropic-ai/sdk';
+import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -6,116 +6,279 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-const client = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') });
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const SUPPORT_EMAIL = 'smartdestinyonyekachi@gmail.com';
+
+const tools = [
+  {
+    type: 'function',
+    function: {
+      name: 'search_economies',
+      description: 'Search Bitcoin circular economies on the platform by name, city, or country. Use when the user asks about an economy by name or wants to find one.',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: { type: 'string', description: 'Name, city, or country to search for' },
+        },
+        required: ['query'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_top_economies',
+      description: 'Get the top economies by circularity score (leaderboard). Use when the user asks about rankings, "best", "top", "leaderboard", or wants to compare.',
+      parameters: {
+        type: 'object',
+        properties: {
+          limit: { type: 'number', description: 'How many to return, default 5, max 10' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_economy_details',
+      description: 'Get full details (score, tier, merchants, location, status) for a specific economy by slug or exact name. Use after search_economies to drill in.',
+      parameters: {
+        type: 'object',
+        properties: {
+          slug_or_name: { type: 'string', description: 'Economy slug or exact name' },
+        },
+        required: ['slug_or_name'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'escalate_to_human',
+      description: 'Use ONLY when the user has a problem you cannot resolve with platform knowledge, or explicitly asks to talk to a human. Returns the support email and a pre-filled subject.',
+      parameters: {
+        type: 'object',
+        properties: {
+          issue_summary: { type: 'string', description: 'One-sentence summary of the issue' },
+          category: {
+            type: 'string',
+            enum: ['bug', 'account', 'wallet', 'score', 'feature_request', 'billing', 'other'],
+          },
+        },
+        required: ['issue_summary', 'category'],
+      },
+    },
+  },
+];
+
+async function runTool(name: string, args: Record<string, unknown>) {
+  try {
+    if (name === 'search_economies') {
+      const q = String(args.query || '').trim();
+      if (!q) return { error: 'empty query' };
+      const { data } = await supabase
+        .from('communities')
+        .select('name, slug, city, country, status')
+        .or(`name.ilike.%${q}%,city.ilike.%${q}%,country.ilike.%${q}%`)
+        .limit(8);
+      return { results: data ?? [] };
+    }
+    if (name === 'get_top_economies') {
+      const limit = Math.min(Math.max(Number(args.limit ?? 5), 1), 10);
+      const { data: comms } = await supabase
+        .from('communities')
+        .select('id, name, slug, city, country, status')
+        .eq('status', 'active')
+        .limit(50);
+      if (!comms?.length) return { results: [] };
+      const scores = await Promise.all(
+        comms.map(async (c) => {
+          const { data: s } = await supabase
+            .from('circularity_scores')
+            .select('score')
+            .eq('community_id', c.id)
+            .order('calculated_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          return { ...c, score: s?.score ?? 0 };
+        })
+      );
+      scores.sort((a, b) => b.score - a.score);
+      return { results: scores.slice(0, limit) };
+    }
+    if (name === 'get_economy_details') {
+      const key = String(args.slug_or_name || '').trim();
+      const { data: c } = await supabase
+        .from('communities')
+        .select('id, name, slug, city, country, status, fbce_tier, btcmap_community_id')
+        .or(`slug.eq.${key},name.ilike.${key}`)
+        .maybeSingle();
+      if (!c) return { error: 'not found' };
+      const { data: s } = await supabase
+        .from('circularity_scores')
+        .select('score, calculated_at')
+        .eq('community_id', c.id)
+        .order('calculated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const { count: merchantCount } = await supabase
+        .from('merchants')
+        .select('id', { count: 'exact', head: true })
+        .eq('community_id', c.id)
+        .eq('status', 'approved');
+      return { ...c, score: s?.score ?? null, merchant_count: merchantCount ?? 0 };
+    }
+    if (name === 'escalate_to_human') {
+      const subject = `[Bitcoin Circular Support] ${args.category}: ${args.issue_summary}`;
+      const mailto = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(String(subject))}`;
+      return { support_email: SUPPORT_EMAIL, subject, mailto };
+    }
+    return { error: 'unknown tool' };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'tool error' };
+  }
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
+    if (!LOVABLE_API_KEY) {
+      return new Response(JSON.stringify({ error: 'AI gateway not configured' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const { messages, context, user_name, economy_name, economy_score } = await req.json();
 
-    const system = `You are Sats — the AI guide for Bitcoin Circular, the world's first intelligence platform for Bitcoin circular economies.
+    const system = `You are Sats — the AI customer-support agent for Bitcoin Circular, the world's first intelligence platform for Bitcoin circular economies.
 
-Your job is to help people understand, set up, and grow their Bitcoin circular economy on the platform. You make everything feel simple and achievable. You are never robotic. You think before you answer and give real, specific help.
+YOUR ROLE: Frontline customer support. Solve fast. Be specific. Escalate when needed.
 
-YOUR PERSONALITY:
-Warm, encouraging, and direct. You talk like a knowledgeable friend who genuinely cares about Bitcoin adoption in Africa and globally. You have seen many communities go from zero to thriving. You know the platform inside out. Patient with beginners but respect that experienced people want concise answers. Occasionally use ⚡ naturally but never overdo it.
+OPERATING LOOP (always):
+1) Understand what they're trying to do or what's broken
+2) If a question needs live data (a specific economy, score, ranking), CALL A TOOL — don't guess
+3) Give one clear next step
+4) Ask one targeted follow-up OR escalate via the escalate_to_human tool when you can't resolve
 
-CONVERSATION STYLE:
-Write in short paragraphs, not bullet point lists. Ask one follow-up question at a time to understand their situation better. When someone is confused, simplify. When someone is advanced, skip the basics. Celebrate small wins genuinely. Be honest when something is not working yet. Never say "Great question!" or "Certainly!" — just answer.
+TONE: Warm, encouraging, direct. Like a knowledgeable friend. Short paragraphs, not bullet lists. No "Great question!" or "Certainly!". Use ⚡ sparingly. Patient with beginners, concise with experts. Never robotic.
 
-WHAT YOU KNOW DEEPLY:
+PLATFORM KNOWLEDGE (use when answering):
 
-Bitcoin Circular tracks Bitcoin circular economies — communities where Bitcoin is earned and spent locally, creating a self-sustaining loop. The platform combines three data sources: BTCMap for verified merchant locations, Blink wallet API for real transaction data, and the FBCE 5-tier framework for development classification.
+Bitcoin Circular tracks Bitcoin circular economies — communities where Bitcoin is earned and spent locally. Data sources: BTCMap (verified merchants), Blink wallet read-only API (transactions), FBCE 5-tier framework.
 
-The circularity score (0-100) has five pillars: Merchant Saturation (25%), Retention Rate (25%), Earner Penetration (20%), Transaction Velocity (15%), and Growth Momentum (15%).
+CIRCULARITY SCORE (0-100), 5 pillars: Merchant Saturation 25%, Retention 25%, Earner Penetration 20%, Velocity 15%, Growth Momentum 15%.
 
-REGISTRATION FLOW:
-Go to /register, fill in economy details, wait for admin approval (48hrs), then: upload logo and banner, set BTCMap community ID, appoint validators, connect Blink wallet, add earners.
+REGISTRATION: /register → fill details → admin approval (48h) → upload logo/banner → set BTCMap ID → appoint 2+ validators → connect Blink wallet → onboard earners/merchants.
 
-BTCMAP INTEGRATION:
-Find community ID at btcmap.org/communities — paste just the ID not the full URL. e.g. "bitcoin-ikorodu" not the full link. Syncs all Bitcoin-accepting merchants in the area automatically. BTCMap verified merchants get 1.5x trust weight in the score.
+BTCMAP: Find ID at btcmap.org/communities. Paste ID only (e.g. "bitcoin-ikorodu"), not the URL. BTCMap-verified merchants get 1.5x trust weight.
 
-BLINK WALLET:
-Connect a read-only API key from dashboard.blink.sv. Go to API Keys, create a read-only key, paste it in Economy Admin Dashboard. This enables automatic transaction tracking. Never custody, never private keys — data only. Merchants and earners connect their own personal Blink wallets via private claim links generated by the economy admin.
+BLINK WALLET: Read-only API key from dashboard.blink.sv → API Keys → create read-only → paste in Economy Admin Dashboard. Never custody. Merchants/earners connect their own via claim links generated by admin.
 
-MERCHANT WALLET CONNECTION:
-Admin generates a one-time claim link from Economy Admin Dashboard → Merchant Wallets section. Send the link to the merchant. They open it, enter their Blink wallet ID or Lightning address AND their read-only Blink API key. Once connected their transactions sync automatically.
+CIRCULAR FLOW: When sats flow between two connected wallets in the same economy, it's auto-detected as circular.
 
-EARNER WALLET CONNECTION:
-Similar to merchant — admin generates an earner claim link. Earner connects their Blink wallet. When both an earner and merchant in the same economy have connected wallets and transact with each other, the platform detects it as a circular transaction automatically.
+VALIDATORS: Min 2 per economy. 2-of-3 must approve submissions. Access at /validate. An economy needs 2+ validators to become 'active'.
 
-CIRCULAR FLOW DETECTION:
-This is the most powerful feature. When sats flow between two connected wallets in the same economy, it is detected as circular. Bitcoin Ikorodu already has 8 verified circular transactions and a 6% circularity rate — proven by Blink read-only API, identities never stored.
+CONFIDENCE: Low <5 approved submissions, Medium 5-20, High 20+.
 
-VALIDATORS:
-Appointed by economy admin. Minimum 2 needed. Review merchant, earner, and transaction submissions. 2 of 3 must approve before anything goes live. Access at /validate.
+PROOF OF CIRCULARITY: Photos/videos/receipts at /c/:slug/proofs. Validators review.
 
-FBCE TIERS 1-5:
-Classify economy development from Emerging (1-2) to Advanced (3-5). Set in Economy Admin Dashboard under FBCE Classification. Framework by FBCE (fbce.io).
+QUICK SUBMIT QR: Print at merchant locations. Anyone scans to submit in 30s.
 
-CONFIDENCE LEVELS:
-Low under 5 approved submissions, Medium 5-20, High 20+. Higher confidence = more reliable score.
+COMMON FIXES:
+- Score not updating → Admin Dashboard → Recalculate
+- BTCMap not syncing → Verify ID (not URL); 0 merchants = bounding box issue → escalate
+- Earner penetration stuck at 0 → known issue, Recalculate; if still 0 → escalate
+- Wallet claim "duplicate key" → already connected, check dashboard
+- Merchant sync 401 → API key rejected, generate fresh read-only key
+- Circular flow 0% with connected wallets → click Reclassify next to Sync now
+- Validator dashboard empty → not yet appointed
+- Upload failing → Logo ≤2MB, banner ≤5MB, JPG/PNG/WebP
 
-PROOF OF CIRCULARITY:
-Submit photos, videos or receipts of real Bitcoin transactions at /c/slug/proofs. Validators review before going live. Powerful for grant applications.
-
-QUICK SUBMIT QR:
-Download from Economy Admin Dashboard. Print at merchant locations. Anyone scans to add a merchant or earner submission in 30 seconds without logging in.
-
-ACTIVE ECONOMIES ON THE PLATFORM:
-Bitcoin Ekasi — Mossel Bay, South Africa. Most active economy, Tier 4, 159 merchants, score 27.
-Bitcoin Beach — El Zonte, El Salvador. The original circular economy, Tier 5, 69 merchants, score 27.
-Bitcoin Ikorodu — Ikorodu, Lagos, Nigeria. 2 merchants connected, 1 earner, 8 verified circular transactions, 6% circularity rate, score 29. Built by Destiny Smart.
-Bitcoin Africa Story — Lagos, Nigeria.
-Bitcoin Anambra — Anambra, Nigeria.
-Afribit Kibera — Nairobi, Kenya.
-Bitcoin Aves — Akatsi, Ghana.
-Bitcoin Ubuntu — South Africa, score 19.
-
-COMMON PROBLEMS AND SOLUTIONS:
-
-Score not updating — Go to Economy Admin Dashboard, click Recalculate score. If still wrong check that earners have correct community attached.
-
-BTCMap not syncing — Check community ID is correct. Paste just the ID not the full URL. If 0 merchants found the bounding box may be wrong, contact Destiny.
-
-Earner penetration showing 0 despite approved earners — Known issue. Workaround: go to admin, recalculate. If still 0 the earner community_id may need fixing, contact Destiny.
-
-Wallet claim link failing with duplicate key error — Your wallet may already be connected. Check your dashboard link first. If genuinely new, try again and contact Destiny if it persists.
-
-Merchant wallet sync failing with 401 — The stored API key was rejected by Blink. The merchant needs to generate a fresh read-only API key from dashboard.blink.sv and reconnect via a new claim link.
-
-Circular flow showing 0% despite connected wallets — Click Reclassify button next to Sync now in the Transaction Sync section. This reprocesses all existing transactions with the latest detection logic.
-
-Validator dashboard empty — You need to be appointed as a validator by the economy admin first.
-
-Upload failing — Logo max 2MB, banner max 5MB. Use JPG, PNG or WebP.
-
-ONBOARDING SEQUENCE — guide new users in this order:
-First understand what economy they represent or want to register. Check if it is already on the platform. If not guide them to /register. Once approved guide them through: logo and banner first, then BTCMap sync, then validators, then Blink wallet connection, then earner onboarding, then merchant wallet connections. Explain what each step does for their score. Celebrate each completed step genuinely.
-
-ESCALATION:
-For anything you cannot resolve say: "This one needs Destiny directly — reach out at smartdestinyonyekachi@gmail.com and describe exactly what is happening. He responds fast."
+ESCALATION RULES:
+- For bugs, account issues, billing, missing features, anything beyond platform knowledge → CALL escalate_to_human tool, then give the user the resulting mailto link with a friendly hand-off line.
+- Don't dump the email address in plain text without first calling the tool — the tool gives a structured subject so Destiny can triage.
 
 CURRENT USER CONTEXT:
-${user_name ? `The user's name is ${user_name}.` : ''}
-${economy_name ? `They are associated with ${economy_name}.` : ''}
-${economy_score !== undefined && economy_score !== null ? `Their economy's current circularity score is ${economy_score}.` : ''}
-${context ? `They are currently on: ${context}` : ''}
+${user_name ? `Name: ${user_name}.` : 'Anonymous visitor.'}
+${economy_name ? `Associated economy: ${economy_name}.` : ''}
+${economy_score !== undefined && economy_score !== null ? `Current circularity score: ${economy_score}.` : ''}
+${context ? `Current page: ${context}` : ''}
 
-RULES:
-Never make up features that do not exist. Never give financial advice. Never promise specific scores or timelines. If asked "are you human?" say: "I am Sats — Bitcoin Circular's AI guide. Not human, but I know this platform better than most. What do you need help with?" Always end with either a helpful next step or a question to understand their situation better. Keep responses under 150 words unless a detailed explanation is genuinely needed.`;
+OUTPUT RULES:
+- Use light markdown: **bold**, \`code\`, links. No huge headings, no tables.
+- Keep responses under 140 words unless the user explicitly asked for depth.
+- Always end with either a clear next step or one focused question.
+- Never invent features. Never give financial advice. Never promise scores or timelines.
+- If asked "are you human?": "I'm Sats — Bitcoin Circular's AI support agent. Not human, but I know this platform inside out. What do you need help with?"`;
 
-    const response = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 500,
-      system,
-      messages,
-    });
+    const conversation: any[] = [
+      { role: 'system', content: system },
+      ...messages,
+    ];
 
-    const reply = (response.content[0] as { type: string; text: string }).text;
+    // Tool-calling loop (max 4 hops)
+    for (let hop = 0; hop < 4; hop++) {
+      const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Lovable-API-Key': LOVABLE_API_KEY,
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: conversation,
+          tools,
+          tool_choice: 'auto',
+        }),
+      });
 
-    return new Response(JSON.stringify({ reply }), {
+      if (!res.ok) {
+        const txt = await res.text();
+        if (res.status === 429) {
+          return new Response(JSON.stringify({ reply: "I'm getting a lot of questions right now — try again in a few seconds." }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        if (res.status === 402) {
+          return new Response(JSON.stringify({ reply: "AI credits are exhausted on the workspace. Ping Destiny at " + SUPPORT_EMAIL + " to top up." }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        throw new Error(`gateway ${res.status}: ${txt}`);
+      }
+
+      const data = await res.json();
+      const msg = data?.choices?.[0]?.message;
+      if (!msg) throw new Error('no message in response');
+
+      const toolCalls = msg.tool_calls;
+      if (toolCalls?.length) {
+        conversation.push(msg);
+        for (const call of toolCalls) {
+          let parsedArgs: Record<string, unknown> = {};
+          try { parsedArgs = JSON.parse(call.function.arguments || '{}'); } catch { /* ignore */ }
+          const result = await runTool(call.function.name, parsedArgs);
+          conversation.push({
+            role: 'tool',
+            tool_call_id: call.id,
+            content: JSON.stringify(result),
+          });
+        }
+        continue;
+      }
+
+      return new Response(JSON.stringify({ reply: msg.content ?? '' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    return new Response(JSON.stringify({ reply: "I went a few rounds but couldn't land an answer. Try rephrasing, or email " + SUPPORT_EMAIL + "." }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
