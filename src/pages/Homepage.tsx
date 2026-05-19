@@ -140,6 +140,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false }: { topSlot?
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
+      <TransparencyBanner />
 
       {/* HERO */}
       {!hideHero && (
@@ -165,16 +166,16 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false }: { topSlot?
             >
               <motion.div variants={fadeUp} custom={0} className="inline-flex items-center gap-2 rounded-full border border-score-amber/40 bg-score-amber/10 px-3 py-1 text-[11px] font-mono uppercase tracking-wider text-score-amber mb-6">
                 <Sparkles className="h-3 w-3" />
-                The verified Bitcoin economy network
+                Early-stage · Open · Privacy-first
               </motion.div>
               <motion.h1 variants={fadeUp} custom={1} className={`${compactHero ? 'text-2xl sm:text-3xl md:text-4xl mb-3' : 'text-3xl sm:text-5xl md:text-6xl mb-4 md:mb-5'} font-extrabold tracking-tight leading-[1.1] text-foreground`}>
-                See where Bitcoin
+                Visualizing Bitcoin
                 <br />
-                <span className="text-score-amber">actually circulates.</span>
+                <span className="text-score-amber">Circular Economies</span>
               </motion.h1>
               {!compactHero && (
                 <motion.p variants={fadeUp} custom={2} className="text-base md:text-lg text-muted-foreground max-w-lg leading-relaxed mb-6 md:mb-8">
-                  The open standard for measuring real Bitcoin adoption. Validator-verified data from circular economies on every continent — free for anyone to read, share, and build on.
+                  Explore how Bitcoin moves across communities through transparent, privacy-conscious activity metrics. No signup required.
                 </motion.p>
               )}
               {!compactHero && (
@@ -184,11 +185,17 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false }: { topSlot?
                       Explore Economies <ArrowRight className="h-4 w-4" />
                     </Button>
                   </Link>
-                  <Link to="/register" className="w-full sm:w-auto">
+                  <Link to="/methodology" className="w-full sm:w-auto">
                     <Button variant="outline" size="lg" className="w-full sm:w-auto rounded-full px-6 h-12 border-foreground/20 hover:bg-foreground/5 gap-2">
-                      Register your economy <ArrowRight className="h-4 w-4" />
+                      How it works <ArrowRight className="h-4 w-4" />
                     </Button>
                   </Link>
+                </motion.div>
+              )}
+              {!compactHero && (
+                <motion.div variants={fadeUp} custom={4} className="mt-5 text-xs text-muted-foreground">
+                  Running a Bitcoin community?{' '}
+                  <Link to="/register" className="text-score-amber hover:underline">Add your economy →</Link>
                 </motion.div>
               )}
             </motion.div>
