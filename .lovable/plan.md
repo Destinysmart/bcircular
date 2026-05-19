@@ -1,46 +1,57 @@
-## Goal
-The mobile leaderboard cards (visible on `/leaderboard` at ≤768px) currently read as a flat, evenly-weighted grid of labels (`TXNS / ACTIVITY / MERCHANTS / CIRCULARITY`). Nothing draws the eye, the score is just a number in a corner box, and the badges feel pasted on. Users can't tell at a glance "is this economy doing well?" — which is the whole point of a leaderboard.
+## Manifest-only PWA (installable, no service worker)
 
-This plan refines only the **mobile card** (`md:hidden` block, lines 500–535 of `src/pages/Leaderboard.tsx`). Desktop layout, filters, sort, hero, and data are untouched.
+Goal: make Bitcoin Circular installable to the home screen on iOS and Android with the official logo, standalone display, and brand-themed splash — without any service worker, offline cache, or background sync. Data stays always-fresh from Lovable Cloud.
 
-## What changes
+### What ships
 
-### 1. Header row — make the score the hero
-Today: rank · logo · name · city · flag.
-New: same row, but the **score** moves up next to the logo as a small circular badge with the threshold color (red / amber / green). It becomes the first thing the eye lands on, paired with the logo. Flag stays as a tiny chip under the city line. Rank becomes a clearer pill (`#1`, `#2`, …) with podium gold/silver/bronze tint for top 3.
+1. **`public/manifest.webmanifest`** — new file
+   - `name`: "Bitcoin Circular"
+   - `short_name`: "Circular"
+   - `description`: same as site meta description
+   - `start_url`: `/`
+   - `scope`: `/`
+   - `display`: `standalone`
+   - `orientation`: `portrait`
+   - `theme_color`: brand indigo (from `index.css` `--primary`)
+   - `background_color`: brand background (from `index.css` `--background`)
+   - `icons`: 192×192 and 512×512 PNGs (both `purpose: "any"` and a `maskable` 512 variant) sourced from the existing brand kit
+   - `categories`: `["finance", "productivity"]`
 
-### 2. Badges — single tidy row, left-aligned
-Today: centered, wrapping, mixed sizes.
-New: left-aligned single row that truncates with `flex-wrap` only if needed. Tier badge first, then confidence, then coverage. BTCMap chip becomes a small mono dot+label to reduce noise.
+2. **Icon files in `public/`** — reuse the official logo PNGs already in the brand assets kit. Add if missing:
+   - `icon-192.png`
+   - `icon-512.png`
+   - `icon-maskable-512.png` (logo with safe-zone padding so Android adaptive masks don't crop it)
+   - `apple-touch-icon.png` (180×180, opaque background so iOS doesn't show transparency)
 
-### 3. Metrics — icon-led, labeled with meaning
-Today: 2×2 grid of code-style labels.
-New: still 2×2, but each cell gets:
-- A small lucide icon (`Zap` for txns, `Activity` for activity rate, `Store` for merchants, `Gauge` for circularity)
-- A short human label ("Txns / mo", "Active", "Merchants", "Score")
-- The number in mono bold
-- The CIRCULARITY cell becomes a mini progress bar under the number, colored by threshold — instantly readable health signal.
+3. **`index.html`** — add inside `<head>`:
+   - `<link rel="manifest" href="/manifest.webmanifest" />`
+   - `<link rel="apple-touch-icon" href="/apple-touch-icon.png" />`
+   - `<meta name="theme-color" content="<brand indigo hsl→hex>" />`
+   - `<meta name="apple-mobile-web-app-capable" content="yes" />`
+   - `<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />`
+   - `<meta name="apple-mobile-web-app-title" content="Circular" />`
+   - `<meta name="mobile-web-app-capable" content="yes" />`
 
-### 4. Trend cue
-If `weeklyChange !== 0`, show a tiny `TrendingUp/Down` chip next to the score badge (e.g. `+3`) in score-green / destructive. Matches what the desktop already does, but mobile currently hides it.
+### What is explicitly NOT included
 
-### 5. CTA row
-Today: a full-width "View" outline button.
-New: split into two pill buttons — **View** (primary, score-amber filled) and **Compare** (outline with `Scale` icon). Compare is currently desktop-only; surfacing it on mobile matches the page's purpose.
+- No `vite-plugin-pwa`, no `sw.js`, no `service-worker.js`
+- No offline cache, no runtime caching, no precache
+- No install-prompt UI / `beforeinstallprompt` handler
+- No push notifications
+- No version-polling endpoints or cache-busting meta tags
 
-### 6. Card chrome
-- Add a subtle left accent bar colored by score tier (today only the desktop variant has this — `md:border-l-4` excludes mobile).
-- Add `active:scale-[0.99]` for tactile feedback on tap.
-- Increase internal padding from `p-3` to `p-4` and gap from `space-y-3` to `space-y-3.5` so the card breathes.
+### Why this is safe for the Lovable preview
 
-## Out of scope
-- Desktop row layout (lines 462–498)
-- Filters, sidebar, search, sort, hero header, "Most improved" banner
-- Data fetching, scoring, or any business logic
-- Tablet (`md`+) — only `md:hidden` block is touched
+No service worker is registered, so there is nothing to intercept iframe navigations or serve stale shells. The manifest itself is inert until a user taps "Add to Home Screen" on a real device on the published domain.
 
-## Files touched
-- `src/pages/Leaderboard.tsx` — replace the mobile card JSX (lines ~500–535) and extend the `MobileMetric` helper to accept an optional icon + progress bar.
+### Verification
 
-## Visual reference
-The current mobile screenshots the user attached are the baseline. The redesign keeps the same information density but redistributes visual weight so the score and trend dominate, metrics read as icons-plus-numbers (not codes), and the card feels like a status card, not a spreadsheet row.
+After implementation:
+- Confirm `manifest.webmanifest` is reachable and valid JSON
+- Confirm `index.html` head includes the new tags
+- Note to user: install only works on the published URL (bitcoincircular.com), not inside the editor preview iframe
+
+### Caveats to flag to the user
+
+- Manifest fields (`name`, `start_url`, `display`, icons) are pinned at install time per device. Picking good values now matters because existing installs won't update them later.
+- "Add to Home Screen" on iOS is a manual user action in Safari's share sheet — there is no install prompt.
