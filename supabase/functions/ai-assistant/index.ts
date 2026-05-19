@@ -353,9 +353,5 @@ OUTPUT RULES:
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
-    return new Response(JSON.stringify({ error: msg }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
   }
 });
