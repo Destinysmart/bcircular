@@ -596,13 +596,20 @@ const Metric = ({ label, value, valueClass = 'text-foreground', leadingIcon }: {
   </div>
 );
 
-const MobileMetric = ({ label, value, valueClass = 'text-foreground', leadingIcon }: { label: string; value: string; valueClass?: string; leadingIcon?: React.ReactNode }) => (
-  <div className="rounded-lg border border-border bg-background/50 px-3 py-2 flex flex-col">
-    <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{label}</span>
-    <span className={`font-mono text-base font-bold tabular-nums inline-flex items-center gap-1 ${valueClass}`}>
-      {leadingIcon}
+const MobileMetric = ({ icon, label, value, valueClass = 'text-foreground', progress, progressClass }: { icon?: React.ReactNode; label: string; value: string; valueClass?: string; progress?: number; progressClass?: string }) => (
+  <div className="rounded-lg border border-border bg-background/50 px-3 py-2 flex flex-col gap-1">
+    <span className="text-[10px] text-muted-foreground uppercase tracking-wider inline-flex items-center gap-1">
+      {icon}
+      {label}
+    </span>
+    <span className={`font-mono text-base font-bold tabular-nums ${valueClass}`}>
       {value}
     </span>
+    {typeof progress === 'number' && (
+      <div className="h-1 w-full rounded-full bg-muted overflow-hidden mt-0.5">
+        <div className={`h-full rounded-full ${progressClass ?? 'bg-foreground'}`} style={{ width: `${Math.max(0, Math.min(100, progress))}%` }} />
+      </div>
+    )}
   </div>
 );
 
