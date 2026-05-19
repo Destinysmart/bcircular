@@ -12,7 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchCommunityBySlug, fetchLatestScore, fetchPendingSubmissions, fetchCommunityMerchants, fetchCommunityEarners, fetchCommunityTransactions } from '@/lib/api';
-import { AlertTriangle, CheckCircle, XCircle, Trash2, RefreshCw, Download, Printer, ExternalLink } from 'lucide-react';
+import { AlertCircle, AlertTriangle, CheckCircle, CheckCircle2, XCircle, Trash2, RefreshCw, Download, Printer, ExternalLink } from 'lucide-react';
 import BlinkWalletSettings from '@/components/BlinkWalletSettings';
 import MerchantClaimManager from '@/components/MerchantClaimManager';
 import ConnectedWalletsManager from '@/components/ConnectedWalletsManager';
@@ -179,7 +179,7 @@ const EconomyAdminDashboard = () => {
       const { error: updateError } = await supabase.from('communities').update({ [column]: publicUrl } as any).eq('id', community.id);
       if (updateError) throw updateError;
       queryClient.invalidateQueries({ queryKey: ['community-by-id', id] });
-      toast({ title: 'Uploaded successfully ✓' });
+      toast({ title: 'Uploaded successfully' });
     } catch (err: any) {
       const message = err?.message || 'Unknown upload error';
       console.error('Full upload error:', err);
@@ -408,7 +408,7 @@ const EconomyAdminDashboard = () => {
             return (
               <div className="mb-6 rounded-lg border border-score-red/40 bg-score-red/10 p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-start gap-3 text-sm">
-                  <span className="text-lg" aria-hidden>🔴</span>
+                  <AlertCircle className="h-5 w-5 text-score-red shrink-0 mt-0.5" aria-hidden />
                   <div>
                     <div className="font-semibold text-score-red">No wallets connected</div>
                     <div className="text-foreground/80 mt-0.5">Circular flow cannot be measured yet. Connect at least one merchant or earner wallet to start tracking.</div>
@@ -582,7 +582,7 @@ const EconomyAdminDashboard = () => {
         <section className="rounded-lg border border-border bg-card p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">Validators ({validators?.length || 0})</h2>
           {(validators?.length || 0) < 2 && (
-            <p className="text-xs text-amber-400 mb-3">⚠ You need at least 2 validators to unlock "active" status.</p>
+            <p className="text-xs text-score-amber mb-3 inline-flex items-center gap-1.5"><AlertTriangle className="h-3.5 w-3.5" /> You need at least 2 validators to unlock "active" status.</p>
           )}
           <div className="space-y-2 mb-4">
             {validators?.map((v: any) => (
@@ -673,19 +673,19 @@ const EconomyAdminDashboard = () => {
               <div className="rounded-md border border-border bg-background p-4 text-sm">
                 {btcmapSyncResult.type === 'error' ? (
                   <div className="space-y-2">
-                    <div className="font-semibold text-destructive">✗ Community not found</div>
+                    <div className="font-semibold text-destructive inline-flex items-center gap-1.5"><XCircle className="h-4 w-4" /> Community not found</div>
                     <p className="text-muted-foreground">&quot;{btcmapSyncResult.areaId}&quot; doesn&apos;t exist on BTCMap.</p>
                     <a href="https://btcmap.org/communities" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Check your ID at btcmap.org/communities</a>
                   </div>
                 ) : btcmapSyncResult.type === 'empty' ? (
                   <div className="space-y-2">
-                    <div className="font-semibold text-score-amber">⚠ 0 merchants found</div>
+                    <div className="font-semibold text-score-amber inline-flex items-center gap-1.5"><AlertTriangle className="h-4 w-4" /> 0 merchants found</div>
                     <p className="text-muted-foreground">Your BTCMap community exists but has no Bitcoin-accepting merchants listed yet.</p>
                     <a href="https://btcmap.org" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">Add merchants at btcmap.org <ExternalLink className="h-3 w-3" /></a>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <div className="font-semibold text-primary">✓ Synced successfully</div>
+                    <div className="font-semibold text-primary inline-flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4" /> Synced successfully</div>
                     <div className="grid gap-1 border-y border-border py-3 text-muted-foreground">
                       <div><span className="text-foreground">Community:</span> {btcmapSyncResult.community_name}</div>
                       <div><span className="text-foreground">Merchants:</span> {btcmapSyncResult.synced} synced from BTCMap</div>

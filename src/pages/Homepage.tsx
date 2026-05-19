@@ -483,7 +483,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false }: { topSlot?
                 {/* Centered modal overlay */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-[calc(100%-2rem)] max-w-xl">
                   <div className="rounded-2xl border border-border bg-card px-6 py-8 text-center shadow-2xl">
-                    <div className="text-2xl mb-3">⚡</div>
+                    <Zap className="h-7 w-7 text-score-amber mx-auto mb-3" fill="currentColor" />
                     <h3 className="text-xl font-bold text-foreground mb-2">Join Bitcoin Circular</h3>
                     <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
                       Sign up to access the full leaderboard, compare economies, and track your Bitcoin circular economy.

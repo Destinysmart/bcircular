@@ -70,15 +70,15 @@ function timeAgo(iso: string | null) {
 
 function getPersonalInsight(rate: number, txnCount: number) {
   if (txnCount === 0) {
-    return 'No transactions synced yet. Make sure your Blink wallet is active and tap “Sync now”.';
+    return 'No transactions synced yet. Make sure your Blink wallet is active and tap "Sync now".';
   }
   if (rate >= 70) {
-    return `⚡ ${rate}% of your sats stayed in the economy — you're a core part of the circular flow.`;
+    return `${rate}% of your sats stayed in the economy — you're a core part of the circular flow.`;
   }
   if (rate >= 40) {
-    return `🔄 ${rate}% circular rate this month. Spending with other economy members increases this.`;
+    return `${rate}% circular rate this month. Spending with other economy members increases this.`;
   }
-  return `📈 ${txnCount} transactions tracked. Pay local merchants and earners to grow your circularity rate.`;
+  return `${txnCount} transactions tracked. Pay local merchants and earners to grow your circularity rate.`;
 }
 
 export default function WalletDashboard({ ownerType }: Props) {
@@ -266,7 +266,7 @@ export default function WalletDashboard({ ownerType }: Props) {
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div>
                     <CardTitle className="text-base">{RANGE_TITLE[timeRange]}</CardTitle>
-                    <CardDescription>Daily received vs spent · 🔄 = circular flow (economy)</CardDescription>
+                    <CardDescription className="inline-flex items-center gap-1.5 flex-wrap">Daily received vs spent · <Recycle className="h-3.5 w-3.5 text-score-amber inline" /> = circular flow (economy)</CardDescription>
                   </div>
                   <div className="inline-flex items-center gap-1">
                     {(['3M', '6M', '1Y', 'All'] as TimeRange[]).map((r) => {
@@ -380,7 +380,7 @@ export default function WalletDashboard({ ownerType }: Props) {
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div>
                     <CardTitle className="text-base">Recent transactions</CardTitle>
-                    <CardDescription>🔄 marks transactions within your economy</CardDescription>
+                    <CardDescription className="inline-flex items-center gap-1.5 flex-wrap"><Recycle className="h-3.5 w-3.5 text-score-amber inline" /> marks transactions within your economy</CardDescription>
                   </div>
                   <span className="text-[11px] text-muted-foreground">
                     Showing {Math.min(recentTx.length, txLimit)} most recent
@@ -401,7 +401,7 @@ export default function WalletDashboard({ ownerType }: Props) {
                             {isReceive ? '+' : '−'}{Number(t.settlement_amount).toLocaleString()} sats
                           </span>
                           {t.is_internal && (
-                            <Badge variant="outline" className="text-score-amber border-score-amber/40">🔄 circular</Badge>
+                            <Badge variant="outline" className="text-score-amber border-score-amber/40 gap-1"><Recycle className="h-3 w-3" /> circular</Badge>
                           )}
                         </div>
                         <span className="text-muted-foreground">{timeAgo(t.blink_created_at)}</span>

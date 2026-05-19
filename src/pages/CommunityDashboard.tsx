@@ -1,6 +1,6 @@
 
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Share2, Store, Zap, ChevronDown, Info, ExternalLink, Shield, Scale, Wallet } from 'lucide-react';
+import { Share2, Store, Zap, ChevronDown, Info, ExternalLink, Shield, Scale, Wallet, BadgeCheck, Check } from 'lucide-react';
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
@@ -277,7 +277,7 @@ const CommunityDashboard = () => {
             )}
             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
               {adminProfile && (
-                <span>Managed by {adminProfile.display_name}{logoUrl && community.admin_id && <span className="ml-1 text-primary">✓</span>}</span>
+                <span className="inline-flex items-center gap-1">Managed by {adminProfile.display_name}{logoUrl && community.admin_id && <BadgeCheck className="h-3.5 w-3.5 text-primary" />}</span>
               )}
               {websiteUrl && (
                 <a href={websiteUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-foreground transition-colors"><ExternalLink className="h-3 w-3" /> Website</a>
@@ -356,7 +356,7 @@ const CommunityDashboard = () => {
             <ul className="space-y-1.5 text-sm">
               {TIER_CHECKLIST[(community as any).fbce_tier as FbceTier].map((item) => (
                 <li key={item} className="flex items-start gap-2 text-foreground">
-                  <span className="mt-0.5 inline-flex h-4 w-4 items-center justify-center rounded-sm border border-border text-score-green">✓</span>
+                  <span className="mt-0.5 inline-flex h-4 w-4 items-center justify-center rounded-sm border border-border text-score-green"><Check className="h-3 w-3" /></span>
                   <span>{item}</span>
                 </li>
               ))}

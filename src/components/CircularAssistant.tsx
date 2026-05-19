@@ -14,18 +14,18 @@ const getOpeningMessage = (userName: string | undefined, economyName: string | u
   const h = new Date().getHours();
   const greeting = h < 12 ? 'Morning' : h < 17 ? 'Hey' : 'Evening';
   if (userName && economyName) {
-    return `${greeting} ${userName}! I'm Sats ⚡ I'm here to help with ${economyName}. What are you working on today?`;
+    return `${greeting} ${userName}! I'm Sats, your Bitcoin Circular guide. I'm here to help with ${economyName}. What are you working on today?`;
   }
   if (path.startsWith('/c/')) {
     return `Hey! I'm Sats, Bitcoin Circular's guide. Looking at this economy's profile — anything you want to understand or improve?`;
   }
   if (path === '/register') {
-    return `Hey! I'm Sats ⚡ Looks like you're registering a Bitcoin circular economy. I can walk you through the whole process — what's the name of your community?`;
+    return `Hey! I'm Sats, your Bitcoin Circular guide. Looks like you're registering a Bitcoin circular economy. I can walk you through the whole process — what's the name of your community?`;
   }
   if (path === '/leaderboard') {
     return `Hey! I'm Sats. Checking out the leaderboard? I can explain what the metrics mean or help you understand how any economy got their score.`;
   }
-  return `Hey! I'm Sats ⚡ Bitcoin Circular's guide. I help communities track and grow their Bitcoin circular economy. Are you setting up a new economy or working on an existing one?`;
+  return `Hey! I'm Sats, Bitcoin Circular's guide. I help communities track and grow their Bitcoin circular economy. Are you setting up a new economy or working on an existing one?`;
 };
 
 export default function CircularAssistant() {
@@ -186,8 +186,8 @@ export default function CircularAssistant() {
                   <Zap className="h-4 w-4 text-score-amber" fill="currentColor" />
                 </div>
                 <div className="leading-tight">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-foreground">Sats ⚡</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-semibold text-foreground inline-flex items-center gap-1">Sats <Zap className="h-3.5 w-3.5 text-score-amber" fill="currentColor" /></span>
                     <span className="inline-flex items-center gap-1 text-[10px] text-score-green">
                       <span className="h-1.5 w-1.5 rounded-full bg-score-green" />
                       Online

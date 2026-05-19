@@ -233,7 +233,7 @@ const Leaderboard = () => {
 
         {mostImproved && (mostImproved.weeklyChange ?? 0) >= 3 && (
           <div className="mb-6 rounded-xl border border-score-green/30 bg-score-green/5 px-5 py-3 text-sm flex items-center gap-2 flex-wrap">
-            <span className="text-lg">🚀</span>
+            <TrendingUp className="h-4 w-4 text-score-green shrink-0" />
             <span className="font-semibold text-score-green">Most improved this week:</span>
             <Link to={`/c/${mostImproved.slug}`} className="text-foreground font-medium hover:underline">{mostImproved.name}</Link>
             <span className="text-muted-foreground">+{mostImproved.weeklyChange} score points</span>
