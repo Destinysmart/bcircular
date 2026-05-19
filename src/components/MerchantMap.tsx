@@ -131,39 +131,50 @@ const MerchantMap = ({ merchants, fallbackCenter }: MerchantMapProps) => {
   useEffect(() => {
     if (!map.current) return;
 
-    markersRef.current.forEach(m => m.remove());
-    markersRef.current = [];
+    const placeMarkers = () => {
+      if (!map.current) return;
+      markersRef.current.forEach(m => m.remove());
+      markersRef.current = [];
 
-    filtered.forEach(m => {
-      const isBtcmap = m.source === 'btcmap';
-      const el = document.createElement('button');
-      el.type = 'button';
-      el.setAttribute('aria-label', `View ${m.name}`);
-      el.style.width = '14px';
-      el.style.height = '14px';
-      el.style.padding = '0';
-      el.style.backgroundColor = isBtcmap ? COLOR_BTCMAP : COLOR_VERIFIED;
-      el.style.borderRadius = '50%';
-      el.style.border = `2px solid ${COLOR_BORDER}`;
-      el.style.cursor = 'pointer';
-      el.style.boxShadow = '0 0 0 1px rgba(255,255,255,0.15)';
-      el.addEventListener('click', (e) => {
-        e.stopPropagation();
-        setSelected(m);
+      filtered.forEach(m => {
+        const isBtcmap = m.source === 'btcmap';
+        const el = document.createElement('button');
+        el.type = 'button';
+        el.setAttribute('aria-label', `View ${m.name}`);
+        el.style.width = '14px';
+        el.style.height = '14px';
+        el.style.padding = '0';
+        el.style.backgroundColor = isBtcmap ? COLOR_BTCMAP : COLOR_VERIFIED;
+        el.style.borderRadius = '50%';
+        el.style.border = `2px solid ${COLOR_BORDER}`;
+        el.style.cursor = 'pointer';
+        el.style.boxShadow = '0 0 0 1px rgba(255,255,255,0.15)';
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          setSelected(m);
+        });
+
+        const marker = new mapboxgl.Marker(el)
+          .setLngLat([m.lng!, m.lat!])
+          .addTo(map.current!);
+        markersRef.current.push(marker);
       });
 
-      const marker = new mapboxgl.Marker(el)
-        .setLngLat([m.lng!, m.lat!])
-        .addTo(map.current!);
-      markersRef.current.push(marker);
-    });
+      map.current.resize();
 
-    if (filtered.length >= 2) {
-      const bounds = new mapboxgl.LngLatBounds();
-      filtered.forEach(m => bounds.extend([m.lng!, m.lat!]));
-      map.current.fitBounds(bounds, { padding: 60, maxZoom: 15, duration: 400 });
-    } else if (filtered.length === 1) {
-      map.current.flyTo({ center: [filtered[0].lng!, filtered[0].lat!], zoom: 14, duration: 400 });
+      if (filtered.length >= 2) {
+        const bounds = new mapboxgl.LngLatBounds();
+        filtered.forEach(m => bounds.extend([m.lng!, m.lat!]));
+        map.current.fitBounds(bounds, { padding: 60, maxZoom: 15, duration: 400 });
+      } else if (filtered.length === 1) {
+        map.current.flyTo({ center: [filtered[0].lng!, filtered[0].lat!], zoom: 14, duration: 400 });
+      }
+    };
+
+    if (map.current.loaded()) {
+      placeMarkers();
+    } else {
+      map.current.once('load', placeMarkers);
     }
   }, [filtered]);
 
