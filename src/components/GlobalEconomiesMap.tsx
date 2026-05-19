@@ -155,10 +155,23 @@ const GlobalEconomiesMap = ({ economies }: Props) => {
       ro.observe(container);
     }
 
+    // Visibility flips (e.g. fade-in section, route transition)
+    let io: IntersectionObserver | null = null;
+    if (container && typeof IntersectionObserver !== 'undefined') {
+      io = new IntersectionObserver((entries) => {
+        if (entries.some(e => e.isIntersecting)) triggerResize();
+      }, { threshold: 0.01 });
+      io.observe(container);
+    }
+
+    window.addEventListener('resize', triggerResize);
+
     return () => {
       window.clearTimeout(t1);
       window.clearTimeout(t2);
       ro?.disconnect();
+      io?.disconnect();
+      window.removeEventListener('resize', triggerResize);
       mapRef.current?.remove();
       mapRef.current = null;
     };
