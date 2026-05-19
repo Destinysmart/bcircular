@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowUpRight, Globe, Scale, Search, SlidersHorizontal, X, Zap, TrendingUp, TrendingDown, Minus, Circle, Activity as ActivityIcon, Store, Gauge } from 'lucide-react';
+import { ArrowUpRight, Globe, Scale, Search, SlidersHorizontal, X, Zap, TrendingUp, TrendingDown, Minus, Circle, Activity as ActivityIcon, Store, Gauge, Info } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import Navbar from '@/components/Navbar';
 import ConfidenceBadge from '@/components/ConfidenceBadge';
 import EconomyLogo from '@/components/EconomyLogo';
