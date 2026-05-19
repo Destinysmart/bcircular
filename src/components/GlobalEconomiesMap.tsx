@@ -194,7 +194,7 @@ const GlobalEconomiesMap = ({ economies }: Props) => {
       <div className="relative rounded-2xl border border-border overflow-hidden bg-card">
         {!MAPBOX_TOKEN ? (
           <div className="h-[300px] md:h-[450px] flex items-center justify-center text-muted-foreground text-sm">
-            <span className="font-mono">Set VITE_MAPBOX_TOKEN to enable map</span>
+            <span className="font-mono">Loading map…</span>
           </div>
         ) : (
           <>
