@@ -523,9 +523,8 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false }: { topSlot?
               We collect data we&apos;re allowed to collect, show what we can verify, and label everything else clearly.
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
-              { Icon: FlaskConical, title: 'Sample data, labelled', desc: 'A meaningful portion of what you see today is demo data used to test the platform. Real economies are clearly marked.' },
               { Icon: CheckCircle2, title: 'Opt-in integrations', desc: 'Wallet sync (Blink) and merchant maps (BTCMap) are voluntary. Communities choose what to connect.' },
               { Icon: Users, title: 'Aggregate, not personal', desc: 'We surface ecosystem-level counts and trends. Individual transactions are never publicly displayed.' },
               { Icon: Globe, title: 'Ecosystem insight, not surveillance', desc: 'The goal is helping circular economies understand themselves — not tracking people.' },
