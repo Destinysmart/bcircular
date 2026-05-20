@@ -270,6 +270,8 @@ const EconomyAdminDashboard = () => {
       setDeclaredPop(String(community.declared_population || ''));
       setFoundingYear(String(community.founding_year || ''));
       setEcoZoneDesc(community.economic_zone_description || '');
+      setCity((community as any).city || '');
+      setSelectedCountry((community as any).country || '');
       setBtcmapAreaId((community as any).btcmap_area_id || '');
       setFbceTier((community as any).fbce_tier ? String((community as any).fbce_tier) : '');
     }
