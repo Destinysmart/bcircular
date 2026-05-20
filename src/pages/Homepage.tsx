@@ -749,14 +749,14 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false }: { topSlot?
                 </ul>
 
                 {/* CTA */}
-                <Link to="/data" className="group/btn relative flex items-center justify-center gap-3 w-full p-5 bg-foreground text-background font-bold rounded-2xl transition-all duration-300 hover:bg-score-amber active:scale-[0.98] overflow-hidden">
+                <Link to="/data" aria-label="Explore data" className="group/btn relative flex items-center justify-center gap-3 w-full p-5 min-h-11 bg-foreground text-background font-bold rounded-2xl transition-all duration-300 hover:bg-score-amber active:scale-[0.98] overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-score-amber focus-visible:ring-offset-2 focus-visible:ring-offset-background">
                   <span className="relative z-10">Explore data</span>
-                  <ArrowRight className="h-5 w-5 relative z-10 transition-transform group-hover/btn:translate-x-1.5" />
+                  <ArrowRight className="h-5 w-5 relative z-10 transition-transform group-hover/btn:translate-x-1.5" aria-hidden="true" />
                 </Link>
 
                 {gated && (
-                  <Link to="/pricing" className="mt-3 flex items-center justify-center gap-2 w-full p-3 text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-score-amber transition-colors">
-                    Need full access? Request Pro <ArrowRight className="h-3 w-3" />
+                  <Link to="/pricing" className="mt-3 flex items-center justify-center gap-2 w-full p-3 min-h-11 text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-score-amber transition-colors rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-score-amber focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+                    Need full access? Request Pro <ArrowRight className="h-3 w-3" aria-hidden="true" />
                   </Link>
                 )}
               </div>
