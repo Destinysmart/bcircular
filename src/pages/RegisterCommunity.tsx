@@ -206,11 +206,6 @@ const RegisterCommunity = () => {
       />
       <Navbar />
       <div className="container px-4 sm:px-6 py-8 sm:py-12 max-w-[560px]">
-        {!user && (
-          <p className="text-sm text-primary mb-4">
-            You'll need to <Link to="/login" className="underline">log in</Link> to register an economy.
-          </p>
-        )}
 
         {/* Progress indicator */}
         <div className="mb-6">
