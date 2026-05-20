@@ -18,9 +18,50 @@ import CountrySelect from '@/components/CountrySelect';
 const STEP_LABELS = ['Your Economy', 'Your Area', 'Your Story', 'Your Contact'] as const;
 
 const RegisterCommunity = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  if (!authLoading && !user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Seo
+          title="Log in to register your Bitcoin economy"
+          description="Create a free account to register your Bitcoin economy on Bitcoin Circular."
+          path="/register"
+          noIndex
+        />
+        <Navbar />
+        <div className="container px-4 sm:px-6 py-12 sm:py-20 max-w-lg">
+          <div className="rounded-2xl border border-border bg-card p-6 sm:p-10 text-center">
+            <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-score-amber/15 border border-score-amber/30 text-score-amber mb-4">
+              <Zap className="h-6 w-6" fill="currentColor" />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold mb-3">Log in to register your economy</h1>
+            <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+              Creating a Bitcoin economy is free and takes ~3 minutes. We just need an account first so you can edit and manage it later.
+            </p>
+            <div className="flex flex-col gap-2">
+              <Link to="/login?signup=1&redirect=/register">
+                <Button className="w-full h-11 bg-score-amber text-background hover:bg-score-amber/90 font-semibold">
+                  Create free account <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
+              </Link>
+              <Link to="/login?redirect=/register">
+                <Button variant="outline" className="w-full h-11">
+                  I already have an account — Log in
+                </Button>
+              </Link>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-5">
+              Free forever · No funds held · ~3 min to complete
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
 
   const [step, setStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
