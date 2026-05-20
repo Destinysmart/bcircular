@@ -518,13 +518,14 @@ const EconomyAdminDashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div><Label>Economy name</Label><Input value={name} onChange={e => setName(e.target.value)} /></div>
             <div><Label>Declared population</Label><Input type="number" value={declaredPop} onChange={e => setDeclaredPop(e.target.value)} /></div>
+            <div><Label>Country</Label><CountrySelect value={selectedCountry} onChange={setSelectedCountry} /></div>
+            <div><Label>City</Label><Input value={city} onChange={e => setCity(e.target.value)} placeholder="e.g. El Zonte" /></div>
             <div><Label>Website</Label><Input value={website} onChange={e => setWebsite(e.target.value)} placeholder="https://" /></div>
-            <div><Label>Twitter handle</Label><Input value={twitter} onChange={e => setTwitter(e.target.value)} placeholder="@handle" /></div>
+            <div><Label>Twitter handle (optional)</Label><Input value={twitter} onChange={e => setTwitter(e.target.value)} placeholder="@handle" /></div>
             <div><Label>Contact email</Label><Input type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} /></div>
             <div><Label>Founding year</Label><Input type="number" value={foundingYear} onChange={e => setFoundingYear(e.target.value)} placeholder="e.g. 2019" /></div>
           </div>
           <div className="mb-4"><Label>Description</Label><Textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} /></div>
-          <div className="mb-4"><Label>Economic zone description</Label><Textarea value={ecoZoneDesc} onChange={e => setEcoZoneDesc(e.target.value)} rows={2} placeholder="Describe the geographic area this economy covers" /></div>
           <div className="mb-4"><Label>Economic zone description</Label><Textarea value={ecoZoneDesc} onChange={e => setEcoZoneDesc(e.target.value)} rows={2} placeholder="Describe the geographic area this economy covers" /></div>
 
           {/* FBCE Classification (Optional) */}
