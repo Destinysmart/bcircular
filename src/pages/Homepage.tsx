@@ -720,7 +720,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false }: { topSlot?
                   <div>
                     <p className="font-mono text-[11px] uppercase tracking-[0.4em] mb-2 font-bold text-score-amber/80">Tier 01</p>
                     <h3 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground">Public Data</h3>
-                    <p className="font-mono text-[10px] text-muted-foreground/70 uppercase tracking-widest mt-2">Anyone with an account</p>
+                    <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest mt-2">Anyone with an account</p>
                   </div>
                   <div className="h-10 w-10 rounded-xl bg-foreground/5 border border-border flex items-center justify-center backdrop-blur-xl">
                     <div className="w-2 h-2 rounded-full bg-score-amber animate-pulse" />
