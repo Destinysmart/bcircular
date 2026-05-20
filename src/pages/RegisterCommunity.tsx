@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Check, Zap } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Zap, Loader2 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Seo from '@/components/Seo';
 import { Button } from '@/components/ui/button';
@@ -40,6 +40,25 @@ const RegisterCommunity = () => {
   const [contactEmail, setContactEmail] = useState('');
   const [committed, setCommitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container px-4 sm:px-6 py-12 sm:py-20 max-w-lg" aria-busy="true" aria-live="polite">
+          <div className="rounded-2xl border border-border bg-card p-6 sm:p-10 text-center">
+            <Loader2 className="h-6 w-6 mx-auto mb-4 text-score-amber animate-spin" />
+            <div className="h-6 w-3/4 mx-auto mb-3 rounded-md bg-muted animate-pulse" />
+            <div className="h-4 w-full mx-auto mb-2 rounded bg-muted animate-pulse" />
+            <div className="h-4 w-5/6 mx-auto mb-6 rounded bg-muted animate-pulse" />
+            <div className="h-11 w-full mx-auto mb-2 rounded-md bg-muted animate-pulse" />
+            <div className="h-11 w-full mx-auto rounded-md bg-muted animate-pulse" />
+            <span className="sr-only">Checking your sign-in status…</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!authLoading && !user) {
     return (
