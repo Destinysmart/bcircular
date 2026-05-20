@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Seo from '@/components/Seo';
 import { Button } from '@/components/ui/button';
