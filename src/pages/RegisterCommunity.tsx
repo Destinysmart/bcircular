@@ -378,6 +378,11 @@ const RegisterCommunity = () => {
                 </Button>
               )}
             </div>
+            {step === 4 && !user && (
+              <p className="text-xs text-destructive mt-2">
+                You need to <Link to="/login" className="underline">log in</Link> before submitting.
+              </p>
+            )}
           </form>
         </div>
       </div>
