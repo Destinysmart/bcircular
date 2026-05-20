@@ -692,15 +692,15 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false }: { topSlot?
                 </p>
               </div>
               <h2 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight text-foreground">
-                Built for <span className="bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/40">Bitcoiners.</span><br />
-                <span className="text-foreground/10">By Bitcoiners.</span>
+                Built for <span className="text-foreground">Bitcoiners.</span><br />
+                <span className="text-muted-foreground">By Bitcoiners.</span>
               </h2>
             </div>
 
             <div className="flex items-center gap-6">
               <div className="h-12 w-px bg-gradient-to-b from-score-amber to-transparent" />
               <p className="text-base md:text-xl text-muted-foreground font-medium">
-                Open by default. <span className="text-foreground/15">// Secured by design.</span>
+                Open by default. <span className="text-muted-foreground/70">// Secured by design.</span>
               </p>
             </div>
           </div>
@@ -720,7 +720,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false }: { topSlot?
                   <div>
                     <p className="font-mono text-[11px] uppercase tracking-[0.4em] mb-2 font-bold text-score-amber/80">Tier 01</p>
                     <h3 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground">Public Data</h3>
-                    <p className="font-mono text-[10px] text-muted-foreground/70 uppercase tracking-widest mt-2">Anyone with an account</p>
+                    <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest mt-2">Anyone with an account</p>
                   </div>
                   <div className="h-10 w-10 rounded-xl bg-foreground/5 border border-border flex items-center justify-center backdrop-blur-xl">
                     <div className="w-2 h-2 rounded-full bg-score-amber animate-pulse" />
@@ -732,7 +732,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false }: { topSlot?
                   <span className="text-6xl md:text-7xl font-black tracking-tighter text-foreground">$0</span>
                   <div className="flex flex-col">
                     <span className="font-mono text-[11px] font-bold tracking-widest text-score-amber">PERPETUAL</span>
-                    <span className="font-mono text-[10px] font-bold text-foreground/20">FREE_ACCESS</span>
+                    <span className="font-mono text-[10px] font-bold text-muted-foreground">FREE_ACCESS</span>
                   </div>
                 </div>
 
@@ -749,14 +749,14 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false }: { topSlot?
                 </ul>
 
                 {/* CTA */}
-                <Link to="/data" className="group/btn relative flex items-center justify-center gap-3 w-full p-5 bg-foreground text-background font-bold rounded-2xl transition-all duration-300 hover:bg-score-amber active:scale-[0.98] overflow-hidden">
+                <Link to="/data" aria-label="Explore data" className="group/btn relative flex items-center justify-center gap-3 w-full p-5 min-h-11 bg-foreground text-background font-bold rounded-2xl transition-all duration-300 hover:bg-score-amber active:scale-[0.98] overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-score-amber focus-visible:ring-offset-2 focus-visible:ring-offset-background">
                   <span className="relative z-10">Explore data</span>
-                  <ArrowRight className="h-5 w-5 relative z-10 transition-transform group-hover/btn:translate-x-1.5" />
+                  <ArrowRight className="h-5 w-5 relative z-10 transition-transform group-hover/btn:translate-x-1.5" aria-hidden="true" />
                 </Link>
 
                 {gated && (
-                  <Link to="/pricing" className="mt-3 flex items-center justify-center gap-2 w-full p-3 text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-score-amber transition-colors">
-                    Need full access? Request Pro <ArrowRight className="h-3 w-3" />
+                  <Link to="/pricing" className="mt-3 flex items-center justify-center gap-2 w-full p-3 min-h-11 text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-score-amber transition-colors rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-score-amber focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+                    Need full access? Request Pro <ArrowRight className="h-3 w-3" aria-hidden="true" />
                   </Link>
                 )}
               </div>
