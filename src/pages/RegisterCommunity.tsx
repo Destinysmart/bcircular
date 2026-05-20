@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Check, Zap } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Zap, Loader2 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Seo from '@/components/Seo';
 import { Button } from '@/components/ui/button';
