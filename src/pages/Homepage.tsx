@@ -678,60 +678,90 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false }: { topSlot?
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-80px' }}
-        transition={{ duration: 0.5 }}
-        className="container py-16"
+        transition={{ duration: 0.6 }}
+        className="container py-20 md:py-28"
       >
-        <div className="text-center mb-10 max-w-2xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Built for explorers. Trusted by researchers.</h2>
-          <p className="text-sm text-muted-foreground mt-2">Open by default{gated ? '. Premium where it matters.' : '.'}</p>
-        </div>
-        <div className={`grid grid-cols-1 ${gated ? 'md:grid-cols-2' : ''} gap-4 ${gated ? 'max-w-4xl' : 'max-w-xl'} mx-auto`}>
-          {/* Free */}
-          <div className="rounded-2xl border border-border bg-card p-6 flex flex-col">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Free</div>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Anyone with an account</span>
+        <div className={`grid grid-cols-1 ${gated ? 'lg:grid-cols-12' : 'lg:grid-cols-12'} gap-12 lg:gap-16 items-center max-w-6xl mx-auto`}>
+          {/* Editorial Side */}
+          <div className="lg:col-span-7 space-y-10 md:space-y-12">
+            <div className="space-y-6">
+              <div className="inline-flex items-center gap-3">
+                <span className="h-px w-8 bg-score-amber" />
+                <p className="font-mono text-[11px] tracking-[0.4em] uppercase font-bold text-score-amber">
+                  System.Access_Protocol
+                </p>
+              </div>
+              <h2 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight text-foreground">
+                Built for <span className="bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/40">Bitcoiners.</span><br />
+                <span className="text-foreground/10">By Bitcoiners.</span>
+              </h2>
             </div>
-            <div className="text-xl font-bold text-foreground mb-1">Public Data</div>
-            <div className="text-2xl text-foreground mb-4 font-bold">$0</div>
-            <ul className="space-y-2 mb-5 text-sm text-muted-foreground flex-1">
-              {['Live leaderboard & economy profiles', 'CSV snapshot download', 'Embeddable economy widget', 'Methodology + verified sources'].map(f => (
-                <li key={f} className="flex items-start gap-2">
-                  <Check className="h-4 w-4 text-score-green shrink-0 mt-0.5" />
-                  <span>{f}</span>
-                </li>
-              ))}
-            </ul>
-            <Link to="/data">
-              <Button variant="outline" className="w-full rounded-lg border-foreground/20">
-                Explore data <ArrowRight className="h-4 w-4 ml-1" />
-              </Button>
-            </Link>
-          </div>
-          {/* Pro - landing page only */}
-          {gated && (
-          <div className="rounded-2xl border border-score-amber/40 bg-card p-6 flex flex-col">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="text-[10px] uppercase tracking-widest text-score-amber font-semibold">Pro</div>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-score-amber/10 text-score-amber">Researchers · NGOs · Partners</span>
+
+            <div className="flex items-center gap-6">
+              <div className="h-12 w-px bg-gradient-to-b from-score-amber to-transparent" />
+              <p className="text-base md:text-xl text-muted-foreground font-medium">
+                Open by default. <span className="text-foreground/15">// Secured by design.</span>
+              </p>
             </div>
-            <div className="text-xl font-bold text-foreground mb-1">Full Access</div>
-            <div className="text-2xl text-foreground mb-4 font-bold">Apply / Contact</div>
-            <ul className="space-y-2 mb-5 text-sm text-muted-foreground flex-1">
-              {['Full historical dataset', 'Economy-level time series', 'API feeds & white-label', 'Custom exports & due diligence'].map(f => (
-                <li key={f} className="flex items-start gap-2">
-                  <Check className="h-4 w-4 text-score-amber shrink-0 mt-0.5" />
-                  <span>{f}</span>
-                </li>
-              ))}
-            </ul>
-            <Link to="/pricing">
-              <Button className="w-full rounded-lg bg-score-amber text-background hover:bg-score-amber/90 font-semibold">
-                Request access <ArrowRight className="h-4 w-4 ml-1" />
-              </Button>
-            </Link>
           </div>
-          )}
+
+          {/* Data Card Side */}
+          <div className="lg:col-span-5">
+            <div className="relative group">
+              {/* Glow */}
+              <div className="absolute -inset-6 bg-score-amber/5 rounded-[3rem] blur-[80px] opacity-0 group-hover:opacity-100 transition-all duration-1000 ease-out" />
+              {/* Ghost layer */}
+              <div className="absolute inset-0 bg-foreground/5 border border-border rounded-[2rem] -z-10 transition-transform duration-700 ease-out group-hover:translate-x-3 group-hover:translate-y-3" />
+
+              {/* Main glass card */}
+              <div className="relative bg-foreground/[0.03] border border-border rounded-[2rem] p-8 md:p-10 shadow-2xl backdrop-blur-xl transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-x-1.5 group-hover:-translate-y-1.5 group-hover:border-score-amber/40">
+                {/* Header */}
+                <div className="flex justify-between items-start mb-10">
+                  <div>
+                    <p className="font-mono text-[11px] uppercase tracking-[0.4em] mb-2 font-bold text-score-amber/80">Tier 01</p>
+                    <h3 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground">Public Data</h3>
+                    <p className="font-mono text-[10px] text-muted-foreground/70 uppercase tracking-widest mt-2">Anyone with an account</p>
+                  </div>
+                  <div className="h-10 w-10 rounded-xl bg-foreground/5 border border-border flex items-center justify-center backdrop-blur-xl">
+                    <div className="w-2 h-2 rounded-full bg-score-amber animate-pulse" />
+                  </div>
+                </div>
+
+                {/* Pricing */}
+                <div className="mb-10 flex items-baseline gap-4">
+                  <span className="text-6xl md:text-7xl font-black tracking-tighter text-foreground">$0</span>
+                  <div className="flex flex-col">
+                    <span className="font-mono text-[11px] font-bold tracking-widest text-score-amber">PERPETUAL</span>
+                    <span className="font-mono text-[10px] font-bold text-foreground/20">FREE_ACCESS</span>
+                  </div>
+                </div>
+
+                {/* Features */}
+                <ul className="space-y-4 mb-10">
+                  {['Live leaderboard & economy profiles', 'CSV snapshot download', 'Embeddable economy widget', 'Methodology + verified sources'].map(f => (
+                    <li key={f} className="flex items-start gap-4 group/item">
+                      <div className="flex-none mt-0.5 w-5 h-5 rounded-md border border-score-amber/40 bg-score-amber/5 flex items-center justify-center transition-transform group-hover/item:scale-110">
+                        <Check className="h-3 w-3 text-score-amber" strokeWidth={3} />
+                      </div>
+                      <span className="text-sm md:text-base text-muted-foreground font-medium transition-colors group-hover/item:text-foreground">{f}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* CTA */}
+                <Link to="/data" className="group/btn relative flex items-center justify-center gap-3 w-full p-5 bg-foreground text-background font-bold rounded-2xl transition-all duration-300 hover:bg-score-amber active:scale-[0.98] overflow-hidden">
+                  <span className="relative z-10">Explore data</span>
+                  <ArrowRight className="h-5 w-5 relative z-10 transition-transform group-hover/btn:translate-x-1.5" />
+                </Link>
+
+                {gated && (
+                  <Link to="/pricing" className="mt-3 flex items-center justify-center gap-2 w-full p-3 text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-score-amber transition-colors">
+                    Need full access? Request Pro <ArrowRight className="h-3 w-3" />
+                  </Link>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </motion.section>
 
