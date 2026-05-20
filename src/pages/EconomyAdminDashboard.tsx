@@ -139,6 +139,8 @@ const EconomyAdminDashboard = () => {
   const [declaredPop, setDeclaredPop] = useState('');
   const [foundingYear, setFoundingYear] = useState('');
   const [ecoZoneDesc, setEcoZoneDesc] = useState('');
+  const [city, setCity] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState('');
   const [validatorEmail, setValidatorEmail] = useState('');
   const [fbceTier, setFbceTier] = useState<string>('');
   const [saving, setSaving] = useState(false);
