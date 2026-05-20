@@ -94,7 +94,7 @@ const Navbar = () => {
               <Link to="/login" className="hidden sm:inline-flex">
                 <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-foreground">Sign in</Button>
               </Link>
-              <Link to="/register">
+              <Link to="/login?signup=1&redirect=/register">
                 <Button size="sm" className="bg-score-amber text-background hover:bg-score-amber/90 font-semibold">
                   Create Economy
                 </Button>

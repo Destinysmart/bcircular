@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Seo from '@/components/Seo';
 import { Button } from '@/components/ui/button';
@@ -12,16 +12,23 @@ import { useToast } from '@/hooks/use-toast';
 import circularLogo from '@/assets/circular-logo.png';
 
 const Login = () => {
-  const [isSignup, setIsSignup] = useState(false);
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || '/';
+  const signupParam = searchParams.get('signup') === '1';
+  const [isSignup, setIsSignup] = useState(signupParam);
   const [isForgot, setIsForgot] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (user) navigate(redirectTo, { replace: true });
+  }, [user, redirectTo, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +48,7 @@ const Login = () => {
       } else {
         const { error } = await signIn(email, password);
         if (error) throw error;
-        navigate('/');
+        navigate(redirectTo);
       }
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
