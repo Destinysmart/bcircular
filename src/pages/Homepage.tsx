@@ -732,7 +732,7 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false }: { topSlot?
                   <span className="text-6xl md:text-7xl font-black tracking-tighter text-foreground">$0</span>
                   <div className="flex flex-col">
                     <span className="font-mono text-[11px] font-bold tracking-widest text-score-amber">PERPETUAL</span>
-                    <span className="font-mono text-[10px] font-bold text-foreground/20">FREE_ACCESS</span>
+                    <span className="font-mono text-[10px] font-bold text-muted-foreground">FREE_ACCESS</span>
                   </div>
                 </div>
 
