@@ -281,12 +281,16 @@ const EconomyAdminDashboard = () => {
     if (!communityId || !user) return;
     setSaving(true);
     try {
+      const countryRow = countries.find((c) => c.name === selectedCountry);
       await supabase.from('communities').update({
-        name, description, website, twitter_handle: twitter,
+        name, description, website,
+        twitter_handle: twitter.trim().replace(/^@+/, '') || null,
         contact_email: contactEmail,
         declared_population: parseInt(declaredPop) || 100,
         founding_year: parseInt(foundingYear) || null,
         economic_zone_description: ecoZoneDesc,
+        city,
+        ...(countryRow ? { country: countryRow.name, country_code: countryRow.code, region: countryRow.region } : {}),
         fbce_tier: fbceTier ? parseInt(fbceTier) : null,
       } as any).eq('id', communityId);
 
