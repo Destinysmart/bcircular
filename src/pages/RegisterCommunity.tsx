@@ -69,14 +69,23 @@ const RegisterCommunity = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateStep(4)) return;
+    if (!validateStep(4)) {
+      toast({ title: 'Please complete the required fields', variant: 'destructive' });
+      return;
+    }
     if (!user) {
       toast({ title: 'Login required', description: 'Please log in to register an economy.', variant: 'destructive' });
       navigate('/login');
       return;
     }
     const country = countries.find((c) => c.name === selectedCountry);
-    if (!country) return;
+    if (!country) {
+      toast({ title: 'Please select a valid country', variant: 'destructive' });
+      setStep(1);
+      return;
+    }
+
+    const twitterHandle = twitter.trim().replace(/^@+/, '');
 
     setLoading(true);
     try {
@@ -87,13 +96,13 @@ const RegisterCommunity = () => {
         declared_population: parseInt(declaredPopulation) || 100,
         economic_zone_description: economicZoneDesc,
         founding_year: parseInt(foundingYear) || undefined,
-        website: website || undefined,
-        twitter_handle: twitter || undefined,
-        contact_email: contactEmail || undefined,
+        website: website.trim() || undefined,
+        twitter_handle: twitterHandle || undefined,
+        contact_email: contactEmail.trim() || undefined,
       }, user.id);
       setSubmitted(true);
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      toast({ title: 'Registration failed', description: err?.message || 'Please try again.', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
