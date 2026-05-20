@@ -25,6 +25,8 @@ import SetupChecklist from '@/components/SetupChecklist';
 import EconomyAlerts from '@/components/EconomyAlerts';
 import { getCoverage } from '@/lib/coverage';
 import { Link } from 'react-router-dom';
+import CountrySelect from '@/components/CountrySelect';
+import { countries } from '@/lib/countries';
 
 const EconomyAdminDashboard = () => {
   const { id } = useParams();
