@@ -692,15 +692,15 @@ const Homepage = ({ topSlot, hideHero = false, compactHero = false }: { topSlot?
                 </p>
               </div>
               <h2 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight text-foreground">
-                Built for <span className="bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/40">Bitcoiners.</span><br />
-                <span className="text-foreground/10">By Bitcoiners.</span>
+                Built for <span className="text-foreground">Bitcoiners.</span><br />
+                <span className="text-muted-foreground">By Bitcoiners.</span>
               </h2>
             </div>
 
             <div className="flex items-center gap-6">
               <div className="h-12 w-px bg-gradient-to-b from-score-amber to-transparent" />
               <p className="text-base md:text-xl text-muted-foreground font-medium">
-                Open by default. <span className="text-foreground/15">// Secured by design.</span>
+                Open by default. <span className="text-muted-foreground/70">// Secured by design.</span>
               </p>
             </div>
           </div>
