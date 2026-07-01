@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Zap, Sparkles, KeyRound, Puzzle, Radio, Loader2, ShieldCheck, ShieldAlert,
-  Copy, Download, Eye, EyeOff, Check, ArrowLeft, ChevronRight, Mail,
+  Copy, Download, Eye, EyeOff, Check, ArrowLeft, ChevronRight, ChevronDown,
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -125,53 +125,110 @@ const MenuView = ({
   onExisting: () => void;
   onCreate: () => void;
   onEmail: () => void;
-}) => (
-  <div className="space-y-2">
-    <MethodCard
-      icon={<Puzzle className="h-5 w-5 text-score-amber" />}
-      title="Continue with Nostr extension"
-      subtitle="Alby, nos2x, Flamingo — most secure. Recommended."
-      badge="Recommended"
-      onClick={onExtension}
-      loading={loading}
-    />
-    <MethodCard
-      icon={<KeyRound className="h-5 w-5" />}
-      title="Use existing Nostr account"
-      subtitle="Paste nsec, ncryptsec, or connect a remote signer (NIP-46)."
-      onClick={onExisting}
-    />
-    <MethodCard
-      icon={<Sparkles className="h-5 w-5 text-score-amber" />}
-      title="Create a new Nostr account"
-      subtitle="Generate a key pair in your browser — 30 seconds."
-      onClick={onCreate}
-    />
-    <MethodCard
-      icon={<Mail className="h-5 w-5" />}
-      title="Continue with email"
-      subtitle="Traditional email + password. You can add Nostr later."
-      onClick={onEmail}
-    />
-    <p className="text-[11px] text-muted-foreground pt-2 inline-flex items-center gap-1.5">
-      <ShieldCheck className="h-3 w-3" /> Private keys never leave your browser.
-    </p>
-  </div>
-);
+}) => {
+  const [explain, setExplain] = useState(false);
+  const extensionAvailable = hasNip07();
+  return (
+    <div className="space-y-4">
+      {/* Hero option for newbies */}
+      <button
+        type="button"
+        onClick={onCreate}
+        className="w-full text-left rounded-2xl border border-score-amber/40 bg-gradient-to-br from-score-amber/10 to-transparent hover:from-score-amber/15 hover:border-score-amber/70 transition p-4"
+      >
+        <div className="flex items-center gap-3">
+          <div className="shrink-0 rounded-xl bg-score-amber/20 p-2.5">
+            <Sparkles className="h-5 w-5 text-score-amber" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold">Create a free account</div>
+            <div className="text-xs text-muted-foreground">Takes 30 seconds. No email, no password.</div>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+        </div>
+      </button>
+
+      <div className="space-y-1.5">
+        <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium px-1">
+          Already have a Nostr key?
+        </p>
+        {extensionAvailable && (
+          <MethodCard
+            icon={<Puzzle className="h-4 w-4 text-score-amber" />}
+            title="Sign in with browser extension"
+            subtitle="Alby, nos2x, Flamingo detected."
+            onClick={onExtension}
+            loading={loading}
+            compact
+          />
+        )}
+        <MethodCard
+          icon={<KeyRound className="h-4 w-4" />}
+          title="Paste key or connect signer"
+          subtitle="nsec, ncryptsec, or NIP-46 remote signer."
+          onClick={onExisting}
+          compact
+        />
+        {!extensionAvailable && (
+          <button
+            type="button"
+            onClick={onExtension}
+            className="w-full text-left text-[11px] text-muted-foreground hover:text-foreground px-1 pt-1"
+          >
+            Have a Nostr extension? <span className="underline underline-offset-2">Enable it</span>
+          </button>
+        )}
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setExplain(o => !o)}
+        className="w-full flex items-center justify-between text-[11px] text-muted-foreground hover:text-foreground pt-1"
+      >
+        <span className="inline-flex items-center gap-1.5">
+          <ShieldCheck className="h-3 w-3" /> What is Nostr &amp; why keys?
+        </span>
+        <ChevronDown className={`h-3 w-3 transition-transform ${explain ? 'rotate-180' : ''}`} />
+      </button>
+      {explain && (
+        <div className="text-[12px] text-muted-foreground leading-relaxed rounded-lg border border-border bg-muted/20 p-3 space-y-1.5">
+          <p>Nostr lets you own your identity — no company can lock you out. You get two keys:</p>
+          <p>
+            <span className="font-mono text-foreground">npub</span> = your public name (safe to share).{' '}
+            <span className="font-mono text-foreground">nsec</span> = your private key (treat like a seed phrase, never share).
+          </p>
+          <p className="text-foreground">Your private key never leaves this browser.</p>
+        </div>
+      )}
+
+      {onEmail && (
+        <div className="pt-1 text-center">
+          <button
+            type="button"
+            onClick={onEmail}
+            className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
+          >
+            Use email &amp; password instead
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const MethodCard = ({
-  icon, title, subtitle, badge, onClick, loading,
+  icon, title, subtitle, badge, onClick, loading, compact,
 }: {
-  icon: React.ReactNode; title: string; subtitle: string; badge?: string; onClick: () => void; loading?: boolean;
+  icon: React.ReactNode; title: string; subtitle: string; badge?: string; onClick: () => void; loading?: boolean; compact?: boolean;
 }) => (
   <button
     type="button"
     onClick={onClick}
     disabled={loading}
-    className="w-full text-left rounded-xl border border-border hover:border-score-amber/60 hover:bg-score-amber/[0.03] transition p-3 flex items-center gap-3 disabled:opacity-60"
+    className={`w-full text-left rounded-xl border border-border hover:border-score-amber/60 hover:bg-score-amber/[0.03] transition flex items-center gap-3 disabled:opacity-60 ${compact ? 'p-2.5' : 'p-3'}`}
   >
-    <div className="shrink-0 rounded-lg border border-border bg-muted/40 p-2">
-      {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : icon}
+    <div className={`shrink-0 rounded-lg border border-border bg-muted/40 ${compact ? 'p-1.5' : 'p-2'}`}>
+      {loading ? <Loader2 className={compact ? 'h-4 w-4 animate-spin' : 'h-5 w-5 animate-spin'} /> : icon}
     </div>
     <div className="flex-1 min-w-0">
       <div className="flex items-center gap-2">
