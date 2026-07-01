@@ -217,18 +217,18 @@ const MenuView = ({
 };
 
 const MethodCard = ({
-  icon, title, subtitle, badge, onClick, loading,
+  icon, title, subtitle, badge, onClick, loading, compact,
 }: {
-  icon: React.ReactNode; title: string; subtitle: string; badge?: string; onClick: () => void; loading?: boolean;
+  icon: React.ReactNode; title: string; subtitle: string; badge?: string; onClick: () => void; loading?: boolean; compact?: boolean;
 }) => (
   <button
     type="button"
     onClick={onClick}
     disabled={loading}
-    className="w-full text-left rounded-xl border border-border hover:border-score-amber/60 hover:bg-score-amber/[0.03] transition p-3 flex items-center gap-3 disabled:opacity-60"
+    className={`w-full text-left rounded-xl border border-border hover:border-score-amber/60 hover:bg-score-amber/[0.03] transition flex items-center gap-3 disabled:opacity-60 ${compact ? 'p-2.5' : 'p-3'}`}
   >
-    <div className="shrink-0 rounded-lg border border-border bg-muted/40 p-2">
-      {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : icon}
+    <div className={`shrink-0 rounded-lg border border-border bg-muted/40 ${compact ? 'p-1.5' : 'p-2'}`}>
+      {loading ? <Loader2 className={compact ? 'h-4 w-4 animate-spin' : 'h-5 w-5 animate-spin'} /> : icon}
     </div>
     <div className="flex-1 min-w-0">
       <div className="flex items-center gap-2">
