@@ -1,4 +1,5 @@
 import { generateSecretKey, getPublicKey, finalizeEvent, nip19 } from 'nostr-tools';
+import { decrypt as nip49decrypt, encrypt as nip49encrypt } from 'nostr-tools/nip49';
 
 const bytesToHex = (b: Uint8Array): string =>
   Array.from(b).map(x => x.toString(16).padStart(2, '0')).join('');
@@ -44,6 +45,21 @@ export function decodeNsec(nsec: string): { privkeyHex: string; pubkeyHex: strin
   const sk = d.data as Uint8Array;
   const pk = getPublicKey(sk);
   return { privkeyHex: bytesToHex(sk), pubkeyHex: pk, npub: nip19.npubEncode(pk) };
+}
+
+export function decodeNcryptsec(ncryptsec: string, passphrase: string): { privkeyHex: string; pubkeyHex: string; npub: string; nsec: string } {
+  const sk = nip49decrypt(ncryptsec.trim(), passphrase);
+  const pk = getPublicKey(sk);
+  return {
+    privkeyHex: bytesToHex(sk),
+    pubkeyHex: pk,
+    npub: nip19.npubEncode(pk),
+    nsec: nip19.nsecEncode(sk),
+  };
+}
+
+export function encodeNcryptsec(privkeyHex: string, passphrase: string): string {
+  return nip49encrypt(hexToBytes(privkeyHex), passphrase);
 }
 
 export function decodeNpub(npub: string): { pubkeyHex: string; npub: string } {
