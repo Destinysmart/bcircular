@@ -10,7 +10,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import circularLogo from '@/assets/circular-logo.png';
-import NostrLoginButton from '@/components/NostrLoginButton';
+import NostrOptions from '@/components/auth/NostrOptions';
+import NewToNostrPanel from '@/components/auth/NewToNostrPanel';
 
 const Login = () => {
   const [searchParams] = useSearchParams();

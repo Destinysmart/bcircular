@@ -31,10 +31,10 @@ function fromB64(s: string): Uint8Array {
 
 async function deriveKey(passphrase: string, salt: Uint8Array): Promise<CryptoKey> {
   const material = await crypto.subtle.importKey(
-    'raw', new TextEncoder().encode(passphrase), 'PBKDF2', false, ['deriveKey'],
+    'raw', new TextEncoder().encode(passphrase) as BufferSource, 'PBKDF2', false, ['deriveKey'],
   );
   return crypto.subtle.deriveKey(
-    { name: 'PBKDF2', salt, iterations: PBKDF2_ITERS, hash: 'SHA-256' },
+    { name: 'PBKDF2', salt: salt as BufferSource, iterations: PBKDF2_ITERS, hash: 'SHA-256' },
     material,
     { name: 'AES-GCM', length: 256 },
     false, ['encrypt', 'decrypt'],
@@ -45,7 +45,11 @@ export async function saveVault(privkeyHex: string, pubkeyHex: string, npub: str
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const key = await deriveKey(passphrase, salt);
-  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(privkeyHex));
+  const ct = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv: iv as BufferSource },
+    key,
+    new TextEncoder().encode(privkeyHex) as BufferSource,
+  );
   const blob: VaultBlob = { v: 1, salt: toB64(salt), iv: toB64(iv), ct: toB64(ct), npub, pubkeyHex };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(blob));
 }
@@ -67,7 +71,11 @@ export async function unlockVault(passphrase: string): Promise<string> {
   const blob = JSON.parse(raw) as VaultBlob;
   const key = await deriveKey(passphrase, fromB64(blob.salt));
   try {
-    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: fromB64(blob.iv) }, key, fromB64(blob.ct));
+    const pt = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: fromB64(blob.iv) as BufferSource },
+      key,
+      fromB64(blob.ct) as BufferSource,
+    );
     return new TextDecoder().decode(pt);
   } catch {
     throw new Error('Wrong passphrase');
