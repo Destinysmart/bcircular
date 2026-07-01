@@ -1,81 +1,98 @@
-## Add "Log in with Nostr" — privacy-first decentralized signup
 
-Bitcoiners increasingly use Nostr keys as portable identity. Adding Nostr login lets people sign up without email, phone, or any personally identifying info — which fits the platform's privacy constitution ("show what Bitcoin does, never who does it").
+# Bitcoin-Native Auth with Nostr
 
-### What users see
+Layer a first-class Nostr identity system on top of the existing email login. Nostr becomes the recommended path; email stays as a friendly fallback. Private keys never leave the browser.
 
-On `/login`, above the email/password form, a new prominent button:
+## What the user will see
 
-> **⚡ Continue with Nostr**
-> *No email. No tracking. Your keys, your identity.*
+**New `/login` layout, in this order:**
+1. **⚡ Continue with Nostr** — detects a NIP-07 extension (Alby, nos2x, Flamingo). If none, opens a friendly explainer sheet with install links + "use email instead" (not an error).
+2. **🔑 Create a new Nostr identity** — generates keys in-browser, shows a secure backup screen (copy nsec, copy npub, download `.txt` backup), requires an "I've backed up my key" checkbox before continuing. Private key is stored **only** in the browser (encrypted in localStorage behind a passphrase), never sent to the server.
+3. **✉️ Continue with email** — existing flow, kept for beginners.
 
-Two sub-options (progressive disclosure — one click reveals them):
-1. **Use browser extension (NIP-07)** — recommended. Works with Alby, nos2x, Flamingo, etc. One click, signs a challenge, done.
-2. **Paste npub (read-only)** — for users without an extension. Creates an account tied to their public key only. They'll need the extension later to prove ownership for sensitive actions (editing an economy).
+Short helper line above the buttons:
+> *"Use your Nostr identity to sign in without sharing passwords. No email required."*
 
-A small "What is Nostr?" link opens a short explainer sheet.
+**"Paste an existing key"** secondary option under Nostr — accepts `nsec1…` (kept only in-browser, used to sign the login challenge locally) or `npub1…` (read-only, marks the session as unverified until upgraded via extension/nsec signature).
 
-### Privacy guarantees shown to the user
+**Onboarding (first login only)** — 3 quick steps:
+1. Choose a username (unique) & display name
+2. Pick user type: Freelancer / Client / Both
+3. Optional: profile picture, about, website, lightning address
 
-- We never see or store your private key (nsec). Ever.
-- No email required. No phone. No name.
-- Your npub is stored hashed on our side — we use it to recognize you, not to profile you.
-- You can disconnect at any time; your account data is deleted.
+Then land on the dashboard.
 
-### How it works (technical section)
+**Profile page** — extends existing profile with: about, website, npub, lightning address, bitcoin wallet (optional, non-custodial hint), github, x/twitter, telegram, location, skills, portfolio. Where possible, we fetch the user's Nostr `kind: 0` metadata (only after explicit consent) and pre-fill fields.
 
-**Auth flow (NIP-07 extension):**
-1. Frontend detects `window.nostr` (NIP-07).
-2. Frontend requests `pubkey = await window.nostr.getPublicKey()`.
-3. Frontend calls edge function `nostr-auth-challenge` → returns a random `challenge` string (short TTL, stored in a `nostr_challenges` table).
-4. Frontend asks extension to sign a Nostr event (`kind: 27235`, per NIP-42-style) containing the challenge + origin.
-5. Frontend posts signed event to edge function `nostr-auth-verify`.
-6. Edge function verifies signature using `nostr-tools` (npm), checks challenge freshness, then:
-   - Looks up or creates a Supabase auth user with a synthetic email `npub1...@nostr.local` (never surfaced in UI).
-   - Uses `supabase.auth.admin.generateLink({ type: 'magiclink' })` and returns the session tokens to the client, which calls `supabase.auth.setSession()`.
-7. On first login, a `profiles` row is created; `display_name` defaults to the short npub (`npub1abc…xyz`), fully editable in Settings.
+## Security guarantees
 
-**Data model additions (one migration):**
+- Server stores only: SHA-256 hash of pubkey (already have `nostr_identities`), npub, profile metadata, user preferences.
+- Server **never** stores: private key, nsec, raw pubkey.
+- Local browser stores: encrypted nsec (AES-GCM with PBKDF2-derived key from user passphrase) only if user chose "create identity" or "paste nsec" — with a "Forget this key on this device" button in Settings.
+- All logins verified by cryptographic signature of a server-issued challenge (NIP-98–style `kind: 27235`, already implemented).
+- Read-only npub sessions get a `verified: false` flag; privileged actions prompt to upgrade to a signed session.
 
-- `nostr_identities` table
-  - `id uuid pk`
-  - `user_id uuid references auth.users(id) on delete cascade`
-  - `pubkey_hash text unique not null` — SHA-256 of the hex pubkey; we never store the raw pubkey
-  - `created_at`, `last_seen_at`
-  - RLS: user reads/deletes their own row; service_role full access
-  - GRANT SELECT, DELETE to authenticated; GRANT ALL to service_role
-- `nostr_challenges` table
-  - `id uuid pk`, `challenge text unique`, `pubkey_hash text`, `expires_at timestamptz`
-  - RLS: no client access. Only service_role.
-  - Cleaned up on verify + a 5-minute TTL check inside the edge function.
+## Error handling (friendly, actionable)
 
-**Edge functions (both `verify_jwt = false`):**
-- `nostr-auth-challenge` — issues challenge, rate-limited by IP hash.
-- `nostr-auth-verify` — verifies sig, mints session. Uses `npm:nostr-tools` for `verifyEvent` and `nip19`.
+| Situation | Message |
+|---|---|
+| No NIP-07 extension | Sheet with "Install Alby / nos2x" + "Create a new key instead" + "Use email" |
+| Invalid nsec | "That doesn't look like a Nostr private key. It should start with `nsec1…`" |
+| User rejects signature | "Signature request cancelled. Approve it in your Nostr extension to continue." |
+| Network failure | Inline retry, form state preserved |
+| Challenge expired | Auto-refresh challenge and re-sign silently |
 
-**Files:**
-- `src/lib/nostr.ts` — client helpers: detect NIP-07, request signature, hash pubkey.
-- `src/components/NostrLoginButton.tsx` — the button + progressive disclosure sheet.
-- `src/pages/Login.tsx` — inject the button above the email form + a subtle divider.
-- `src/pages/Settings.tsx` — new "Linked identities" section showing the connected npub (masked) with a "Disconnect Nostr" button.
-- `supabase/functions/nostr-auth-challenge/index.ts`
-- `supabase/functions/nostr-auth-verify/index.ts`
-- One migration for the two tables above.
+## Inline docs / education
 
-**Read-only npub path:** stores the npub, creates an account, but marks `nostr_identities.verified = false`. Any privileged action (editing an economy, submitting proofs) requires upgrading to a signed session via the extension. This prevents impersonation while still giving frictionless read/browse access.
+A collapsible **"New to Nostr?"** panel on the login page explains, in plain language: what Nostr is, what npub/nsec are, why the private key is sacred, how this differs from email/password. Same copy reused in the create-identity backup screen.
 
-### What I won't do (privacy constraints)
-- No storage of raw pubkeys — only SHA-256 hashes.
-- No fetching of the user's Nostr profile (`kind: 0`) unless they opt in later. We don't want to pull their name/avatar/lightning address without consent.
-- No relay writes. We never publish anything to Nostr on the user's behalf.
+## Future-ready architecture
 
-### Out of scope for this pass
-- Publishing verification notes to Nostr relays.
-- Zap-based validator payouts.
-- NIP-05 verification of economy admins.
+A single `AuthProvider` interface in `src/lib/auth/providers/`:
+- `nip07-provider.ts` (implemented)
+- `nsec-provider.ts` (implemented — local key)
+- `npub-provider.ts` (implemented — read-only)
+- `nip46-provider.ts` (stub, interface only, ready for bunker://)
+- `email-provider.ts` (wraps existing Supabase)
 
-These can be follow-ups once the login flow is in.
+Each provider implements `getPublicKey()`, `signEvent()`, `capabilities()`. NIP-05 verification, Lightning Address verification, and wallet-auth land as new providers later with no UI rewrite.
 
-### Questions before I build
-1. **Read-only npub path** — include it in v1, or extension-only? Extension-only is safer and simpler; npub-paste is friendlier for non-technical users but weaker.
-2. **Should Nostr login replace email/password for new signups**, or sit alongside it (both work)? I recommend alongside — email is still the fallback for people without a Nostr key yet.
+## Technical details
+
+**New files**
+- `src/lib/auth/providers/{types,nip07,nsec,npub,nip46,email}.ts`
+- `src/lib/nostr/keys.ts` — generate keys, encode/decode nsec/npub (via `nostr-tools`)
+- `src/lib/nostr/localVault.ts` — AES-GCM encrypt/decrypt nsec in localStorage
+- `src/lib/nostr/metadata.ts` — optional fetch of `kind: 0` from public relays (consent-gated)
+- `src/components/auth/NostrOptions.tsx` — the 3-button stack + explainer sheet
+- `src/components/auth/CreateNostrIdentity.tsx` — key generation + backup screen
+- `src/components/auth/PasteKeyDialog.tsx` — nsec/npub paste with validation
+- `src/components/auth/NewToNostrPanel.tsx` — collapsible educational panel
+- `src/pages/Onboarding.tsx` — username + user type + optional profile
+- `src/components/ProfileForm.tsx` — extended profile editor
+
+**Edited files**
+- `src/pages/Login.tsx` — replace current layout with new 3-method stack
+- `src/pages/Settings.tsx` — add "Linked identities" and "Forget local key" controls
+- `src/App.tsx` — add `/onboarding` route + gate
+
+**Migration**
+- Extend `profiles` with: `username` (unique), `about`, `website`, `npub`, `lightning_address`, `bitcoin_wallet`, `github`, `x_handle`, `telegram`, `location`, `skills` (text[]), `portfolio_url`, `user_type` (enum: freelancer/client/both), `onboarding_completed_at`.
+- Add unique index on `lower(username)`.
+
+**Edge functions** — reuse existing `nostr-auth-challenge` + `nostr-auth-verify` (already deployed). No new server code required for v1.
+
+**Dependencies** — `nostr-tools` (add to frontend for key gen + nsec/npub encoding). No other new deps.
+
+## Explicitly out of scope for v1
+
+- NIP-46 (bunker://) — interface stub only, no working transport yet.
+- Publishing our own events to relays (we only read `kind: 0` on request).
+- NIP-05 verification badges on profiles.
+- Zap-based payments / Lightning receive flows.
+- Migrating existing email users to Nostr (they can link one from Settings later).
+
+## Two quick questions before I build
+
+1. **Username uniqueness**: enforce globally unique usernames (like Twitter) or scope to display-only (like Discord discriminators)? I'll default to **globally unique**.
+2. **App name**: your brief says "BitLance" on the backup screen but the app is "Bitcoin Circular". Should the backup screen say **Bitcoin Circular** (keep consistent) or **BitLance**?
