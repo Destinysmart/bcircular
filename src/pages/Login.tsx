@@ -11,7 +11,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import circularLogo from '@/assets/circular-logo.png';
 import NostrOptions from '@/components/auth/NostrOptions';
-import NewToNostrPanel from '@/components/auth/NewToNostrPanel';
 
 const Login = () => {
   const [searchParams] = useSearchParams();
@@ -85,11 +84,7 @@ const Login = () => {
 
           {!isForgot && (
             <div className="space-y-3">
-              <p className="text-xs text-muted-foreground text-center">
-                Use your Nostr identity to sign in without sharing passwords. No email required.
-              </p>
               <NostrOptions />
-              <NewToNostrPanel />
               <div className="flex items-center gap-3 text-[11px] uppercase tracking-wider text-muted-foreground pt-1">
                 <div className="flex-1 h-px bg-border" />
                 <span>or with email</span>

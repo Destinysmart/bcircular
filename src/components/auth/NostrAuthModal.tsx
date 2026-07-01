@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Zap, Sparkles, KeyRound, Puzzle, Radio, Loader2, ShieldCheck, ShieldAlert,
-  Copy, Download, Eye, EyeOff, Check, ArrowLeft, ChevronRight, Mail,
+  Copy, Download, Eye, EyeOff, Check, ArrowLeft, ChevronRight, ChevronDown,
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
