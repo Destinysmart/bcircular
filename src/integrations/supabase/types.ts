@@ -803,37 +803,79 @@ export type Database = {
       }
       profiles: {
         Row: {
+          about: string | null
           avatar_url: string | null
           bio: string | null
+          bitcoin_wallet: string | null
           created_at: string
           display_name: string | null
           email: string | null
+          github: string | null
           id: string
           is_super_admin: boolean
+          lightning_address: string | null
+          location: string | null
+          npub: string | null
+          onboarding_completed_at: string | null
+          portfolio_url: string | null
+          skills: string[] | null
+          telegram: string | null
           updated_at: string
           user_id: string
+          user_type: Database["public"]["Enums"]["user_type"] | null
+          username: string | null
+          website: string | null
+          x_handle: string | null
         }
         Insert: {
+          about?: string | null
           avatar_url?: string | null
           bio?: string | null
+          bitcoin_wallet?: string | null
           created_at?: string
           display_name?: string | null
           email?: string | null
+          github?: string | null
           id?: string
           is_super_admin?: boolean
+          lightning_address?: string | null
+          location?: string | null
+          npub?: string | null
+          onboarding_completed_at?: string | null
+          portfolio_url?: string | null
+          skills?: string[] | null
+          telegram?: string | null
           updated_at?: string
           user_id: string
+          user_type?: Database["public"]["Enums"]["user_type"] | null
+          username?: string | null
+          website?: string | null
+          x_handle?: string | null
         }
         Update: {
+          about?: string | null
           avatar_url?: string | null
           bio?: string | null
+          bitcoin_wallet?: string | null
           created_at?: string
           display_name?: string | null
           email?: string | null
+          github?: string | null
           id?: string
           is_super_admin?: boolean
+          lightning_address?: string | null
+          location?: string | null
+          npub?: string | null
+          onboarding_completed_at?: string | null
+          portfolio_url?: string | null
+          skills?: string[] | null
+          telegram?: string | null
           updated_at?: string
           user_id?: string
+          user_type?: Database["public"]["Enums"]["user_type"] | null
+          username?: string | null
+          website?: string | null
+          x_handle?: string | null
         }
         Relationships: []
       }
@@ -1175,6 +1217,7 @@ export type Database = {
       app_role: "admin" | "moderator" | "user"
       community_status: "pending" | "active" | "suspended"
       submission_status: "pending" | "approved" | "rejected"
+      user_type: "freelancer" | "client" | "both"
       vote_type: "approve" | "reject"
     }
     CompositeTypes: {
@@ -1306,6 +1349,7 @@ export const Constants = {
       app_role: ["admin", "moderator", "user"],
       community_status: ["pending", "active", "suspended"],
       submission_status: ["pending", "approved", "rejected"],
+      user_type: ["freelancer", "client", "both"],
       vote_type: ["approve", "reject"],
     },
   },
