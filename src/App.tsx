@@ -35,6 +35,7 @@ import Pricing from "./pages/Pricing";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
 import MyDashboardRedirect from "./pages/MyDashboardRedirect";
+import Onboarding from "./pages/Onboarding";
 import CircularAssistant from "./components/CircularAssistant";
 import InstallAppPrompt from "./components/InstallAppPrompt";
 
@@ -80,6 +81,7 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Login />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/validate" element={<ValidatorDashboard />} />
               <Route path="/methodology" element={<Methodology />} />
               <Route path="/dashboard" element={<MyDashboardRedirect />} />

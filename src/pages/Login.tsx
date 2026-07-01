@@ -84,14 +84,18 @@ const Login = () => {
           </div>
 
           {!isForgot && (
-            <>
-              <NostrLoginButton />
-              <div className="flex items-center gap-3 text-[11px] uppercase tracking-wider text-muted-foreground">
+            <div className="space-y-3">
+              <p className="text-xs text-muted-foreground text-center">
+                Use your Nostr identity to sign in without sharing passwords. No email required.
+              </p>
+              <NostrOptions />
+              <NewToNostrPanel />
+              <div className="flex items-center gap-3 text-[11px] uppercase tracking-wider text-muted-foreground pt-1">
                 <div className="flex-1 h-px bg-border" />
                 <span>or with email</span>
                 <div className="flex-1 h-px bg-border" />
               </div>
-            </>
+            </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
