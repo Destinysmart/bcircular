@@ -753,6 +753,54 @@ export type Database = {
           },
         ]
       }
+      nostr_challenges: {
+        Row: {
+          challenge: string
+          created_at: string
+          expires_at: string
+          id: string
+          pubkey_hash: string
+        }
+        Insert: {
+          challenge: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          pubkey_hash: string
+        }
+        Update: {
+          challenge?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          pubkey_hash?: string
+        }
+        Relationships: []
+      }
+      nostr_identities: {
+        Row: {
+          created_at: string
+          id: string
+          last_seen_at: string
+          pubkey_hash: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          pubkey_hash: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          pubkey_hash?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

@@ -1,52 +1,81 @@
-## The friction
+## Add "Log in with Nostr" — privacy-first decentralized signup
 
-Right now `/register` lets logged-out users fill all 4 steps. The only signal that login is required is a small line of text at the top and a disabled submit button on Step 4 — easy to miss on mobile (your screenshot shows exactly this). Users invest 10–30 min filling the form, then hit a wall.
+Bitcoiners increasingly use Nostr keys as portable identity. Adding Nostr login lets people sign up without email, phone, or any personally identifying info — which fits the platform's privacy constitution ("show what Bitcoin does, never who does it").
 
-## Fix: gate the page before the form, not after
+### What users see
 
-Block the form entirely for logged-out users with a clear, friendly auth screen — same pattern already used on `/leaderboard` and `/compare` (the existing `AuthGate` component). They cannot waste time filling fields they can't submit.
+On `/login`, above the email/password form, a new prominent button:
 
-### 1. Block `/register` for logged-out users
+> **⚡ Continue with Nostr**
+> *No email. No tracking. Your keys, your identity.*
 
-In `src/pages/RegisterCommunity.tsx`, before rendering the multi-step form:
+Two sub-options (progressive disclosure — one click reveals them):
+1. **Use browser extension (NIP-07)** — recommended. Works with Alby, nos2x, Flamingo, etc. One click, signs a challenge, done.
+2. **Paste npub (read-only)** — for users without an extension. Creates an account tied to their public key only. They'll need the extension later to prove ownership for sensitive actions (editing an economy).
 
-- If `!user` (and `!loading`), render a dedicated gate screen instead of the form.
-- Copy tuned for this exact moment:
-  - Title: **"Log in to register your economy"**
-  - Body: "Creating a Bitcoin economy is free and takes ~1 minute. We just need an account first so you can edit and manage it later."
-  - Primary CTA: **Create free account** → `/login?signup=1&redirect=/register`
-  - Secondary CTA: **Log in** → `/login?redirect=/register`
-  - Small reassurance line: "Free forever · No funds held · ~3 min to complete"
+A small "What is Nostr?" link opens a short explainer sheet.
 
-### 2. Return user to `/register` after auth
+### Privacy guarantees shown to the user
 
-In `src/pages/Login.tsx`:
+- We never see or store your private key (nsec). Ever.
+- No email required. No phone. No name.
+- Your npub is stored hashed on our side — we use it to recognize you, not to profile you.
+- You can disconnect at any time; your account data is deleted.
 
-- Read `?redirect=` from the URL.
-- After successful login/signup, navigate to that path (default `/dashboard` as today).
-- Pass `?signup=1` through so the signup tab opens when coming from the gate's "Create free account" button (already supported).
+### How it works (technical section)
 
-So the flow becomes: visit `/register` → see gate → click CTA → log in → land back on `/register` with the form ready, name still empty but no wasted typing.
+**Auth flow (NIP-07 extension):**
+1. Frontend detects `window.nostr` (NIP-07).
+2. Frontend requests `pubkey = await window.nostr.getPublicKey()`.
+3. Frontend calls edge function `nostr-auth-challenge` → returns a random `challenge` string (short TTL, stored in a `nostr_challenges` table).
+4. Frontend asks extension to sign a Nostr event (`kind: 27235`, per NIP-42-style) containing the challenge + origin.
+5. Frontend posts signed event to edge function `nostr-auth-verify`.
+6. Edge function verifies signature using `nostr-tools` (npm), checks challenge freshness, then:
+   - Looks up or creates a Supabase auth user with a synthetic email `npub1...@nostr.local` (never surfaced in UI).
+   - Uses `supabase.auth.admin.generateLink({ type: 'magiclink' })` and returns the session tokens to the client, which calls `supabase.auth.setSession()`.
+7. On first login, a `profiles` row is created; `display_name` defaults to the short npub (`npub1abc…xyz`), fully editable in Settings.
 
-### 3. Keep the existing in-form safety net
+**Data model additions (one migration):**
 
-Leave the "log in required" toast + disabled submit in place as a fallback for anyone who somehow reaches Step 4 logged-out (e.g. session expired mid-flow). No code removal needed there.
+- `nostr_identities` table
+  - `id uuid pk`
+  - `user_id uuid references auth.users(id) on delete cascade`
+  - `pubkey_hash text unique not null` — SHA-256 of the hex pubkey; we never store the raw pubkey
+  - `created_at`, `last_seen_at`
+  - RLS: user reads/deletes their own row; service_role full access
+  - GRANT SELECT, DELETE to authenticated; GRANT ALL to service_role
+- `nostr_challenges` table
+  - `id uuid pk`, `challenge text unique`, `pubkey_hash text`, `expires_at timestamptz`
+  - RLS: no client access. Only service_role.
+  - Cleaned up on verify + a 5-minute TTL check inside the edge function.
 
-### 4. Optional polish (low effort, big clarity win)
+**Edge functions (both `verify_jwt = false`):**
+- `nostr-auth-challenge` — issues challenge, rate-limited by IP hash.
+- `nostr-auth-verify` — verifies sig, mints session. Uses `npm:nostr-tools` for `verifyEvent` and `nip19`.
 
-On the homepage "Create Economy" button (Navbar / hero), if the user is logged out, the button can route to `/login?signup=1&redirect=/register` directly instead of `/register`. This skips the gate screen entirely for first-time visitors clicking the main CTA — they go straight to signup, then straight into the form.
+**Files:**
+- `src/lib/nostr.ts` — client helpers: detect NIP-07, request signature, hash pubkey.
+- `src/components/NostrLoginButton.tsx` — the button + progressive disclosure sheet.
+- `src/pages/Login.tsx` — inject the button above the email form + a subtle divider.
+- `src/pages/Settings.tsx` — new "Linked identities" section showing the connected npub (masked) with a "Disconnect Nostr" button.
+- `supabase/functions/nostr-auth-challenge/index.ts`
+- `supabase/functions/nostr-auth-verify/index.ts`
+- One migration for the two tables above.
 
-## Files touched
+**Read-only npub path:** stores the npub, creates an account, but marks `nostr_identities.verified = false`. Any privileged action (editing an economy, submitting proofs) requires upgrading to a signed session via the extension. This prevents impersonation while still giving frictionless read/browse access.
 
-- `src/pages/RegisterCommunity.tsx` — add logged-out gate branch (uses same visual language as `AuthGate`)
-- `src/pages/Login.tsx` — honor `?redirect=` param on success
-- `src/components/Navbar.tsx` — route "Create Economy" CTA through login when logged out (optional but recommended)
+### What I won't do (privacy constraints)
+- No storage of raw pubkeys — only SHA-256 hashes.
+- No fetching of the user's Nostr profile (`kind: 0`) unless they opt in later. We don't want to pull their name/avatar/lightning address without consent.
+- No relay writes. We never publish anything to Nostr on the user's behalf.
 
-No DB, no API, no schema changes. Pure UX/routing.
+### Out of scope for this pass
+- Publishing verification notes to Nostr relays.
+- Zap-based validator payouts.
+- NIP-05 verification of economy admins.
 
-## Why this works
+These can be follow-ups once the login flow is in.
 
-- Users learn the requirement **before** investing effort, not after.
-- The auth screen explains *why* an account is needed ("so you can edit and manage it later") — that reframes login from friction to value.
-- Returning them to `/register` automatically means zero context loss after signup.
-- Consistent with how `/leaderboard` and `/compare` already behave, so the pattern is familiar across the app.
+### Questions before I build
+1. **Read-only npub path** — include it in v1, or extension-only? Extension-only is safer and simpler; npub-paste is friendlier for non-technical users but weaker.
+2. **Should Nostr login replace email/password for new signups**, or sit alongside it (both work)? I recommend alongside — email is still the fallback for people without a Nostr key yet.

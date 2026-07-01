@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import circularLogo from '@/assets/circular-logo.png';
+import NostrLoginButton from '@/components/NostrLoginButton';
 
 const Login = () => {
   const [searchParams] = useSearchParams();
@@ -80,6 +81,17 @@ const Login = () => {
             <h1 className="text-xl font-semibold">{title}</h1>
             <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
           </div>
+
+          {!isForgot && (
+            <>
+              <NostrLoginButton />
+              <div className="flex items-center gap-3 text-[11px] uppercase tracking-wider text-muted-foreground">
+                <div className="flex-1 h-px bg-border" />
+                <span>or with email</span>
+                <div className="flex-1 h-px bg-border" />
+              </div>
+            </>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignup && !isForgot && (
