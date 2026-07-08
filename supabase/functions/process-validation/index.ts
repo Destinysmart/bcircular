@@ -103,73 +103,78 @@ Deno.serve(async (req) => {
     if (newStatus === 'approved') {
       const { data: submission } = await supabase
         .from(tableName)
-        .select('id, community_id, pending_blink_api_key_encrypted, pending_ln_address_hash')
+        .select('id, community_id')
         .eq('id', submission_id)
         .single()
 
       if (submission) {
-        if ((submission_type === 'merchant' || submission_type === 'earner') && submission.pending_blink_api_key_encrypted) {
-          const { data: existingWallet } = await supabase
-            .from('wallets')
-            .select('id, blink_wallet_id')
-            .eq('owner_type', submission_type)
-            .eq('owner_id', submission.id)
+        if (submission_type === 'merchant' || submission_type === 'earner') {
+          const secretsTable = submission_type === 'merchant' ? 'merchant_secrets' : 'earner_secrets'
+          const ownerKey = submission_type === 'merchant' ? 'merchant_id' : 'earner_id'
+          const { data: secret } = await supabase
+            .from(secretsTable)
+            .select('pending_blink_api_key_encrypted, pending_ln_address_hash')
+            .eq(ownerKey, submission.id)
             .maybeSingle()
 
-          // Use owner_id as user_id to avoid colliding on the
-          // (user_id, community_id, wallet_currency) unique constraint —
-          // each merchant/earner needs its own wallet row.
-          let walletId = existingWallet?.id
-          const walletPayload = {
-            community_id: submission.community_id,
-            user_id: submission.id,
-            blink_wallet_id: existingWallet?.blink_wallet_id || '',
-            wallet_currency: 'BTC',
-            balance_sats: 0,
-            owner_type: submission_type,
-            owner_id: submission.id,
-            ln_address_hash: submission.pending_ln_address_hash || null,
-            blink_api_key_encrypted: submission.pending_blink_api_key_encrypted,
-            wallet_status: 'connected',
-          }
-
-          if (walletId) {
-            const { error: walletUpdateError } = await supabase.from('wallets').update(walletPayload).eq('id', walletId)
-            if (walletUpdateError) throw walletUpdateError
-          } else {
-            const { data: insertedWallet, error: walletInsertError } = await supabase
+          if (secret?.pending_blink_api_key_encrypted) {
+            const { data: existingWallet } = await supabase
               .from('wallets')
-              .insert(walletPayload)
-              .select('id')
-              .single()
-            if (walletInsertError) throw walletInsertError
-            walletId = insertedWallet.id
-          }
+              .select('id, blink_wallet_id')
+              .eq('owner_type', submission_type)
+              .eq('owner_id', submission.id)
+              .maybeSingle()
 
-          if (submission_type === 'merchant') {
-            await supabase.from('merchants').update({
-              wallet_id: walletId,
-              has_wallet_pending: false,
-              pending_blink_api_key_encrypted: null,
-              pending_ln_address_hash: null,
-            }).eq('id', submission.id)
-          } else {
-            const { data: earnerWallet } = await supabase.from('earner_wallets').select('id').eq('earner_id', submission.id).maybeSingle()
-            if (earnerWallet) {
-              await supabase.from('earner_wallets').update({ wallet_id: walletId, claimed_at: new Date().toISOString() }).eq('id', earnerWallet.id)
-            } else {
-              await supabase.from('earner_wallets').insert({
-                earner_id: submission.id,
-                community_id: submission.community_id,
-                wallet_id: walletId,
-                claimed_at: new Date().toISOString(),
-              })
+            let walletId = existingWallet?.id
+            const walletPayload = {
+              community_id: submission.community_id,
+              user_id: submission.id,
+              blink_wallet_id: existingWallet?.blink_wallet_id || '',
+              wallet_currency: 'BTC',
+              balance_sats: 0,
+              owner_type: submission_type,
+              owner_id: submission.id,
+              ln_address_hash: secret.pending_ln_address_hash || null,
+              blink_api_key_encrypted: secret.pending_blink_api_key_encrypted,
+              wallet_status: 'connected',
             }
-            await supabase.from('earners').update({
-              has_wallet_pending: false,
-              pending_blink_api_key_encrypted: null,
-              pending_ln_address_hash: null,
-            }).eq('id', submission.id)
+
+            if (walletId) {
+              const { error: walletUpdateError } = await supabase.from('wallets').update(walletPayload).eq('id', walletId)
+              if (walletUpdateError) throw walletUpdateError
+            } else {
+              const { data: insertedWallet, error: walletInsertError } = await supabase
+                .from('wallets')
+                .insert(walletPayload)
+                .select('id')
+                .single()
+              if (walletInsertError) throw walletInsertError
+              walletId = insertedWallet.id
+            }
+
+            if (submission_type === 'merchant') {
+              await supabase.from('merchants').update({
+                wallet_id: walletId,
+                has_wallet_pending: false,
+              }).eq('id', submission.id)
+            } else {
+              const { data: earnerWallet } = await supabase.from('earner_wallets').select('id').eq('earner_id', submission.id).maybeSingle()
+              if (earnerWallet) {
+                await supabase.from('earner_wallets').update({ wallet_id: walletId, claimed_at: new Date().toISOString() }).eq('id', earnerWallet.id)
+              } else {
+                await supabase.from('earner_wallets').insert({
+                  earner_id: submission.id,
+                  community_id: submission.community_id,
+                  wallet_id: walletId,
+                  claimed_at: new Date().toISOString(),
+                })
+              }
+              await supabase.from('earners').update({
+                has_wallet_pending: false,
+              }).eq('id', submission.id)
+            }
+
+            await supabase.from(secretsTable).delete().eq(ownerKey, submission.id)
           }
         }
 

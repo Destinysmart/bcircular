@@ -76,11 +76,19 @@ Deno.serve(async (req) => {
 
     const { error: updErr } = await supabase
       .from('merchants')
-      .update({ claim_token_hash: tokenHash, claimed_at: null })
+      .update({ claimed_at: null })
       .eq('id', merchant_id)
 
     if (updErr) {
       return new Response(JSON.stringify({ error: updErr.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
+    const { error: secretErr } = await supabase
+      .from('merchant_secrets')
+      .upsert({ merchant_id, claim_token_hash: tokenHash, updated_at: new Date().toISOString() }, { onConflict: 'merchant_id' })
+
+    if (secretErr) {
+      return new Response(JSON.stringify({ error: secretErr.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
     return new Response(JSON.stringify({

@@ -94,7 +94,7 @@ Deno.serve(async (req) => {
 
     const { data: merchant, error: mErr } = await supabase
       .from('merchants')
-      .select('id, community_id, status, claim_token_hash, wallet_id, public_merchant_id, claimed_at')
+      .select('id, community_id, status, wallet_id, public_merchant_id, claimed_at')
       .eq('public_merchant_id', public_merchant_id)
       .maybeSingle()
 
@@ -113,14 +113,21 @@ Deno.serve(async (req) => {
         error: 'This merchant wallet is already connected. Use your dashboard link to view your data.',
       }, 400)
     }
-    if (!merchant.claim_token_hash) {
+
+    const { data: secretRow } = await supabase
+      .from('merchant_secrets')
+      .select('claim_token_hash')
+      .eq('merchant_id', merchant.id)
+      .maybeSingle()
+
+    if (!secretRow?.claim_token_hash) {
       return jsonResponse({
         error: 'This claim link has already been used or has expired. Contact your economy admin for a new link.',
       }, 400)
     }
 
     const submittedHash = await sha256Hex(claim_token.trim())
-    if (!timingSafeEqual(submittedHash, merchant.claim_token_hash)) {
+    if (!timingSafeEqual(submittedHash, secretRow.claim_token_hash)) {
       return jsonResponse({
         error: 'This claim link has already been used or has expired. Contact your economy admin for a new link.',
       }, 403)
@@ -277,7 +284,6 @@ Deno.serve(async (req) => {
       .update({
         wallet_id: walletDbId,
         claimed_at: new Date().toISOString(),
-        claim_token_hash: null,
       })
       .eq('id', merchant.id)
 
@@ -285,6 +291,8 @@ Deno.serve(async (req) => {
       console.error('merchant link failed', linkErr)
       return jsonResponse({ error: linkErr.message }, 500)
     }
+
+    await supabase.from('merchant_secrets').delete().eq('merchant_id', merchant.id)
 
     // Fire-and-forget: sync this merchant's own wallet (uses the merchant's API key).
     // Do not run the economy-wide Blink sync here — it uses the economy account key
