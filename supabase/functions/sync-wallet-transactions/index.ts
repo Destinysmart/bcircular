@@ -238,9 +238,8 @@ async function ensureOwnerWallet(supabase: any, owner_type: 'merchant' | 'earner
     await supabase.from('merchants').update({
       wallet_id: data.id,
       has_wallet_pending: false,
-      pending_blink_api_key_encrypted: null,
-      pending_ln_address_hash: null,
     }).eq('id', owner.id)
+    await supabase.from('merchant_secrets').delete().eq('merchant_id', owner.id)
   } else {
     const { data: earnerWallet } = await supabase.from('earner_wallets').select('id').eq('earner_id', owner.id).maybeSingle()
     if (earnerWallet) {
@@ -255,9 +254,8 @@ async function ensureOwnerWallet(supabase: any, owner_type: 'merchant' | 'earner
     }
     await supabase.from('earners').update({
       has_wallet_pending: false,
-      pending_blink_api_key_encrypted: null,
-      pending_ln_address_hash: null,
     }).eq('id', owner.id)
+    await supabase.from('earner_secrets').delete().eq('earner_id', owner.id)
   }
 
   return data
