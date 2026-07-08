@@ -284,7 +284,6 @@ Deno.serve(async (req) => {
       .update({
         wallet_id: walletDbId,
         claimed_at: new Date().toISOString(),
-        claim_token_hash: null,
       })
       .eq('id', merchant.id)
 
@@ -292,6 +291,8 @@ Deno.serve(async (req) => {
       console.error('merchant link failed', linkErr)
       return jsonResponse({ error: linkErr.message }, 500)
     }
+
+    await supabase.from('merchant_secrets').delete().eq('merchant_id', merchant.id)
 
     // Fire-and-forget: sync this merchant's own wallet (uses the merchant's API key).
     // Do not run the economy-wide Blink sync here — it uses the economy account key
