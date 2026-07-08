@@ -49,12 +49,21 @@ Deno.serve(async (req) => {
     );
 
     const table = owner_type === 'merchant' ? 'merchants' : 'earners';
-    const { error } = await supabase.from(table).update({
+    const secretsTable = owner_type === 'merchant' ? 'merchant_secrets' : 'earner_secrets';
+    const ownerKey = owner_type === 'merchant' ? 'merchant_id' : 'earner_id';
+
+    const { error: flagErr } = await supabase.from(table).update({
       has_wallet_pending: true,
+    }).eq('id', owner_id);
+    if (flagErr) throw flagErr;
+
+    const { error: secretErr } = await supabase.from(secretsTable).upsert({
+      [ownerKey]: owner_id,
       pending_blink_api_key_encrypted: encrypted,
       pending_ln_address_hash: lnHash,
-    }).eq('id', owner_id);
-    if (error) throw error;
+      updated_at: new Date().toISOString(),
+    }, { onConflict: ownerKey });
+    if (secretErr) throw secretErr;
 
     return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (e) {
