@@ -418,6 +418,38 @@ export type Database = {
         }
         Relationships: []
       }
+      earner_secrets: {
+        Row: {
+          created_at: string
+          earner_id: string
+          pending_blink_api_key_encrypted: string | null
+          pending_ln_address_hash: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          earner_id: string
+          pending_blink_api_key_encrypted?: string | null
+          pending_ln_address_hash?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          earner_id?: string
+          pending_blink_api_key_encrypted?: string | null
+          pending_ln_address_hash?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "earner_secrets_earner_id_fkey"
+            columns: ["earner_id"]
+            isOneToOne: true
+            referencedRelation: "earners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       earner_wallets: {
         Row: {
           claimed_at: string | null
@@ -456,8 +488,6 @@ export type Database = {
           has_wallet_pending: boolean
           id: string
           payment_method: string | null
-          pending_blink_api_key_encrypted: string | null
-          pending_ln_address_hash: string | null
           status: Database["public"]["Enums"]["submission_status"]
           submitted_by: string | null
         }
@@ -471,8 +501,6 @@ export type Database = {
           has_wallet_pending?: boolean
           id?: string
           payment_method?: string | null
-          pending_blink_api_key_encrypted?: string | null
-          pending_ln_address_hash?: string | null
           status?: Database["public"]["Enums"]["submission_status"]
           submitted_by?: string | null
         }
@@ -486,8 +514,6 @@ export type Database = {
           has_wallet_pending?: boolean
           id?: string
           payment_method?: string | null
-          pending_blink_api_key_encrypted?: string | null
-          pending_ln_address_hash?: string | null
           status?: Database["public"]["Enums"]["submission_status"]
           submitted_by?: string | null
         }
@@ -650,6 +676,48 @@ export type Database = {
           },
         ]
       }
+      merchant_secrets: {
+        Row: {
+          claim_token_hash: string | null
+          created_at: string
+          merchant_id: string
+          pending_blink_api_key_encrypted: string | null
+          pending_ln_address_hash: string | null
+          updated_at: string
+        }
+        Insert: {
+          claim_token_hash?: string | null
+          created_at?: string
+          merchant_id: string
+          pending_blink_api_key_encrypted?: string | null
+          pending_ln_address_hash?: string | null
+          updated_at?: string
+        }
+        Update: {
+          claim_token_hash?: string | null
+          created_at?: string
+          merchant_id?: string
+          pending_blink_api_key_encrypted?: string | null
+          pending_ln_address_hash?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_secrets_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: true
+            referencedRelation: "merchant_metrics"
+            referencedColumns: ["merchant_id"]
+          },
+          {
+            foreignKeyName: "merchant_secrets_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: true
+            referencedRelation: "merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       merchants: {
         Row: {
           address: string | null
@@ -657,7 +725,6 @@ export type Database = {
           btcmap_id: string | null
           btcmap_node_id: string | null
           category: string
-          claim_token_hash: string | null
           claimed_at: string | null
           community_id: string
           created_at: string
@@ -668,8 +735,6 @@ export type Database = {
           merchant_code: string | null
           name: string
           payment_methods: string[]
-          pending_blink_api_key_encrypted: string | null
-          pending_ln_address_hash: string | null
           public_merchant_id: string | null
           source: string | null
           status: Database["public"]["Enums"]["submission_status"]
@@ -683,7 +748,6 @@ export type Database = {
           btcmap_id?: string | null
           btcmap_node_id?: string | null
           category?: string
-          claim_token_hash?: string | null
           claimed_at?: string | null
           community_id: string
           created_at?: string
@@ -694,8 +758,6 @@ export type Database = {
           merchant_code?: string | null
           name: string
           payment_methods?: string[]
-          pending_blink_api_key_encrypted?: string | null
-          pending_ln_address_hash?: string | null
           public_merchant_id?: string | null
           source?: string | null
           status?: Database["public"]["Enums"]["submission_status"]
@@ -709,7 +771,6 @@ export type Database = {
           btcmap_id?: string | null
           btcmap_node_id?: string | null
           category?: string
-          claim_token_hash?: string | null
           claimed_at?: string | null
           community_id?: string
           created_at?: string
@@ -720,8 +781,6 @@ export type Database = {
           merchant_code?: string | null
           name?: string
           payment_methods?: string[]
-          pending_blink_api_key_encrypted?: string | null
-          pending_ln_address_hash?: string | null
           public_merchant_id?: string | null
           source?: string | null
           status?: Database["public"]["Enums"]["submission_status"]
